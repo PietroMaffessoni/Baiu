@@ -63,16 +63,19 @@ export function Section({
   linkLabel = 'Ver tudo',
   children,
   style,
+  bleed,
 }: {
   title: string;
   link?: Href;
   linkLabel?: string;
   children: ReactNode;
   style?: StyleProp<ViewStyle>;
+  /** Conteúdo vai de borda a borda; o título continua na margem. */
+  bleed?: boolean;
 }) {
   return (
-    <View style={[styles.section, style]}>
-      <View style={styles.sectionHead}>
+    <View style={[styles.section, bleed && { paddingHorizontal: 0 }, style]}>
+      <View style={[styles.sectionHead, bleed && { paddingHorizontal: gutter }]}>
         <T variant="title2" accessibilityRole="header">
           {title}
         </T>

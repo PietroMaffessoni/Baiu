@@ -10,30 +10,32 @@ import { Button } from '@/components/button';
 import { GroundLight } from '@/components/ground-light';
 import { Mark } from '@/components/mark';
 import { Wordmark } from '@/components/wordmark';
-import { useFolego, useStore } from '@/store/store';
+import { createDemo } from '@/data/demo';
+import { computeFolego } from '@/lib/folego';
+import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 /**
- * Primeiro contato: o Baiu começa murcho. Ao tocar em Começar, ele enche
- * até o fôlego real dos dados de exemplo, e só então o app abre.
+ * Primeiro contato: o Baiu começa murcho. Ao tocar em Começar, ele enche até o
+ * fôlego inicial (ou o dos dados de exemplo), e só então o app abre.
  */
 export default function BoasVindas() {
-  const { dispatch } = useStore();
-  const folego = useFolego();
+  const { state, dispatch } = useStore();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [score, setScore] = useState(8);
   const [filling, setFilling] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const hasData = state.accounts.length > 0 && !state.demo;
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  const start = () => {
+  const start = (mode: 'real' | 'demo') => {
     if (filling) return;
     setFilling(true);
-    const target = folego.score;
-    const steps = [30, 52, target];
+    const target = computeFolego(mode === 'demo' ? createDemo() : state).score;
+    const steps = (target > 52 ? [30, 52, target] : [Math.max(12, target - 10), target]).filter((v) => v > 8);
     steps.forEach((v, i) => {
       timers.current.push(
         setTimeout(
@@ -48,7 +50,9 @@ export default function BoasVindas() {
         ),
       );
     });
-    timers.current.push(setTimeout(() => dispatch({ type: 'onboard' }), 260 + steps.length * 380 + 650));
+    timers.current.push(
+      setTimeout(() => dispatch({ type: mode === 'demo' ? 'loadDemo' : 'onboard' }), 260 + steps.length * 380 + 650),
+    );
   };
 
   const lanternW = Math.min(270, Math.round(width * 0.64));
@@ -93,10 +97,11 @@ export default function BoasVindas() {
           ))}
         </Animated.View>
         <View style={{ flex: 1, minHeight: 20 }} />
-        <Animated.View entering={FadeInDown.delay(260).duration(500)} style={{ gap: 12 }}>
-          <Button label={filling ? 'Enchendo o Baiu…' : 'Começar'} onPress={start} />
-          <T variant="caption" tone="ink3" align="center">
-            Esta prévia usa dados de exemplo e salva tudo só neste aparelho.
+        <Animated.View entering={FadeInDown.delay(260).duration(500)} style={{ gap: 4 }}>
+          <Button label={filling ? 'Enchendo o Baiu…' : 'Começar'} onPress={() => start('real')} />
+          {!hasData && <Button label="Explorar com dados de exemplo" kind="quiet" onPress={() => start('demo')} />}
+          <T variant="caption" tone="ink3" align="center" style={{ marginTop: 4 }}>
+            Seus dados ficam só neste aparelho, protegidos por criptografia.
           </T>
         </Animated.View>
       </View>

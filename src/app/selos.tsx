@@ -4,16 +4,15 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { sealsFor } from '@/lib/seals';
 import { Seal } from '@/components/seal';
-import { useFolego, useStore } from '@/store/store';
+import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 export default function Selos() {
   const { state } = useStore();
-  const folego = useFolego();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const seals = useMemo(() => sealsFor(state, folego), [state, folego]);
+  const seals = useMemo(() => sealsFor(state), [state]);
   const earned = seals.filter((s) => s.earned).length;
 
   const cols = 3;

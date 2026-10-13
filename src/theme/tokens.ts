@@ -26,7 +26,6 @@ export const color = {
 export const font = {
   black: 'ZenMaru-Black',
   bold: 'ZenMaru-Bold',
-  medium: 'ZenMaru-Medium',
 } as const;
 
 export const space = {

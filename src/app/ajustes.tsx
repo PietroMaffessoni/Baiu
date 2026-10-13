@@ -1,68 +1,226 @@
+import Constants from 'expo-constants';
 import { router } from 'expo-router';
-import type { ReactNode } from 'react';
-import { Alert, Platform, Pressable, ScrollView, StyleSheet, Switch, View } from 'react-native';
+import { useEffect, useState, type ReactNode } from 'react';
+import { Alert, Linking, Platform, ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Icon, type IconName } from '@/components/icon';
+import { Button } from '@/components/button';
+import { ListRow } from '@/components/form';
 import { Plate, Rule } from '@/components/layout';
+import { withoutCurtain } from '@/components/lock-gate';
 import { Wordmark } from '@/components/wordmark';
+import { accountsCsv, transactionsCsv } from '@/lib/csv';
+import { authenticate, lockInfo, type LockInfo } from '@/lib/lock';
+import { remindersAllowed } from '@/lib/reminders';
+import { shareCsv } from '@/lib/share';
 import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
-export default function Ajustes() {
-  const { state, dispatch } = useStore();
-  const insets = useSafeAreaInsets();
+const today = () => new Date().toISOString().slice(0, 10);
 
-  const reset = () => {
-    const go = () => dispatch({ type: 'reset' });
-    if (Platform.OS === 'web') return go();
-    Alert.alert('Restaurar dados de exemplo?', 'As contas que você adicionou serão apagadas deste aparelho.', [
+export default function Ajustes() {
+  const { state, dispatch, eraseAll } = useStore();
+  const insets = useSafeAreaInsets();
+  const [lock, setLock] = useState<LockInfo | null>(null);
+  const s = state.settings;
+
+  useEffect(() => {
+    lockInfo()
+      .then(setLock)
+      .catch(() => setLock({ available: false, method: 'Bloqueio' }));
+  }, []);
+
+  const toggleLock = async (on: boolean) => {
+    if (on) {
+      // confirma que a pessoa consegue desbloquear antes de ligar
+      const ok = await withoutCurtain(() => authenticate('Ativar o bloqueio do Baiu'));
+      if (!ok) return;
+    }
+    dispatch({ type: 'setSetting', key: 'lock', value: on });
+  };
+
+  const toggleReminders = async (on: boolean) => {
+    if (on) {
+      const ok = await withoutCurtain(() => remindersAllowed(true));
+      if (!ok) {
+        Alert.alert(
+          'Notificações desligadas',
+          'Para receber os lembretes, permita notificações do Baiu nos ajustes do aparelho.',
+          [
+            { text: 'Agora não', style: 'cancel' },
+            { text: 'Abrir ajustes', onPress: () => Linking.openSettings() },
+          ],
+        );
+        return;
+      }
+    }
+    dispatch({ type: 'setSetting', key: 'reminders', value: on });
+  };
+
+  const exportTx = () =>
+    shareCsv(`baiu-movimentos-${today()}.csv`, transactionsCsv(state)).catch((e) =>
+      Alert.alert('Não deu para exportar', String(e?.message ?? e)),
+    );
+  const exportAccounts = () =>
+    shareCsv(`baiu-contas-${today()}.csv`, accountsCsv(state)).catch((e) =>
+      Alert.alert('Não deu para exportar', String(e?.message ?? e)),
+    );
+
+  const confirm = (title: string, message: string, action: string, run: () => void) => {
+    if (Platform.OS === 'web') return run();
+    Alert.alert(title, message, [
       { text: 'Cancelar', style: 'cancel' },
-      { text: 'Restaurar', style: 'destructive', onPress: go },
+      { text: action, style: 'destructive', onPress: run },
     ]);
   };
+
+  const eraseEverything = () =>
+    confirm(
+      'Apagar todos os dados?',
+      'Contas, movimentos, vencimentos, investimentos e selos saem deste aparelho, junto com a chave de criptografia. Isso não pode ser desfeito.',
+      'Apagar tudo',
+      () => {
+        eraseAll();
+      },
+    );
+
+  const version = Constants.expoConfig?.version ?? '1.0.0';
 
   return (
     <ScrollView
       style={styles.screen}
       contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={{ paddingBottom: insets.bottom + 40, paddingTop: 8 }}>
-      <Group title="Privacidade">
-        <Row
-          icon={state.hideValues ? 'eyeOff' : 'eye'}
+      {state.demo && (
+        <View style={styles.group}>
+          <Plate style={{ padding: 16, gap: 12 }}>
+            <T variant="callout" tone="ink2">
+              Você está vendo dados de exemplo. Ao sair, o Baiu fica vazio para você cadastrar suas contas de verdade.
+            </T>
+            <Button
+              label="Sair do modo exemplo"
+              onPress={() =>
+                confirm('Sair do modo exemplo?', 'Os dados de exemplo serão apagados.', 'Sair', () => {
+                  dispatch({ type: 'exitDemo' });
+                  router.back();
+                })
+              }
+            />
+          </Plate>
+        </View>
+      )}
+
+      <Group title="Privacidade e segurança">
+        <ListRow
+          icon={s.hideValues ? 'eyeOff' : 'eye'}
           label="Ocultar valores"
           hint="Esconde saldos e valores em todas as telas.">
-          <Switch
-            value={state.hideValues}
-            onValueChange={() => dispatch({ type: 'toggleHide' })}
-            trackColor={{ true: color.lantern, false: color.plateHi }}
-            thumbColor={Platform.OS === 'android' ? color.paper : undefined}
-            ios_backgroundColor={color.plateHi}
-            accessibilityLabel="Ocultar valores"
+          <Toggle
+            value={s.hideValues}
+            onChange={(v) => dispatch({ type: 'setSetting', key: 'hideValues', value: v })}
+            label="Ocultar valores"
           />
-        </Row>
+        </ListRow>
+        <Rule inset={33} />
+        <ListRow
+          icon="faceid"
+          label={lock?.available ? `Bloquear com ${lock.method}` : 'Bloquear o app'}
+          hint={lock?.available ? 'Pede ao abrir e ao voltar depois de 30 segundos.' : lock?.hint}>
+          <Toggle value={s.lock} disabled={!lock?.available && !s.lock} onChange={toggleLock} label="Bloquear o app" />
+        </ListRow>
+      </Group>
+
+      <Group title="Lembretes">
+        <ListRow
+          icon="bell"
+          label="Avisar vencimentos"
+          hint="Um dia antes e no dia, às 9h. Sem valores na notificação.">
+          <Toggle value={s.reminders} onChange={toggleReminders} label="Avisar vencimentos" />
+        </ListRow>
+        <Rule inset={33} />
+        <ListRow icon="calendar" label="Vencimentos" onPress={() => router.push('/vencimentos')} chevron />
+      </Group>
+
+      <Group title="Seus dados">
+        <ListRow
+          icon="share"
+          label="Exportar movimentos"
+          hint="Planilha CSV com todos os registros."
+          onPress={exportTx}
+          chevron
+        />
+        <Rule inset={33} />
+        <ListRow
+          icon="share"
+          label="Exportar contas"
+          hint="Planilha CSV com saldos atuais."
+          onPress={exportAccounts}
+          chevron
+        />
+        <Rule inset={33} />
+        <ListRow
+          icon="lock"
+          label="Onde ficam"
+          hint="Só neste aparelho, criptografados. Nada é enviado para servidores."
+        />
       </Group>
 
       <Group title="Baiu">
-        <Row icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
-        <Rule inset={46} />
-        <Row icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />
+        <ListRow icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
+        <Rule inset={33} />
+        <ListRow icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />
       </Group>
 
-      <Group title="Demonstração">
-        <Row icon="repeat" label="Restaurar dados de exemplo" onPress={reset} />
-        <Rule inset={46} />
-        <Row icon="bolt" label="Ver as boas-vindas de novo" onPress={() => dispatch({ type: 'replayWelcome' })} />
+      <Group title="Sobre">
+        <ListRow icon="privacy" label="Política de privacidade" onPress={() => router.push('/privacidade')} chevron />
+        <Rule inset={33} />
+        <ListRow icon="doc" label="Termos de uso" onPress={() => router.push('/termos')} chevron />
+        <Rule inset={33} />
+        <ListRow
+          icon="help"
+          label="Ajuda e contato"
+          onPress={() => Linking.openURL('https://github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md')}
+          chevron
+        />
       </Group>
 
       <View style={styles.about}>
         <Wordmark width={88} tint={color.ink2} />
         <T variant="caption" tone="ink3" align="center" style={{ marginTop: 10 }}>
-          Versão 0.1, prévia visual.{'\n'}Tudo fica salvo só neste aparelho.
+          Versão {version}
         </T>
       </View>
+
+      {/* ação destrutiva sozinha, no fim */}
+      <View style={[styles.group, { marginTop: 56 }]}>
+        <Button label="Apagar todos os dados" kind="danger" icon="trash" onPress={eraseEverything} />
+      </View>
     </ScrollView>
+  );
+}
+
+function Toggle({
+  value,
+  onChange,
+  disabled,
+  label,
+}: {
+  value: boolean;
+  onChange: (v: boolean) => void;
+  disabled?: boolean;
+  label: string;
+}) {
+  return (
+    <Switch
+      value={value}
+      onValueChange={onChange}
+      disabled={disabled}
+      trackColor={{ true: color.lantern, false: color.plateHi }}
+      thumbColor={Platform.OS === 'android' ? color.paper : undefined}
+      ios_backgroundColor={color.plateHi}
+      accessibilityLabel={label}
+    />
   );
 }
 
@@ -77,48 +235,9 @@ function Group({ title, children }: { title: string; children: ReactNode }) {
   );
 }
 
-function Row({
-  icon,
-  label,
-  hint,
-  onPress,
-  chevron,
-  children,
-}: {
-  icon: IconName;
-  label: string;
-  hint?: string;
-  onPress?: () => void;
-  chevron?: boolean;
-  children?: ReactNode;
-}) {
-  const body = (
-    <View style={styles.row}>
-      <Icon name={icon} size={19} tint={color.ink2} />
-      <View style={{ flex: 1 }}>
-        <T variant="body">{label}</T>
-        {hint ? (
-          <T variant="caption" tone="ink3">
-            {hint}
-          </T>
-        ) : null}
-      </View>
-      {children}
-      {chevron ? <Icon name="chevron" size={13} tint={color.ink3} weight="semibold" /> : null}
-    </View>
-  );
-  if (!onPress) return body;
-  return (
-    <Pressable onPress={onPress} style={({ pressed }) => pressed && { opacity: 0.6 }} accessibilityRole="button">
-      {body}
-    </Pressable>
-  );
-}
-
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.night },
   group: { marginTop: 24, paddingHorizontal: gutter },
   groupTitle: { marginBottom: 8, marginLeft: 4 },
-  row: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 56, paddingVertical: 10 },
-  about: { alignItems: 'center', marginTop: 48 },
+  about: { alignItems: 'center', marginTop: 40 },
 });

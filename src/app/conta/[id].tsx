@@ -1,32 +1,38 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useMemo } from 'react';
-import { Alert, Platform, ScrollView, StyleSheet, View } from 'react-native';
+import { Alert, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BankMark } from '@/components/bank-mark';
 import { Button } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
+import { EmptyPlate } from '@/components/form';
 import { Plate, Rule } from '@/components/layout';
 import { BigMoney } from '@/components/money';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
+import { dueLabel, nextCardDue } from '@/lib/bills';
+import { accountTotal } from '@/lib/ledger';
 import { brl } from '@/lib/money';
-import { dailySpending, sortedTxs } from '@/lib/summary';
-import { useStore } from '@/store/store';
+import { dailySpending, last30, sortedTxs } from '@/lib/summary';
+import { close } from '@/lib/nav';
+import { useAccountsById, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 export default function ContaDetalhe() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { state, dispatch } = useStore();
+  const accountsById = useAccountsById();
   const insets = useSafeAreaInsets();
   const account = state.accounts.find((a) => a.id === id);
   const txs = useMemo(() => sortedTxs(state, id), [state, id]);
-  const bars = useMemo(() => dailySpending(state, new Date(), id), [state, id]);
+  const bars = useMemo(() => dailySpending(state, last30(), new Date(), id), [state, id]);
 
   if (!account) {
     return (
       <View style={[styles.screen, styles.missing]}>
+        <Stack.Screen options={{ title: '' }} />
         <T variant="body" tone="ink2">
           Esta conta não existe mais.
         </T>
@@ -36,18 +42,17 @@ export default function ContaDetalhe() {
 
   const bank = bankById(account.bankId);
   const card = account.kind === 'cartao';
-  const used = card && account.limit ? Math.min(1, account.balance / account.limit) : 0;
+  const invest = account.kind === 'investimento';
+  const used = card && account.limit ? Math.min(1, Math.max(0, account.balance) / account.limit) : 0;
+  const hide = state.settings.hideValues;
 
   const remove = () => {
     const doIt = () => {
       dispatch({ type: 'removeAccount', id: account.id });
-      router.back();
+      close();
     };
-    const msg = 'Os movimentos desta conta saem do Baiu. Dá para cadastrar de novo depois.';
-    if (Platform.OS === 'web') {
-      doIt();
-      return;
-    }
+    const msg = `Os ${txs.length} movimentos ligados a esta conta também saem do Baiu. Isso não pode ser desfeito.`;
+    if (Platform.OS === 'web') return doIt();
     Alert.alert('Remover esta conta?', msg, [
       { text: 'Cancelar', style: 'cancel' },
       { text: 'Remover', style: 'destructive', onPress: doIt },
@@ -59,7 +64,21 @@ export default function ContaDetalhe() {
       style={styles.screen}
       contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}
       contentInsetAdjustmentBehavior="automatic">
-      <Stack.Screen options={{ title: account.nickname ?? bank.name }} />
+      <Stack.Screen
+        options={{
+          title: account.nickname ?? bank.name,
+          headerRight: () => (
+            <Pressable
+              hitSlop={10}
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: '/conta-editar', params: { id: account.id } })}>
+              <T variant="body" tone="lantern">
+                Editar
+              </T>
+            </Pressable>
+          ),
+        }}
+      />
 
       <View style={styles.head}>
         <BankMark bankId={account.bankId} size={56} />
@@ -72,31 +91,68 @@ export default function ContaDetalhe() {
         </T>
         <View style={{ marginTop: 18 }}>
           <T variant="caption" tone="ink2">
-            {card ? 'Fatura atual' : 'Saldo'}
+            {card ? 'Fatura atual' : invest ? 'Total na corretora' : 'Saldo'}
           </T>
-          <BigMoney value={card ? -account.balance : account.balance} size={40} />
+          <BigMoney value={card ? -account.balance : accountTotal(account, state.holdings)} size={40} />
         </View>
-        {card && account.limit ? (
-          <View style={{ marginTop: 14 }}>
-            <View style={styles.limitTrack}>
-              <View style={[styles.limitFill, { width: `${used * 100}%` }]} />
-            </View>
+        {card && account.dueDay ? (
+          <View style={{ marginTop: 14, alignSelf: 'stretch' }}>
+            {account.limit ? (
+              <View style={styles.limitTrack}>
+                <View style={[styles.limitFill, { width: `${used * 100}%` }]} />
+              </View>
+            ) : null}
             <View style={styles.limitRow}>
               <T variant="caption" tone="ink2">
-                Vence dia {account.dueDay}
+                {account.balance > 0 ? dueLabel(nextCardDue(account.dueDay)) : `Vence dia ${account.dueDay}`}
               </T>
-              <T variant="caption" tone="ink3" tabular>
-                {state.hideValues ? 'Limite oculto' : `Limite ${brl(account.limit, { cents: false })}`}
-              </T>
+              {account.limit ? (
+                <T variant="caption" tone="ink3" tabular>
+                  {hide ? 'Limite oculto' : `Limite ${brl(account.limit, { cents: false })}`}
+                </T>
+              ) : null}
             </View>
           </View>
         ) : null}
       </View>
 
+      <View style={styles.actions}>
+        {card && account.balance > 0 ? (
+          <Button
+            label="Pagar fatura"
+            onPress={() =>
+              router.push({
+                pathname: '/movimento/novo',
+                params: {
+                  kind: 'transferencia',
+                  toAccountId: account.id,
+                  cents: String(Math.round(account.balance * 100)),
+                },
+              })
+            }
+          />
+        ) : null}
+        {invest ? (
+          <Button
+            label="Adicionar investimento"
+            icon="plus"
+            onPress={() => router.push({ pathname: '/investimento/novo', params: { accountId: account.id } })}
+          />
+        ) : null}
+        <Button
+          label={card ? 'Registrar compra' : 'Registrar movimento'}
+          kind={(card && account.balance > 0) || invest ? 'secondary' : 'primary'}
+          icon="plus"
+          onPress={() =>
+            router.push({ pathname: '/movimento/novo', params: { accountId: account.id, kind: card ? 'saida' : '' } })
+          }
+        />
+      </View>
+
       {txs.length > 0 && (
         <View style={styles.pad}>
           <T variant="title3" style={{ marginBottom: 12 }} accessibilityRole="header">
-            Gastos nos últimos 30 dias
+            {card ? 'Compras nos últimos 30 dias' : 'Gastos nos últimos 30 dias'}
           </T>
           <DayBars bars={bars} />
         </View>
@@ -107,17 +163,19 @@ export default function ContaDetalhe() {
           Movimentos
         </T>
         {txs.length === 0 ? (
-          <Plate style={{ padding: 16 }}>
-            <T variant="callout" tone="ink2">
-              Nenhum movimento ainda. Quando a conta estiver conectada, cada Pix, compra e boleto aparece aqui.
-            </T>
-          </Plate>
+          <EmptyPlate text="Nenhum movimento nesta conta ainda. Cada Pix, compra e boleto que você registrar aparece aqui." />
         ) : (
           <Plate style={{ paddingHorizontal: 14 }}>
             {txs.map((tx, i) => (
               <View key={tx.id}>
                 {i > 0 && <Rule inset={50} />}
-                <TxRow tx={tx} showAccount={false} />
+                <TxRow
+                  tx={tx}
+                  accounts={accountsById}
+                  perspective={account.id}
+                  showAccount={false}
+                  onPress={() => router.push({ pathname: '/movimento/[id]', params: { id: tx.id } })}
+                />
               </View>
             ))}
           </Plate>
@@ -136,23 +194,10 @@ const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.night },
   missing: { alignItems: 'center', justifyContent: 'center' },
   head: { paddingHorizontal: gutter, paddingTop: 12, alignItems: 'flex-start' },
-  limitTrack: {
-    height: 6,
-    width: 260,
-    maxWidth: '100%',
-    borderRadius: 3,
-    backgroundColor: color.plateHi,
-    overflow: 'hidden',
-  },
+  limitTrack: { height: 6, borderRadius: 3, backgroundColor: color.plateHi, overflow: 'hidden' },
   limitFill: { height: 6, backgroundColor: color.lantern },
-  limitRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    width: 260,
-    maxWidth: '100%',
-    marginTop: 6,
-    gap: 12,
-  },
+  limitRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 6, gap: 12 },
+  actions: { paddingHorizontal: gutter, marginTop: 24, gap: 10 },
   pad: { paddingHorizontal: gutter, marginTop: 34 },
   danger: { paddingHorizontal: gutter, marginTop: 72 },
 });

@@ -110,13 +110,14 @@ export default function FolegoSheet() {
               Próximo passo
             </T>
             <T variant="callout">
-              {state.hideValues ? folego.habit.text.replace(/R\$\s?[\d.,]+/g, 'um valor') : folego.habit.text}
+              {state.settings.hideValues ? folego.habit.text.replace(/R\$\s?[\d.,]+/g, 'um valor') : folego.habit.text}
             </T>
           </View>
         </View>
 
         <T variant="caption" tone="ink3" style={{ marginTop: 18 }}>
-          O fôlego é recalculado sempre que uma conta muda. Os números usam os últimos 30 dias de movimentos.
+          O fôlego é recalculado sempre que algo muda e usa os últimos 30 dias de movimentos. As sugestões são
+          educativas e gerais: não são recomendação de investimento nem consultoria financeira.
         </T>
       </View>
     </ScrollView>

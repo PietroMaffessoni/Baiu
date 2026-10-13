@@ -6,8 +6,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Baiu, levelScale } from '@/components/baiu/baiu';
 import { PALETTE, VB_W } from '@/components/baiu/geometry';
 import { BankMark } from '@/components/bank-mark';
-import { IconButton } from '@/components/button';
+import { Button, IconButton } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
+import { EmptyPlate } from '@/components/form';
 import { GroundLight } from '@/components/ground-light';
 import { Icon } from '@/components/icon';
 import { DemoNote, Plate, Rule, Section } from '@/components/layout';
@@ -17,41 +18,46 @@ import { Seal } from '@/components/seal';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account } from '@/data/types';
+import { dueItems, dueLabel } from '@/lib/bills';
 import { greeting, longToday } from '@/lib/dates';
+import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
 import { sealsFor } from '@/lib/seals';
-import { dailySpending, sortedTxs } from '@/lib/summary';
-import { useFolego, useStore } from '@/store/store';
+import { dailySpending, last30, sortedTxs } from '@/lib/summary';
+import { useAccountsById, useFolego, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter, radius } from '@/theme/tokens';
 
 export default function Home() {
   const { state, dispatch } = useStore();
   const folego = useFolego();
+  const accountsById = useAccountsById();
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
 
   const s = folego.summary;
-  const bars = useMemo(() => dailySpending(state), [state]);
+  const bars = useMemo(() => dailySpending(state, last30()), [state]);
   const recent = useMemo(() => sortedTxs(state).slice(0, 4), [state]);
-  const seals = useMemo(
-    () =>
-      sealsFor(state, folego)
-        .filter((x) => x.earned)
-        .slice(-3)
-        .reverse(),
-    [state, folego],
-  );
-  const accountsById = useMemo(() => new Map(state.accounts.map((a) => [a.id, a])), [state.accounts]);
+  const dues = useMemo(() => dueItems(state).slice(0, 3), [state]);
+  const allSeals = useMemo(() => sealsFor(state), [state]);
+  const earned = allSeals.filter((x) => x.earned);
+  const seals = earned.length > 0 ? earned.slice(-3).reverse() : allSeals.slice(0, 3);
 
   const lanternW = Math.min(200, Math.round(width * 0.5));
   const cord = insets.top + 26;
   const lanternH = (lanternW * 240) / VB_W;
   const stage = cord + lanternH * 0.94;
   const glow = PALETTE[folego.mood.mood].glow;
-  const hide = state.hideValues;
+  const hide = state.settings.hideValues;
+  const hasAccounts = state.accounts.length > 0;
 
-  const fatura = state.accounts.find((a) => a.kind === 'cartao');
+  const card = state.accounts.find((a) => a.kind === 'cartao' && a.balance > 0);
+  const subline = [
+    s.investido > 0 ? `${hide ? HIDDEN : brl(s.investido)} investidos` : null,
+    card ? `fatura ${hide ? HIDDEN : brl(s.fatura)} vence dia ${card.dueDay}` : null,
+  ]
+    .filter(Boolean)
+    .join(' · ');
 
   return (
     <ScrollView
@@ -81,9 +87,15 @@ export default function Home() {
           </View>
           <View style={styles.topActions}>
             <IconButton
+              icon="plus"
+              label="Registrar movimento"
+              tint={color.lantern}
+              onPress={() => router.push(hasAccounts ? '/movimento/novo' : '/nova-conta')}
+            />
+            <IconButton
               icon={hide ? 'eyeOff' : 'eye'}
               label={hide ? 'Mostrar valores' : 'Ocultar valores'}
-              onPress={() => dispatch({ type: 'toggleHide' })}
+              onPress={() => dispatch({ type: 'setSetting', key: 'hideValues', value: !hide })}
             />
             <IconButton icon="settings" label="Ajustes" onPress={() => router.push('/ajustes')} />
           </View>
@@ -118,15 +130,16 @@ export default function Home() {
           Saldo nas contas
         </T>
         <BigMoney value={s.saldo} size={Math.min(46, width * 0.115)} />
-        <T variant="caption" tone="ink2" align="center" tabular>
-          {hide ? HIDDEN : brl(s.investido)} investidos
-          {fatura ? ` · fatura ${hide ? HIDDEN : brl(s.fatura)} vence dia ${fatura.dueDay}` : ''}
-        </T>
+        {subline ? (
+          <T variant="caption" tone="ink2" align="center" tabular>
+            {subline}
+          </T>
+        ) : null}
       </View>
 
       {/* próximo hábito */}
       <Pressable
-        onPress={() => router.push('/folego')}
+        onPress={() => router.push(hasAccounts ? '/folego' : '/nova-conta')}
         style={({ pressed }) => [styles.habit, pressed && { backgroundColor: color.plateHi }]}
         accessibilityRole="button">
         <View style={styles.habitGlyph}>
@@ -142,10 +155,10 @@ export default function Home() {
       </Pressable>
 
       {/* contas */}
-      <Section title="Contas" link="/contas" linkLabel="Ver todas" style={{ paddingHorizontal: 0 }}>
+      <Section title="Contas" link={hasAccounts ? '/contas' : undefined} linkLabel="Ver todas" bleed>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.strip}>
           {state.accounts.map((a) => (
-            <AccountPlate key={a.id} account={a} />
+            <AccountPlate key={a.id} account={a} total={accountTotal(a, state.holdings)} />
           ))}
           <Pressable
             onPress={() => router.push('/nova-conta')}
@@ -161,6 +174,49 @@ export default function Home() {
         </ScrollView>
       </Section>
 
+      {/* vencimentos */}
+      {hasAccounts && (
+        <Section title="Vencimentos" link="/vencimentos" linkLabel={dues.length ? 'Ver todos' : 'Abrir'}>
+          {dues.length === 0 ? (
+            <EmptyPlate text="Cadastre boletos e contas fixas para o Baiu avisar antes do vencimento.">
+              <Button
+                label="Adicionar vencimento"
+                kind="secondary"
+                icon="plus"
+                onPress={() => router.push('/vencimento/novo')}
+              />
+            </EmptyPlate>
+          ) : (
+            <Plate style={{ paddingHorizontal: 14 }}>
+              {dues.map((d, i) => (
+                <View key={d.key}>
+                  {i > 0 && <Rule inset={36} />}
+                  <Pressable
+                    style={({ pressed }) => [styles.dueRow, pressed && { opacity: 0.6 }]}
+                    accessibilityRole="button"
+                    onPress={() =>
+                      d.billId
+                        ? router.push({ pathname: '/vencimento/[id]', params: { id: d.billId } })
+                        : router.push({ pathname: '/conta/[id]', params: { id: d.accountId! } })
+                    }>
+                    <Mark state={d.overdue ? 'riscada' : 'vazia'} />
+                    <View style={{ flex: 1 }}>
+                      <T variant="calloutStrong" numberOfLines={1}>
+                        {d.title}
+                      </T>
+                      <T variant="caption" tone={d.overdue ? 'vermilion' : 'ink3'}>
+                        {dueLabel(d.due)}
+                      </T>
+                    </View>
+                    <Money value={-d.amount} variant="calloutStrong" />
+                  </Pressable>
+                </View>
+              ))}
+            </Plate>
+          )}
+        </Section>
+      )}
+
       {/* mês */}
       <Section title="Últimos 30 dias" link="/extrato" linkLabel="Extrato">
         <View style={styles.flowRow}>
@@ -174,15 +230,29 @@ export default function Home() {
       </Section>
 
       {/* movimentos */}
-      <Section title="Movimentos" link="/extrato" linkLabel="Ver extrato">
-        <Plate style={{ paddingHorizontal: 14 }}>
-          {recent.map((tx, i) => (
-            <View key={tx.id}>
-              {i > 0 && <Rule inset={50} />}
-              <TxRow tx={tx} account={accountsById.get(tx.accountId)} />
-            </View>
-          ))}
-        </Plate>
+      <Section title="Movimentos" link={recent.length ? '/extrato' : undefined} linkLabel="Ver extrato">
+        {recent.length === 0 ? (
+          <EmptyPlate
+            text={
+              hasAccounts
+                ? 'Nenhum movimento ainda. Registre o que entrou e o que saiu para o Baiu medir seu mês.'
+                : 'Cadastre suas contas primeiro. Depois, cada entrada e cada gasto aparecem aqui.'
+            }
+          />
+        ) : (
+          <Plate style={{ paddingHorizontal: 14 }}>
+            {recent.map((tx, i) => (
+              <View key={tx.id}>
+                {i > 0 && <Rule inset={50} />}
+                <TxRow
+                  tx={tx}
+                  accounts={accountsById}
+                  onPress={() => router.push({ pathname: '/movimento/[id]', params: { id: tx.id } })}
+                />
+              </View>
+            ))}
+          </Plate>
+        )}
       </Section>
 
       {/* selos */}
@@ -190,18 +260,23 @@ export default function Home() {
         <Plate style={styles.sealRow}>
           {seals.map((x, i) => (
             <View key={x.id} style={styles.sealCell}>
-              <Seal lines={x.lines} date={x.date} earned size={92} ground={color.plate} seed={i + 3} />
+              <Seal lines={x.lines} date={x.date} earned={x.earned} size={92} ground={color.plate} seed={i + 3} />
             </View>
           ))}
         </Plate>
+        {earned.length === 0 && (
+          <T variant="caption" tone="ink3" style={{ marginTop: 10 }}>
+            Cada hábito que cuida do seu dinheiro vira um carimbo. O primeiro vem com a primeira conta.
+          </T>
+        )}
       </Section>
 
-      <DemoNote />
+      {state.demo && <DemoNote />}
     </ScrollView>
   );
 }
 
-function AccountPlate({ account }: { account: Account }) {
+function AccountPlate({ account, total }: { account: Account; total: number }) {
   const bank = bankById(account.bankId);
   const card = account.kind === 'cartao';
   return (
@@ -209,7 +284,7 @@ function AccountPlate({ account }: { account: Account }) {
       onPress={() => router.push({ pathname: '/conta/[id]', params: { id: account.id } })}
       style={({ pressed }) => [styles.accPlate, pressed && { backgroundColor: color.plateHi }]}
       accessibilityRole="button"
-      accessibilityLabel={`${bank.name}, ${KIND_LABEL[account.kind]}`}>
+      accessibilityLabel={`${account.nickname ?? bank.name}, ${KIND_LABEL[account.kind]}`}>
       <BankMark bankId={account.bankId} size={34} />
       <View style={{ marginTop: 14 }}>
         <T variant="captionStrong" numberOfLines={1}>
@@ -220,7 +295,7 @@ function AccountPlate({ account }: { account: Account }) {
         </T>
       </View>
       <View style={{ marginTop: 8 }}>
-        <Money value={card ? -account.balance : account.balance} variant="bodyStrong" />
+        <Money value={card ? -account.balance : total} variant="bodyStrong" />
       </View>
     </Pressable>
   );
@@ -299,6 +374,7 @@ const styles = StyleSheet.create({
   },
   addPlate: {
     width: 150,
+    minHeight: 132,
     padding: 14,
     borderRadius: radius.plate,
     borderCurve: 'continuous',
@@ -315,18 +391,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     backgroundColor: color.lanternWash,
   },
+  dueRow: { flexDirection: 'row', alignItems: 'center', gap: 14, minHeight: 60, paddingVertical: 10 },
   flowRow: { flexDirection: 'row', gap: 12 },
-  flowLabel: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 2,
-  },
+  flowLabel: { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 2 },
   flowDot: { width: 7, height: 7, borderRadius: 4 },
-  sealRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 18,
-  },
+  sealRow: { flexDirection: 'row', justifyContent: 'space-around', paddingVertical: 18 },
   sealCell: { alignItems: 'center' },
 });

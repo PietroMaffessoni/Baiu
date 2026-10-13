@@ -1,4 +1,4 @@
-import { Link, router } from 'expo-router';
+import { router } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
@@ -7,13 +7,15 @@ import { BankMark } from '@/components/bank-mark';
 import { Button, IconButton } from '@/components/button';
 import { Icon } from '@/components/icon';
 import { DemoNote, Plate, Rule, Screen } from '@/components/layout';
+import { EmptyPlate } from '@/components/form';
 import { BigMoney, Money } from '@/components/money';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account, AccountKind } from '@/data/types';
+import { accountTotal } from '@/lib/ledger';
 import { brl } from '@/lib/money';
 import { sortedTxs, summarize } from '@/lib/summary';
-import { useStore } from '@/store/store';
+import { useAccountsById, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
@@ -51,43 +53,50 @@ export default function Contas() {
           onPress={() => router.push('/nova-conta')}
         />
       }>
-      <View style={styles.pad}>
-        <Plate style={styles.summary}>
-          <T variant="caption" tone="ink2">
-            Patrimônio líquido
-          </T>
-          <BigMoney value={s.patrimonio} size={36} />
-          <View style={styles.stack} accessible accessibilityLabel="Composição do patrimônio">
-            {parts.map((p) =>
-              p.value > 0 ? (
-                <View key={p.key} style={{ flex: p.value / whole, backgroundColor: p.tint, height: 8 }} />
-              ) : null,
-            )}
-          </View>
-          <View style={styles.legend}>
-            {parts.map((p) => (
-              <View key={p.key} style={styles.legendItem}>
-                <View style={[styles.legendDot, { backgroundColor: p.tint }]} />
-                <View>
-                  <T variant="micro" tone="ink3">
-                    {p.label}
-                  </T>
-                  <Money value={p.value} variant="captionStrong" />
-                </View>
-              </View>
-            ))}
-          </View>
-          {s.fatura > 0 && (
-            <View style={styles.faturaLine}>
-              <Icon name="card" size={15} tint={color.ink2} />
-              <T variant="caption" tone="ink2" style={{ flex: 1 }}>
-                Faturas em aberto
-              </T>
-              <Money value={-s.fatura} variant="captionStrong" />
+      {state.accounts.length === 0 && (
+        <View style={styles.pad}>
+          <EmptyPlate text="Cadastre as contas onde você recebe e paga: conta corrente, reserva, cartão e corretora. O Baiu soma tudo aqui." />
+        </View>
+      )}
+      {state.accounts.length > 0 && (
+        <View style={styles.pad}>
+          <Plate style={styles.summary}>
+            <T variant="caption" tone="ink2">
+              Patrimônio líquido
+            </T>
+            <BigMoney value={s.patrimonio} size={36} />
+            <View style={styles.stack} accessible accessibilityLabel="Composição do patrimônio">
+              {parts.map((p) =>
+                p.value > 0 ? (
+                  <View key={p.key} style={{ flex: p.value / whole, backgroundColor: p.tint, height: 8 }} />
+                ) : null,
+              )}
             </View>
-          )}
-        </Plate>
-      </View>
+            <View style={styles.legend}>
+              {parts.map((p) => (
+                <View key={p.key} style={styles.legendItem}>
+                  <View style={[styles.legendDot, { backgroundColor: p.tint }]} />
+                  <View>
+                    <T variant="micro" tone="ink3">
+                      {p.label}
+                    </T>
+                    <Money value={p.value} variant="captionStrong" />
+                  </View>
+                </View>
+              ))}
+            </View>
+            {s.fatura > 0 && (
+              <View style={styles.faturaLine}>
+                <Icon name="card" size={15} tint={color.ink2} />
+                <T variant="caption" tone="ink2" style={{ flex: 1 }}>
+                  Faturas em aberto
+                </T>
+                <Money value={-s.fatura} variant="captionStrong" />
+              </View>
+            )}
+          </Plate>
+        </View>
+      )}
 
       {GROUPS.map((g) => {
         const list = state.accounts.filter((a) => a.kind === g.kind);
@@ -117,14 +126,13 @@ export default function Contas() {
       <View style={[styles.pad, { marginTop: 32, gap: 12 }]}>
         <Button label="Adicionar conta" icon="plus" onPress={() => router.push('/nova-conta')} />
         <View style={styles.soon}>
-          <Icon name="link" size={15} tint={color.ink3} />
+          <Icon name="lock" size={15} tint={color.ink3} />
           <T variant="caption" tone="ink3" style={{ flex: 1 }}>
-            Conexão automática com os bancos pelo Open Finance chega numa próxima versão. Por enquanto, você informa o
-            saldo.
+            Você informa os saldos e o Baiu acompanha a partir daí. Tudo fica só neste aparelho, criptografado.
           </T>
         </View>
       </View>
-      <DemoNote />
+      {state.demo && <DemoNote />}
     </Screen>
   );
 }
@@ -141,6 +149,7 @@ function AccountRow({
   onPress: () => void;
 }) {
   const { state } = useStore();
+  const accountsById = useAccountsById();
   const bank = bankById(account.bankId);
   const card = account.kind === 'cartao';
   const txs = useMemo(() => (focused ? sortedTxs(state, account.id).slice(0, 3) : []), [focused, state, account.id]);
@@ -167,10 +176,10 @@ function AccountRow({
           </T>
         </View>
         <View style={{ alignItems: 'flex-end' }}>
-          <Money value={card ? -account.balance : account.balance} variant="bodyStrong" />
+          <Money value={card ? -account.balance : accountTotal(account, state.holdings)} variant="bodyStrong" />
           {card && account.limit ? (
             <T variant="micro" tone="ink3">
-              {state.hideValues ? 'limite oculto' : `limite ${brl(account.limit, { cents: false })}`}
+              {state.settings.hideValues ? 'limite oculto' : `limite ${brl(account.limit, { cents: false })}`}
             </T>
           ) : null}
         </View>
@@ -182,16 +191,26 @@ function AccountRow({
               Nenhum movimento registrado nesta conta ainda.
             </T>
           ) : (
-            txs.map((tx) => <TxRow key={tx.id} tx={tx} showAccount={false} />)
+            txs.map((tx) => (
+              <TxRow
+                key={tx.id}
+                tx={tx}
+                accounts={accountsById}
+                perspective={account.id}
+                showAccount={false}
+                onPress={() => router.push({ pathname: '/movimento/[id]', params: { id: tx.id } })}
+              />
+            ))
           )}
-          <Link href={{ pathname: '/conta/[id]', params: { id: account.id } }} asChild>
-            <Pressable style={styles.open} accessibilityRole="button">
-              <T variant="calloutStrong" tone="lantern">
-                Abrir conta
-              </T>
-              <Icon name="chevron" size={13} tint={color.lantern} weight="semibold" />
-            </Pressable>
-          </Link>
+          <Pressable
+            style={styles.open}
+            accessibilityRole="button"
+            onPress={() => router.push({ pathname: '/conta/[id]', params: { id: account.id } })}>
+            <T variant="calloutStrong" tone="lantern">
+              Abrir conta
+            </T>
+            <Icon name="chevron" size={13} tint={color.lantern} weight="semibold" />
+          </Pressable>
         </Animated.View>
       )}
     </Animated.View>

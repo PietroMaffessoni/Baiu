@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useMemo, useState } from 'react';
 import { Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
@@ -14,7 +14,9 @@ import { Mark } from '@/components/mark';
 import { BANKS, bankById, KIND_HINT, KIND_LABEL } from '@/data/banks';
 import type { Account, AccountKind } from '@/data/types';
 import { computeFolego } from '@/lib/folego';
+import { newId } from '@/lib/ledger';
 import { brlParts } from '@/lib/money';
+import { close } from '@/lib/nav';
 import { useFolego, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, font, gutter, radius } from '@/theme/tokens';
@@ -34,17 +36,21 @@ const tick = () => {
 };
 
 export default function NovaConta() {
+  const params = useLocalSearchParams<{ kind?: string }>();
+  const presetKind =
+    (['corrente', 'reserva', 'cartao', 'investimento'] as const).find((k) => k === params.kind) ?? null;
   const { state, dispatch } = useStore();
   const folego = useFolego();
   const insets = useSafeAreaInsets();
 
   const [step, setStep] = useState<Step>('banco');
   const [bankId, setBankId] = useState<string | null>(null);
-  const [kind, setKind] = useState<AccountKind | null>(null);
+  const [kind, setKind] = useState<AccountKind | null>(presetKind);
   const [cents, setCents] = useState(0);
   const [nick, setNick] = useState('');
   const [due, setDue] = useState(10);
   const [query, setQuery] = useState('');
+  const [createdId, setCreatedId] = useState<string | null>(null);
   const [result, setResult] = useState<{ before: number; after: number; beforeMood: string; afterMood: string } | null>(
     null,
   );
@@ -55,14 +61,15 @@ export default function NovaConta() {
   }, [query]);
 
   const back = () => {
-    if (step === 'banco' || step === 'pronto') router.back();
+    if (step === 'banco' || step === 'pronto') close();
+    else if (step === 'valor' && presetKind) setStep('banco');
     else setStep(ORDER[ORDER.indexOf(step) - 1]);
   };
 
   const add = () => {
     if (!bankId || !kind) return;
     const account: Account = {
-      id: `a-${Date.now().toString(36)}`,
+      id: newId('a'),
       bankId,
       kind,
       nickname: nick.trim() || undefined,
@@ -73,13 +80,14 @@ export default function NovaConta() {
     const after = computeFolego({ ...state, accounts: [...state.accounts, account] });
     setResult({ before: folego.score, after: after.score, beforeMood: folego.mood.label, afterMood: after.mood.label });
     dispatch({ type: 'addAccount', account });
+    setCreatedId(account.id);
     if (Platform.OS !== 'web') Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
     setStep('pronto');
   };
 
   const restart = () => {
     setBankId(null);
-    setKind(null);
+    setKind(presetKind);
     setCents(0);
     setNick('');
     setQuery('');
@@ -143,7 +151,7 @@ export default function NovaConta() {
                       onPress={() => {
                         tick();
                         setBankId(b.id);
-                        setStep('tipo');
+                        setStep(presetKind ? 'valor' : 'tipo');
                       }}
                       style={({ pressed }) => [styles.row, pressed && styles.rowPressed]}
                       accessibilityRole="button">
@@ -164,8 +172,8 @@ export default function NovaConta() {
               <View style={styles.soon}>
                 <Icon name="lock" size={15} tint={color.ink3} />
                 <T variant="caption" tone="ink3" style={{ flex: 1 }}>
-                  Conectar direto com o banco, pelo Open Finance, chega numa próxima versão. Por enquanto o cadastro é
-                  manual e fica só neste aparelho.
+                  Você informa o saldo e o Baiu acompanha a partir daí. Nenhuma senha de banco é pedida, e tudo fica só
+                  neste aparelho, criptografado.
                 </T>
               </View>
             </View>
@@ -225,7 +233,18 @@ export default function NovaConta() {
                   {bankById(bankId).name} · {KIND_LABEL[kind]}
                 </T>
               </View>
-              <T variant="title1">{kind === 'cartao' ? 'Qual o valor da fatura atual?' : 'Quanto tem nela hoje?'}</T>
+              <T variant="title1">
+                {kind === 'cartao'
+                  ? 'Qual o valor da fatura atual?'
+                  : kind === 'investimento'
+                    ? 'Quanto está parado na corretora?'
+                    : 'Quanto tem nela hoje?'}
+              </T>
+              {kind === 'investimento' && (
+                <T variant="caption" tone="ink3" style={{ marginTop: 6 }}>
+                  Só o dinheiro fora das aplicações. Cada investimento você cadastra em seguida.
+                </T>
+              )}
               <Amount cents={cents} />
               <TextInput
                 value={nick}
@@ -307,8 +326,20 @@ export default function NovaConta() {
             </Animated.View>
           </View>
           <View style={{ gap: 6 }}>
-            <Button label="Concluir" onPress={() => router.back()} />
-            <Button label="Adicionar outra conta" kind="quiet" onPress={restart} />
+            {kind === 'investimento' && createdId ? (
+              <>
+                <Button
+                  label="Adicionar investimentos"
+                  onPress={() => router.replace({ pathname: '/investimento/novo', params: { accountId: createdId } })}
+                />
+                <Button label="Depois" kind="quiet" onPress={() => close()} />
+              </>
+            ) : (
+              <>
+                <Button label="Concluir" onPress={() => close()} />
+                <Button label="Adicionar outra conta" kind="quiet" onPress={restart} />
+              </>
+            )}
           </View>
         </Animated.View>
       )}

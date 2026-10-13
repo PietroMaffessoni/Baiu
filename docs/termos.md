@@ -1,0 +1,39 @@
+# Termos de Uso do Baiu
+
+Atualizada em 13 de outubro de 2026.
+
+Ao usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
+
+## O que é o Baiu
+
+O Baiu é uma ferramenta para você organizar suas finanças pessoais: registrar contas, movimentos, vencimentos e investimentos e acompanhar um indicador de saúde financeira, o fôlego.
+
+O Baiu não é banco, instituição de pagamento nem corretora. Ele não movimenta dinheiro, não faz pagamentos e não se conecta às suas contas.
+
+## Sugestões não são recomendação
+
+O fôlego, os selos e os próximos passos são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.
+
+Antes de decisões financeiras importantes, procure um profissional habilitado.
+
+## Seus registros
+
+Os valores mostrados são os que você informa. Você é responsável por mantê-los corretos.
+
+Os dados ficam só no seu aparelho. Exporte seus registros com frequência se quiser ter uma cópia.
+
+## Uso do aplicativo
+
+O Baiu é oferecido para uso pessoal. Não tente copiar, modificar para redistribuir ou explorar falhas do app.
+
+Podemos atualizar o app, mudar ou encerrar funções, sempre buscando preservar seus dados no aparelho.
+
+## Responsabilidade
+
+Fazemos o possível para o Baiu funcionar bem, mas ele é oferecido como está. Na medida permitida pela lei, não respondemos por decisões tomadas com base nas informações do app nem por perdas de dados causadas por falha, troca ou perda do aparelho. Nada aqui limita direitos garantidos pelo Código de Defesa do Consumidor.
+
+## Lei aplicável
+
+Estes termos seguem as leis do Brasil.
+
+Dúvidas: github.com/PietroMaffessoni/Baiu/issues.

@@ -1,86 +1,112 @@
-import AsyncStorage from '@react-native-async-storage/async-storage';
-import { createContext, useContext, useEffect, useMemo, useReducer, useRef, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
+import { AppState } from 'react-native';
 
-import { createDemo } from '@/data/demo';
-import type { Account, State } from '@/data/types';
+import { createEmpty } from '@/data/demo';
+import type { State } from '@/data/types';
 import { computeFolego } from '@/lib/folego';
-
-const KEY = 'baiu:state:v1';
-
-type Action =
-  | { type: 'hydrate'; state: State }
-  | { type: 'onboard' }
-  | { type: 'replayWelcome' }
-  | { type: 'toggleHide' }
-  | { type: 'addAccount'; account: Account }
-  | { type: 'removeAccount'; id: string }
-  | { type: 'reset' };
-
-function reducer(state: State, action: Action): State {
-  switch (action.type) {
-    case 'hydrate':
-      return action.state;
-    case 'onboard':
-      return { ...state, onboarded: true };
-    case 'replayWelcome':
-      return { ...state, onboarded: false };
-    case 'toggleHide':
-      return { ...state, hideValues: !state.hideValues };
-    case 'addAccount':
-      return { ...state, accounts: [...state.accounts, action.account] };
-    case 'removeAccount':
-      return {
-        ...state,
-        accounts: state.accounts.filter((a) => a.id !== action.id),
-        txs: state.txs.filter((t) => t.accountId !== action.id),
-        holdings: state.holdings.filter((h) => h.accountId !== action.id),
-        bills: state.bills.filter((b) => b.accountId !== action.id),
-      };
-    case 'reset':
-      return { ...createDemo(), onboarded: state.onboarded };
-  }
-}
+import { clearReminders, syncReminders } from '@/lib/reminders';
+import { loadState, saveState, wipeVault } from '@/lib/vault';
+import { reducer, type Action } from './reducer';
 
 type Ctx = {
   state: State;
   hydrated: boolean;
+  /** Os dados existem mas não puderam ser lidos (chave perdida ou arquivo corrompido). */
+  unreadable: boolean;
   dispatch: (a: Action) => void;
+  /** Apaga tudo do aparelho, inclusive a chave, e volta ao início. */
+  eraseAll: () => Promise<void>;
 };
 
 const StoreContext = createContext<Ctx | null>(null);
 
-export function StoreProvider({ children }: { children: ReactNode }) {
-  const [state, dispatch] = useReducer(reducer, undefined, () => createDemo());
-  const [hydrated, setHydrated] = useState(false);
-  const skipNextSave = useRef(true);
+const SAVE_DELAY = 250;
 
+export function StoreProvider({ children }: { children: ReactNode }) {
+  const [state, dispatch] = useReducer(reducer, undefined, () => createEmpty());
+  const [hydrated, setHydrated] = useState(false);
+  const [unreadable, setUnreadable] = useState(false);
+  const latest = useRef(state);
+  const dirty = useRef(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // carregar
   useEffect(() => {
     let alive = true;
-    AsyncStorage.getItem(KEY)
-      .then((raw) => {
-        if (!alive || !raw) return;
-        const saved = JSON.parse(raw) as State;
-        if (saved?.version === 1) dispatch({ type: 'hydrate', state: saved });
+    loadState()
+      .then((res) => {
+        if (!alive) return;
+        if (res.status === 'ok') dispatch({ type: 'hydrate', state: res.state });
+        if (res.status === 'unreadable') setUnreadable(true);
       })
-      .catch(() => {
-        /* sem dados salvos: segue com a demonstração */
-      })
+      .catch(() => alive && setUnreadable(true))
       .finally(() => alive && setHydrated(true));
     return () => {
       alive = false;
     };
   }, []);
 
-  useEffect(() => {
-    if (!hydrated) return;
-    if (skipNextSave.current) {
-      skipNextSave.current = false;
-      return;
-    }
-    AsyncStorage.setItem(KEY, JSON.stringify(state)).catch(() => {});
-  }, [state, hydrated]);
+  const flush = useCallback(() => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    if (!dirty.current) return;
+    dirty.current = false;
+    saveState(latest.current).catch(() => {
+      dirty.current = true;
+    });
+  }, []);
 
-  const value = useMemo(() => ({ state, hydrated, dispatch }), [state, hydrated]);
+  // gravar: só depois de carregar, e nunca por cima de dados ilegíveis
+  useEffect(() => {
+    latest.current = state;
+    if (!hydrated || unreadable) return;
+    dirty.current = true;
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(flush, SAVE_DELAY);
+  }, [state, hydrated, unreadable, flush]);
+
+  // ao sair do app, grava na hora
+  useEffect(() => {
+    const sub = AppState.addEventListener('change', (s) => {
+      if (s !== 'active') flush();
+    });
+    return () => sub.remove();
+  }, [flush]);
+
+  // lembretes de vencimento
+  const { bills } = state;
+  const reminders = state.settings.reminders;
+  useEffect(() => {
+    if (!hydrated || unreadable) return;
+    const t = setTimeout(() => {
+      syncReminders(bills, reminders).catch(() => {});
+    }, 800);
+    return () => clearTimeout(t);
+  }, [bills, reminders, hydrated, unreadable]);
+
+  const eraseAll = useCallback(async () => {
+    if (timer.current) clearTimeout(timer.current);
+    dirty.current = false;
+    await clearReminders().catch(() => {});
+    await wipeVault();
+    setUnreadable(false);
+    dispatch({ type: 'wipe' });
+  }, []);
+
+  const value = useMemo(
+    () => ({ state, hydrated, unreadable, dispatch, eraseAll }),
+    [state, hydrated, unreadable, eraseAll],
+  );
   return <StoreContext.Provider value={value}>{children}</StoreContext.Provider>;
 }
 
@@ -93,4 +119,9 @@ export function useStore() {
 export function useFolego() {
   const { state } = useStore();
   return useMemo(() => computeFolego(state), [state]);
+}
+
+export function useAccountsById() {
+  const { state } = useStore();
+  return useMemo(() => new Map(state.accounts.map((a) => [a.id, a])), [state.accounts]);
 }

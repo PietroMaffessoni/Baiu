@@ -18,8 +18,8 @@ type Props = {
 /** Valor em reais que respeita o modo privado. */
 export function Money({ value, variant = 'body', tone = 'paper', sign = 'auto', colorize, align }: Props) {
   const { state } = useStore();
-  const text = state.hideValues ? HIDDEN : brl(value, { sign });
-  const finalTone = colorize && value > 0 && !state.hideValues ? 'jade' : tone;
+  const text = state.settings.hideValues ? HIDDEN : brl(value, { sign });
+  const finalTone = colorize && value > 0 && !state.settings.hideValues ? 'jade' : tone;
   return (
     <T
       variant={variant}
@@ -49,7 +49,7 @@ export function BigMoney({
   const small = Math.round(size * 0.42);
   const line = Math.round(size * 1.22);
 
-  if (state.hideValues) {
+  if (state.settings.hideValues) {
     return (
       <View style={styles.row} accessibilityLabel="Valores ocultos">
         <Text allowFontScaling={false} style={[styles.currency, { fontSize: small, lineHeight: line }]}>
