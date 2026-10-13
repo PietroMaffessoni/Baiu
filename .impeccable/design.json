@@ -1,0 +1,155 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-13T00:00:00Z",
+  "title": "Design System: Baiu",
+  "extensions": {
+    "colorMeta": {
+      "night": { "role": "neutral", "displayName": "Noite Aizome", "canonical": "#0F1A3D", "tonalRamp": ["#060B1C", "#0A1230", "#0F1A3D", "#16234D", "#1E2D5E", "#34457E", "#6A79AC", "#B9C2E2"] },
+      "night-deep": { "role": "neutral", "displayName": "Noite Funda", "canonical": "#0A1230", "tonalRamp": ["#050918", "#0A1230", "#111B42", "#1A2656", "#2A386C", "#4C5B8F", "#8590BA", "#C9D0EA"] },
+      "plate": { "role": "neutral", "displayName": "Placa", "canonical": "#16234D", "tonalRamp": ["#0A1230", "#0F1A3D", "#16234D", "#1E2D5E", "#2A3A70", "#4A5A92", "#8590BA", "#C9D0EA"] },
+      "plate-hi": { "role": "neutral", "displayName": "Placa Acesa", "canonical": "#1E2D5E", "tonalRamp": ["#0A1230", "#16234D", "#1E2D5E", "#2A3A70", "#3B4C84", "#5F6FA3", "#A9B3D6", "#DDE2F3"] },
+      "line": { "role": "neutral", "displayName": "Fio", "canonical": "rgba(168, 184, 238, 0.14)" },
+      "line-strong": { "role": "neutral", "displayName": "Fio Forte", "canonical": "rgba(168, 184, 238, 0.30)" },
+      "paper": { "role": "neutral", "displayName": "Papel Washi", "canonical": "#F4F0E6", "tonalRamp": ["#2E2B24", "#4F4A3F", "#77705F", "#A39A85", "#C7BFAB", "#DED7C6", "#EDE8DB", "#F4F0E6"] },
+      "ink2": { "role": "neutral", "displayName": "Tinta 2", "canonical": "#A9B3D6", "tonalRamp": ["#1E2540", "#323C62", "#4A5584", "#6671A2", "#8590BA", "#A9B3D6", "#C9D0EA", "#E6E9F6"] },
+      "ink3": { "role": "neutral", "displayName": "Tinta 3", "canonical": "#8590BA", "tonalRamp": ["#1E2540", "#323C62", "#4A5584", "#6671A2", "#8590BA", "#A9B3D6", "#C9D0EA", "#E6E9F6"] },
+      "lantern": { "role": "primary", "displayName": "Âmbar de Lanterna", "canonical": "#FFB648", "tonalRamp": ["#3A2205", "#6B3E0C", "#A9601A", "#E58A2B", "#FFB648", "#FFC56B", "#FFE3A1", "#FFF4D2"] },
+      "lantern-core": { "role": "primary", "displayName": "Miolo da Chama", "canonical": "#FFE3A1" },
+      "lantern-wash": { "role": "primary", "displayName": "Véu de Lanterna", "canonical": "rgba(255, 182, 72, 0.12)" },
+      "vermilion": { "role": "secondary", "displayName": "Vermelhão Hanko", "canonical": "#F2573C", "tonalRamp": ["#3A0E06", "#6B1A0D", "#9E2814", "#B53B25", "#F2573C", "#F67F69", "#FAB0A2", "#FDE0DA"] },
+      "vermilion-wash": { "role": "secondary", "displayName": "Véu de Vermelhão", "canonical": "rgba(242, 87, 60, 0.14)" },
+      "jade": { "role": "tertiary", "displayName": "Jade de Entrada", "canonical": "#5ED6A7", "tonalRamp": ["#0B2E21", "#13503A", "#1E7555", "#2E9C73", "#5ED6A7", "#86E2BE", "#B5EFD8", "#E1F9EF"] },
+      "lacquer": { "role": "neutral", "displayName": "Laca (só mascote)", "canonical": "#151A2E" }
+    },
+    "typographyMeta": {
+      "big-money": { "displayName": "BigMoney", "purpose": "O saldo da tela. R$ e centavos a 42% em ZenMaru-Bold ink2; inteiro em ZenMaru-Black papel. Um por tela." },
+      "hero": { "displayName": "Hero", "purpose": "Números de destaque secundários." },
+      "title1": { "displayName": "Title 1", "purpose": "Título de tela de aba e de passo de fluxo. Escala do sistema travada em 1.25x." },
+      "title2": { "displayName": "Title 2", "purpose": "Título de seção e linha de humor do Baiu." },
+      "title3": { "displayName": "Title 3", "purpose": "Saudação, títulos curtos e título de cabeçalho empilhado." },
+      "body": { "displayName": "Body", "purpose": "Texto corrido e campos." },
+      "body-strong": { "displayName": "Body Strong", "purpose": "Rótulo de botão, valores em placas." },
+      "callout": { "displayName": "Callout", "purpose": "Descrições, subtítulos, links de seção (strong em lantern)." },
+      "caption": { "displayName": "Caption", "purpose": "Metadados e rótulos de campo." },
+      "micro": { "displayName": "Micro", "purpose": "Legendas de gráfico e nota de demonstração." }
+    },
+    "shadows": [],
+    "motion": [
+      { "name": "baiu-breath", "value": "scale 1 -> 1.022, 2400ms, Easing.inOut(sin), repetição alternada", "purpose": "Respiração contínua do mascote." },
+      { "name": "baiu-sway", "value": "rotate ±2.2deg, 3600ms, Easing.inOut(sin), pivô no topo do fio", "purpose": "Balanço da lanterna pendurada." },
+      { "name": "baiu-fins", "value": "520ms (estufado) / 700ms (cheio) / 950ms (meio) / 1500ms (murcho), sin", "purpose": "Nadadeiras mais rápidas quanto melhor o humor." },
+      { "name": "baiu-level", "value": "withSpring damping 9, stiffness 70; escala 0.8 a 1.0", "purpose": "Tamanho acompanha o fôlego." },
+      { "name": "baiu-puff", "value": "entrada withSpring damping 7, stiffness 180; saída damping 10, stiffness 120; +10% corpo, +18% halo; haptic Medium/Light", "purpose": "Momento memorável: tocar estufa o Baiu." },
+      { "name": "press", "value": "opacity 0.86, scale 0.985; haptic de seleção", "purpose": "Estado pressionado de botões." },
+      { "name": "step-fade", "value": "FadeIn 180ms", "purpose": "Troca de passo no fluxo Adicionar conta." },
+      { "name": "reduce-motion", "value": "useReducedMotion desliga respiração, balanço, nadadeiras e piscada", "purpose": "Acessibilidade." }
+    ],
+    "breakpoints": []
+  },
+  "components": [
+    {
+      "name": "Botão Primário",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "A ação principal da tela, em pílula âmbar.",
+      "html": "<button class=\"ds-btn-primary\">Adicionar conta</button>",
+      "css": ".ds-btn-primary { background: #FFB648; color: #0F1A3D; min-height: 52px; padding: 0 22px; border: none; border-radius: 999px; font: 600 16px/22px system-ui, -apple-system, Roboto, sans-serif; transition: opacity .15s, transform .15s; } .ds-btn-primary:hover { opacity: .92; } .ds-btn-primary:active { opacity: .86; transform: scale(.985); } .ds-btn-primary:focus-visible { outline: 2px solid #FFE3A1; outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão Secundário",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Alternativa em placa com fio forte.",
+      "html": "<button class=\"ds-btn-secondary\">Ver extrato</button>",
+      "css": ".ds-btn-secondary { background: #16234D; color: #F4F0E6; min-height: 52px; padding: 0 22px; border: 1px solid rgba(168,184,238,.30); border-radius: 999px; font: 600 16px/22px system-ui, -apple-system, Roboto, sans-serif; transition: background .15s, transform .15s; } .ds-btn-secondary:hover { background: #1E2D5E; } .ds-btn-secondary:active { opacity: .86; transform: scale(.985); } .ds-btn-secondary:focus-visible { outline: 2px solid #FFB648; outline-offset: 2px; }"
+    },
+    {
+      "name": "Botão Destrutivo",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Ação destrutiva, sempre isolada por espaço vazio.",
+      "html": "<button class=\"ds-btn-danger\">Remover conta</button>",
+      "css": ".ds-btn-danger { background: transparent; color: #F2573C; min-height: 52px; padding: 0 22px; border: 1px solid rgba(242,87,60,.45); border-radius: 999px; font: 600 16px/22px system-ui, -apple-system, Roboto, sans-serif; } .ds-btn-danger:hover { background: rgba(242,87,60,.14); } .ds-btn-danger:active { opacity: .86; transform: scale(.985); } .ds-btn-danger:focus-visible { outline: 2px solid #F2573C; outline-offset: 2px; }"
+    },
+    {
+      "name": "Busca",
+      "kind": "input",
+      "refersTo": "input-search",
+      "description": "Campo em pílula sobre placa, cursor âmbar.",
+      "html": "<label class=\"ds-search\"><svg width=\"17\" height=\"17\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"#8590BA\" stroke-width=\"2\" stroke-linecap=\"round\"><circle cx=\"11\" cy=\"11\" r=\"7\"/><path d=\"M20 20l-4-4\"/></svg><input placeholder=\"Buscar instituição\"></label>",
+      "css": ".ds-search { display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 0 14px; background: #16234D; border: 1px solid rgba(168,184,238,.14); border-radius: 999px; } .ds-search input { flex: 1; background: none; border: none; outline: none; color: #F4F0E6; caret-color: #FFB648; font: 400 16px system-ui, -apple-system, Roboto, sans-serif; } .ds-search input::placeholder { color: #8590BA; } .ds-search:focus-within { border-color: rgba(255,182,72,.45); }"
+    },
+    {
+      "name": "Placa com linhas de transação",
+      "kind": "card",
+      "refersTo": "plate",
+      "description": "Superfície por tom e fio, sem sombra, com TxRow e divisores recuados.",
+      "html": "<div class=\"ds-plate\"><div class=\"ds-tx\"><span class=\"ds-tx-glyph ds-tx-in\"></span><span class=\"ds-tx-text\"><b>Salário</b><small>Renda · Pix · Nubank</small></span><span class=\"ds-tx-val ds-in\">+R$ 4.800,00</span></div><hr class=\"ds-rule\"><div class=\"ds-tx\"><span class=\"ds-tx-glyph\"></span><span class=\"ds-tx-text\"><b>Mercado</b><small>Mercado · Cartão · Inter</small></span><span class=\"ds-tx-val\">−R$ 312,40</span></div></div>",
+      "css": ".ds-plate { background: #16234D; border: 1px solid rgba(168,184,238,.14); border-radius: 18px; padding: 0 14px; color: #F4F0E6; font-family: system-ui, -apple-system, Roboto, sans-serif; } .ds-tx { display: flex; align-items: center; gap: 12px; min-height: 60px; padding: 11px 0; } .ds-tx-glyph { width: 38px; height: 38px; border-radius: 19px; background: #16234D; border: 1px solid rgba(168,184,238,.14); flex: none; } .ds-tx-in { background: rgba(94,214,167,.1); border-color: rgba(94,214,167,.28); } .ds-tx-text { flex: 1; display: flex; flex-direction: column; gap: 1px; } .ds-tx-text b { font: 600 15px/20px inherit; } .ds-tx-text small { font-size: 13px; line-height: 18px; color: #8590BA; } .ds-tx-val { font: 600 15px/20px inherit; font-variant-numeric: tabular-nums; } .ds-in { color: #5ED6A7; } .ds-rule { border: 0; height: 1px; background: rgba(168,184,238,.14); margin: 0 0 0 50px; }"
+    },
+    {
+      "name": "Chip de fôlego",
+      "kind": "chip",
+      "refersTo": "chip-choice",
+      "description": "Pílula com marca parcial que abre a explicação do fôlego.",
+      "html": "<button class=\"ds-chip\"><svg width=\"18\" height=\"18\" viewBox=\"0 0 18 18\"><circle cx=\"9\" cy=\"9\" r=\"7.5\" fill=\"none\" stroke=\"#FFB648\" stroke-width=\"1.5\"/><path d=\"M9 9 L9 4.7 A4.3 4.3 0 1 1 5.2 11 Z\" fill=\"#FFB648\"/></svg><b>Fôlego 72</b><span>de 100</span></button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 6px; min-height: 36px; padding: 0 12px; border-radius: 999px; border: 1px solid rgba(168,184,238,.30); background: rgba(22,35,77,.6); color: #F4F0E6; font: 15px/20px system-ui, -apple-system, Roboto, sans-serif; } .ds-chip b { font-weight: 600; font-variant-numeric: tabular-nums; } .ds-chip span { color: #8590BA; } .ds-chip:hover { background: #1E2D5E; } .ds-chip:focus-visible { outline: 2px solid #FFB648; outline-offset: 2px; }"
+    },
+    {
+      "name": "Barra de abas",
+      "kind": "nav",
+      "refersTo": "tab-bar",
+      "description": "Abas nativas sobre noite funda; selecionada em âmbar.",
+      "html": "<nav class=\"ds-tabs\"><a class=\"on\">Início</a><a>Contas</a><a>Extrato</a><a>Investir</a></nav>",
+      "css": ".ds-tabs { display: flex; justify-content: space-around; background: #0A1230; padding: 10px 0 14px; font: 500 11px system-ui, -apple-system, Roboto, sans-serif; } .ds-tabs a { color: #8590BA; text-decoration: none; padding: 4px 10px; border-radius: 999px; } .ds-tabs a.on { color: #FFB648; background: #1E2D5E; } .ds-tabs a:hover { color: #A9B3D6; } .ds-tabs a:focus-visible { outline: 2px solid #FFB648; }"
+    },
+    {
+      "name": "Selo Hanko",
+      "kind": "custom",
+      "refersTo": "seal",
+      "description": "Carimbo vermelhão de anel duplo, inclinado, para hábitos conquistados.",
+      "html": "<div class=\"ds-seal\"><span>RESERVA<br>1 MÊS</span></div>",
+      "css": ".ds-seal { width: 88px; height: 88px; border-radius: 50%; border: 3.2px solid #F2573C; background: rgba(242,87,60,.14); box-sizing: border-box; display: grid; place-items: center; transform: rotate(-4deg); position: relative; } .ds-seal::after { content: ''; position: absolute; inset: 5px; border: 1.2px solid #F2573C; border-radius: 50%; } .ds-seal span { color: #F2573C; font: 900 12px/1.18 'Zen Maru Gothic', system-ui, sans-serif; letter-spacing: .4px; text-align: center; }"
+    }
+  ],
+  "narrative": {
+    "northStar": "A Lanterna no Fio",
+    "overview": "O Baiu acontece numa noite índigo. Um chão aizome cobre cada tela, de ponta a ponta, e a única fonte de luz é âmbar: a lanterna-baiacu pendurada por um fio no topo do Início, o halo que ela derrama no chão e o tom das ações que a pessoa pode tocar. Tudo o mais é papel washi sobre índigo, em três tintas (papel, ink2, ink3). A saúde financeira não vira gráfico de rosca nem cartão com gradiente: vira tamanho, brilho e respiração do mascote.\n\nA densidade é de app de banco usado em sessões curtas e muitas vezes à noite: um número grande por tela, listas de linhas compactas em placas, títulos em Zen Maru Gothic pesada e todo o resto na fonte do sistema. A profundidade vem de tom e de fio fino, nunca de sombra. Vermelhão e jade não decoram; aparecem só como estado (selo carimbado, alerta, dinheiro que entrou).\n\nO sistema é adaptativo: a barra de abas é nativa (UITabBar no iPhone, barra Material no Android), os ícones são SF Symbols no iOS e Material Symbols no Android, e o app é escuro por decisão (userInterfaceStyle \"dark\"); não existe modo claro. Nada aqui foi verificado em aparelho ou simulador; os valores vêm do código.",
+    "keyCharacteristics": [
+      "Chão índigo único (night) em todas as telas, sem modo claro.",
+      "Uma luz só: âmbar de lanterna para mascote, ação e \"hoje\".",
+      "Vermelhão e jade apenas como estado.",
+      "Placas separadas por fio fino (hairline), sem sombras.",
+      "Zen Maru Gothic Black/Bold para números grandes e títulos; fonte do sistema para leitura.",
+      "Todo valor em reais com algarismos tabulares.",
+      "O mascote é instrumento: tamanho e brilho leem o fôlego, sempre com texto ao lado."
+    ],
+    "rules": [
+      { "name": "The One Light Rule", "body": "A única luz da tela é âmbar. Se algo precisa chamar o toque ou marcar \"agora\", é lantern; nenhuma outra cor cumpre esse papel.", "section": "colors" },
+      { "name": "The State-Only Rule", "body": "Vermelhão e jade só aparecem quando carregam estado: selo conquistado, alerta, ação destrutiva (vermelhão); dinheiro que entrou (jade). Nunca como decoração ou cor de seção.", "section": "colors" },
+      { "name": "The Three Tints Rule", "body": "Texto sobre índigo usa só papel, ink2 e ink3, nessa ordem de importância.", "section": "colors" },
+      { "name": "The Tabular Money Rule", "body": "Todo valor em reais passa por Money ou BigMoney e usa algarismos de largura fixa; valores nunca são texto solto.", "section": "typography" },
+      { "name": "The Heavy Numbers Rule", "body": "Zen Maru é para números grandes e títulos. Texto de leitura, listas e rótulos ficam na fonte do sistema.", "section": "typography" },
+      { "name": "The Thread Not Shadow Rule", "body": "Superfícies se separam por tom e por fio fino (hairline em line), nunca por sombra.", "section": "elevation" },
+      { "name": "The Light Is Data Rule", "body": "Brilho âmbar no chão só existe ligado ao fôlego; não é decoração de fundo.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do pintar toda tela sobre night e usar night-deep só para a barra de abas e folhas.",
+      "Do reservar lantern para o que se toca, para \"hoje\" e para a luz do mascote.",
+      "Do separar superfícies por tom (plate, plate-hi) e fio hairline em line.",
+      "Do passar todo valor por Money ou BigMoney, com algarismos tabulares e respeito ao modo de ocultar valores.",
+      "Do mostrar estado com a marca em célula fixa (cheia, parcial, vazia, riscada) no mesmo lugar da linha.",
+      "Do isolar a ação destrutiva no fim da tela, com espaço vazio acima.",
+      "Do acompanhar qualquer leitura do Baiu com texto e respeitar Reduzir Movimento.",
+      "Do usar SF Symbols no iOS e Material Symbols no Android pelo componente Icon."
+    ],
+    "donts": [
+      "Don't usar sombra, elevation ou brilho como profundidade; a única luz é a da lanterna.",
+      "Don't usar vermelhão ou jade como decoração, cor de seção ou de marca.",
+      "Don't fazer cartão de saldo com gradiente, carrossel de cartões de crédito ou rosca de categorias.",
+      "Don't desenhar a marca real de um banco; BankMark é monograma com iniciais e cor próxima.",
+      "Don't criar modo claro ou fundo branco.",
+      "Don't colocar Zen Maru em texto de leitura nem a fonte do sistema no número grande."
+    ]
+  }
+}
