@@ -1,0 +1,46 @@
+{
+  "expo": {
+    "name": "Baiu",
+    "slug": "baiu",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/icon.png",
+    "scheme": "baiu",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pitroibas.baiu"
+    },
+    "android": {
+      "package": "com.pitroibas.baiu",
+      "adaptiveIcon": {
+        "backgroundColor": "#0F1A3D",
+        "foregroundImage": "./assets/images/android-icon-foreground.png",
+        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+      },
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "output": "single",
+      "favicon": "./assets/images/favicon.png",
+      "backgroundColor": "#0F1A3D"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0F1A3D",
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 150
+        }
+      ],
+      "expo-font"
+    ],
+    "experiments": {
+      "typedRoutes": true,
+      "reactCompiler": true
+    },
+    "backgroundColor": "#0F1A3D"
+  }
+}
