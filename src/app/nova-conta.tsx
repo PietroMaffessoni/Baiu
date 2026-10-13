@@ -214,7 +214,10 @@ export default function NovaConta() {
 
       {step === 'valor' && bankId && kind && (
         <Animated.View entering={FadeIn.duration(180)} style={{ flex: 1 }}>
-          <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ flexGrow: 1 }}>
+          <ScrollView
+            keyboardShouldPersistTaps="handled"
+            automaticallyAdjustKeyboardInsets
+            contentContainerStyle={{ flexGrow: 1 }}>
             <View style={styles.pad}>
               <View style={styles.bankLine}>
                 <BankMark bankId={bankId} size={28} />

@@ -34,6 +34,7 @@ Uso no celular, em sessões curtas: conferir saldo consolidado, ver um gasto que
 - Conexão real com bancos (Open Finance ou agregador) fica para uma etapa posterior. A v0 mostra o fluxo visual de adicionar conta com entrada manual.
 - Sem backend e sem login real na v0.
 - Indefinido: fórmula final do índice de saúde financeira (a v0 usa uma regra simples e explicável), monetização, provedor de Open Finance.
+- Indefinido: suporte a tablet. A v0 foi desenhada para celular; o iOS está limitado a iPhone, mas o Android ainda instala em tablets.
 
 ## Brand Commitments
 

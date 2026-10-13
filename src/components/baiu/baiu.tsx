@@ -65,31 +65,35 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
   const blink = useSharedValue(1);
 
   useEffect(() => {
-    level.value = still ? levelScale(score) : withSpring(levelScale(score), { damping: 9, stiffness: 70 });
+    level.set(still ? levelScale(score) : withSpring(levelScale(score), { damping: 9, stiffness: 70 }));
   }, [score, still, level]);
 
   useEffect(() => {
     if (!animate) {
-      breath.value = 1;
-      sway.value = 0;
-      finL.value = 0;
-      finR.value = 0;
-      blink.value = 1;
+      breath.set(1);
+      sway.set(0);
+      finL.set(0);
+      finR.set(0);
+      blink.set(1);
       return;
     }
     const sine = Easing.inOut(Easing.sin);
-    breath.value = withRepeat(withTiming(1.022, { duration: 2400, easing: sine }), -1, true);
-    sway.value = withSequence(
-      withTiming(-1, { duration: 1800, easing: sine }),
-      withRepeat(withTiming(1, { duration: 3600, easing: sine }), -1, true),
+    breath.set(withRepeat(withTiming(1.022, { duration: 2400, easing: sine }), -1, true));
+    sway.set(
+      withSequence(
+        withTiming(-1, { duration: 1800, easing: sine }),
+        withRepeat(withTiming(1, { duration: 3600, easing: sine }), -1, true),
+      ),
     );
     const speed = FIN_SPEED[mood];
-    finL.value = withRepeat(withTiming(1, { duration: speed, easing: sine }), -1, true);
-    finR.value = withDelay(speed * 0.4, withRepeat(withTiming(1, { duration: speed, easing: sine }), -1, true));
-    blink.value = withRepeat(
-      withSequence(withDelay(3600, withTiming(0.08, { duration: 80 })), withTiming(1, { duration: 130 })),
-      -1,
-      false,
+    finL.set(withRepeat(withTiming(1, { duration: speed, easing: sine }), -1, true));
+    finR.set(withDelay(speed * 0.4, withRepeat(withTiming(1, { duration: speed, easing: sine }), -1, true)));
+    blink.set(
+      withRepeat(
+        withSequence(withDelay(3600, withTiming(0.08, { duration: 80 })), withTiming(1, { duration: 130 })),
+        -1,
+        false,
+      ),
     );
     return () => {
       [breath, sway, finL, finR, blink].forEach(cancelAnimation);
@@ -99,22 +103,22 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
   const total = cord + H;
 
   const swayStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -total / 2 }, { rotate: `${sway.value * 2.2}deg` }, { translateY: total / 2 }],
+    transform: [{ translateY: -total / 2 }, { rotate: `${sway.get() * 2.2}deg` }, { translateY: total / 2 }],
   }));
 
   const bodyStyle = useAnimatedStyle(() => {
-    const s = level.value * breath.value * (1 + 0.1 * puff.value);
+    const s = level.get() * breath.get() * (1 + 0.1 * puff.get());
     const p = anchorY - H / 2;
     return { transform: [{ translateY: p }, { scale: s }, { translateY: -p }] };
   });
 
   const haloStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, pal.glow * (0.85 + (breath.value - 1) * 6) + puff.value * 0.5),
-    transform: [{ scale: level.value * (1 + 0.18 * puff.value) }],
+    opacity: Math.min(1, pal.glow * (0.85 + (breath.get() - 1) * 6) + puff.get() * 0.5),
+    transform: [{ scale: level.get() * (1 + 0.18 * puff.get()) }],
   }));
 
   const finLStyle = useAnimatedStyle(() => {
-    const deg = (-10 + finL.value * 24 + puff.value * 14) * 1;
+    const deg = (-10 + finL.get() * 24 + puff.get() * 14) * 1;
     const px = (CX - g.finX) * f - width / 2;
     const py = g.finY * f - H / 2;
     return {
@@ -128,7 +132,7 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
     };
   });
   const finRStyle = useAnimatedStyle(() => {
-    const deg = (-10 + finR.value * 24 + puff.value * 14) * -1;
+    const deg = (-10 + finR.get() * 24 + puff.get() * 14) * -1;
     const px = (CX + g.finX) * f - width / 2;
     const py = g.finY * f - H / 2;
     return {
@@ -144,17 +148,17 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
 
   const eyeStyle = useAnimatedStyle(() => {
     const p = g.eyeY * f - H / 2;
-    return { transform: [{ translateY: p }, { scaleY: puff.value > 0.5 ? 1 : blink.value }, { translateY: -p }] };
+    return { transform: [{ translateY: p }, { scaleY: puff.get() > 0.5 ? 1 : blink.get() }, { translateY: -p }] };
   });
 
   const onIn = () => {
     setPuffed(true);
-    puff.value = withSpring(1, { damping: 7, stiffness: 180 });
+    puff.set(withSpring(1, { damping: 7, stiffness: 180 }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
   };
   const onOut = () => {
     setPuffed(false);
-    puff.value = withSpring(0, { damping: 10, stiffness: 120 });
+    puff.set(withSpring(0, { damping: 10, stiffness: 120 }));
     if (Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
   };
 

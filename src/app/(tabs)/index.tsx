@@ -245,6 +245,7 @@ const styles = StyleSheet.create({
   lantern: { position: 'absolute', top: 0 },
   topbar: {
     position: 'absolute',
+    zIndex: 2,
     left: gutter,
     right: gutter,
     flexDirection: 'row',

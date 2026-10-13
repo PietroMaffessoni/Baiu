@@ -21,7 +21,14 @@ export function Money({ value, variant = 'body', tone = 'paper', sign = 'auto', 
   const text = state.hideValues ? HIDDEN : brl(value, { sign });
   const finalTone = colorize && value > 0 && !state.hideValues ? 'jade' : tone;
   return (
-    <T variant={variant} tone={finalTone} tabular align={align} numberOfLines={1}>
+    <T
+      variant={variant}
+      tone={finalTone}
+      tabular
+      align={align}
+      numberOfLines={1}
+      adjustsFontSizeToFit
+      minimumFontScale={0.7}>
       {text}
     </T>
   );
