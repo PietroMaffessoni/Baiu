@@ -1,6 +1,6 @@
 # Termos de Uso do Baiu
 
-Atualizada em 13 de outubro de 2026.
+Atualizada em 14 de outubro de 2026.
 
 Ao usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
 
@@ -36,4 +36,4 @@ Fazemos o possível para o Baiu funcionar bem, mas ele é oferecido como está. 
 
 Estes termos seguem as leis do Brasil.
 
-Dúvidas: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md.
+Dúvidas: suporte.baiu@gmail.com.

@@ -13,7 +13,7 @@ Ficha pronta para copiar no Play Console e o passo a passo da publicação. As i
 | Gratuito ou pago | Gratuito |
 | Categoria | Finanças |
 | Tags sugeridas | Finanças pessoais, Orçamento |
-| E-mail de contato | o seu e-mail público de suporte |
+| E-mail de contato | suporte.baiu@gmail.com |
 | Site | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md |
 | Política de privacidade | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md |
 

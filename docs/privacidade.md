@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 13 de outubro de 2026.
+Atualizada em 14 de outubro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni. Esta política explica o que acontece com as informações que você registra nele.
 
@@ -54,4 +54,4 @@ Se esta política mudar, a nova versão aparece no app e nesta página, com a da
 
 ## Contato
 
-Dúvidas sobre privacidade podem ser enviadas pelos canais da página de suporte do Baiu: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md.
+Dúvidas sobre privacidade ou pedidos ligados aos seus dados podem ser enviados para suporte.baiu@gmail.com.

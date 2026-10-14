@@ -27,6 +27,8 @@ Não. As sugestões são educativas e gerais. Elas não são recomendação de i
 
 ## Contato
 
-Abra uma solicitação em [github.com/PietroMaffessoni/Baiu/issues](https://github.com/PietroMaffessoni/Baiu/issues).
+Escreva para **suporte.baiu@gmail.com**.
+
+Se preferir, abra uma solicitação em [github.com/PietroMaffessoni/Baiu/issues](https://github.com/PietroMaffessoni/Baiu/issues).
 
 Leia também a [Política de Privacidade](privacidade.md) e os [Termos de Uso](termos.md).
