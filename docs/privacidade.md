@@ -54,4 +54,4 @@ Se esta política mudar, a nova versão aparece no app e nesta página, com a da
 
 ## Contato
 
-Dúvidas sobre privacidade podem ser enviadas pelo canal de suporte do Baiu: github.com/PietroMaffessoni/Baiu/issues.
+Dúvidas sobre privacidade podem ser enviadas pelos canais da página de suporte do Baiu: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md.

@@ -141,6 +141,26 @@ describe('vencimentos', () => {
     expect(s.bills[0].paid).toBe(false);
   });
 
+  it('apagar o pagamento de um vencimento já apagado mantém o do mês seguinte', () => {
+    let s = reducer(start(), { type: 'addBill', bill: bill({}) });
+    s = reducer(s, { type: 'payBill', id: 'b', accountId: 'c', date: iso() });
+    const paidTx = s.txs[0];
+    s = reducer(s, { type: 'removeBill', id: 'b' });
+    s = reducer(s, { type: 'removeTx', id: paidTx.id });
+    expect(bal(s, 'c')).toBe(1000);
+    expect(s.bills).toHaveLength(1);
+    expect(s.bills[0].fromBillId).toBe('b');
+  });
+
+  it('editar a data do pagamento atualiza o "pago em"', () => {
+    let s = reducer(start(), { type: 'addBill', bill: bill({}) });
+    s = reducer(s, { type: 'payBill', id: 'b', accountId: 'c', date: iso() });
+    const paidTx = s.txs[0];
+    s = reducer(s, { type: 'updateTx', tx: { ...paidTx, date: iso(2) } });
+    expect(s.bills.find((b) => b.id === 'b')!.paidAt).toBe(iso(2));
+    expect(bal(s, 'c')).toBe(900);
+  });
+
   it('vencimento atrasado derruba metade do pilar', () => {
     const s = reducer(start(), { type: 'addBill', bill: bill({ dueDate: iso(3), repeatMonthly: false }) });
     expect(computeFolego(s).pillars.find((p) => p.key === 'emdia')!.points).toBe(12.5);

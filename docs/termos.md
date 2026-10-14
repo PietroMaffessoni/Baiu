@@ -36,4 +36,4 @@ Fazemos o possível para o Baiu funcionar bem, mas ele é oferecido como está. 
 
 Estes termos seguem as leis do Brasil.
 
-Dúvidas: github.com/PietroMaffessoni/Baiu/issues.
+Dúvidas: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md.

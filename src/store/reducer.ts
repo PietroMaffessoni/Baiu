@@ -156,12 +156,20 @@ function core(s: State, action: Action): State {
       if (!old) return s;
       const without = withoutTx(s, old.id);
       const next = withTx(without, { ...action.tx, billId: old.billId, createdAt: old.createdAt });
-      return next === without ? s : next;
+      if (next === without) return s;
+      if (!old.billId) return next;
+      // a data do pagamento acompanha o movimento editado
+      return {
+        ...next,
+        bills: next.bills.map((b) => (b.id === old.billId && b.paid ? { ...b, paidAt: action.tx.date } : b)),
+      };
     }
     case 'removeTx': {
       const tx = s.txs.find((t) => t.id === action.id);
       const next = withoutTx(s, action.id);
       if (!tx?.billId) return next;
+      // vencimento original já apagado: o do mês seguinte agora é independente e fica
+      if (!next.bills.some((b) => b.id === tx.billId)) return next;
       // desfazer o pagamento volta o vencimento para "a pagar" e tira a recorrência gerada
       return {
         ...next,

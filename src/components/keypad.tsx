@@ -6,7 +6,7 @@ import { brlParts } from '@/lib/money';
 import { color, font, gutter } from '@/theme/tokens';
 import { Icon } from './icon';
 
-const MAX_CENTS = 9_999_999_999; // R$ 99.999.999,99
+export const MAX_CENTS = 9_999_999_999; // R$ 99.999.999,99
 
 export const tick = () => {
   if (Platform.OS !== 'web') Haptics.selectionAsync().catch(() => {});

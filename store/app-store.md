@@ -73,18 +73,19 @@ O app já declara `ITSAppUsesNonExemptEncryption = false`, então o App Store Co
 
 ## Capturas de tela
 
-A Apple pede capturas de iPhone de 6,9 polegadas (1320 × 2868) ou 6,7 polegadas (1290 × 2796). O app não roda em iPad, então não precisa de capturas de iPad.
+As capturas já estão prontas em `store/imagens/app-store/`, no tamanho de iPhone de 6,9 polegadas (1320 × 2868). O app não roda em iPad, então não precisa de capturas de iPad.
 
-Sugestão de ordem, usando os dados de exemplo:
+| Ordem | Arquivo | Legenda |
+| --- | --- | --- |
+| 1 | `01-inicio.jpg` | Seu dinheiro com fôlego |
+| 2 | `02-folego.jpg` | Entenda sua nota |
+| 3 | `03-registrar.jpg` | Registre em segundos |
+| 4 | `04-extrato.jpg` | Veja para onde foi |
+| 5 | `05-investir.jpg` | Investimentos em dia |
+| 6 | `06-vencimentos.jpg` | Nenhum vencimento esquecido |
+| 7 | `07-contas.jpg` | Tudo num lugar só |
 
-1. Início com o Baiu cheio e o saldo.
-2. Fôlego com os quatro pilares.
-3. Registrar movimento (teclado de valor).
-4. Extrato do mês.
-5. Investimentos com a constância.
-6. Vencimentos.
-
-Tire as capturas num iPhone com tela grande rodando o build de teste, ou num simulador do Xcode, se tiver um Mac.
+Elas usam os dados de exemplo do próprio app.
 
 ## Passo a passo para publicar
 
@@ -107,17 +108,9 @@ npx eas-cli submit --platform ios --latest
 5. Teste pelo TestFlight, principalmente o Face ID e as notificações, que não funcionam no Expo Go.
 6. Preencha a ficha com este documento, envie as capturas e mande para revisão.
 
-## Google Play (opcional)
+## Google Play
 
-1. Crie a conta de desenvolvedor no Google Play Console (US$ 25, pagamento único).
-2. Gere o pacote e envie:
-
-```bash
-npx eas-cli build --platform android --profile production
-npx eas-cli submit --platform android --latest
-```
-
-3. No formulário de Segurança dos dados, declare que o app não coleta nem compartilha dados.
+A ficha e o passo a passo estão em `store/google-play.md`.
 
 ## Teste em aparelho antes da loja
 

@@ -1,6 +1,6 @@
 {
   "updated": "13 de outubro de 2026",
-  "contact": "https://github.com/PietroMaffessoni/Baiu/issues",
+  "contact": "https://github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md",
   "privacy": {
     "title": "Política de Privacidade",
     "intro": "O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni. Esta política explica o que acontece com as informações que você registra nele.",
@@ -64,7 +64,7 @@
       {
         "heading": "Contato",
         "body": [
-          "Dúvidas sobre privacidade podem ser enviadas pelo canal de suporte do Baiu: github.com/PietroMaffessoni/Baiu/issues."
+          "Dúvidas sobre privacidade podem ser enviadas pelos canais da página de suporte do Baiu: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md."
         ]
       }
     ]
@@ -111,7 +111,7 @@
         "heading": "Lei aplicável",
         "body": [
           "Estes termos seguem as leis do Brasil.",
-          "Dúvidas: github.com/PietroMaffessoni/Baiu/issues."
+          "Dúvidas: github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md."
         ]
       }
     ]

@@ -50,3 +50,6 @@ example
 
 # página auxiliar de captura (só desenvolvimento)
 public/__shot.html
+
+# chave da conta de serviço do Google Play (envio pelo EAS)
+google-service-account.json

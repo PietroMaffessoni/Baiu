@@ -9,6 +9,7 @@ import { Baiu } from '@/components/baiu/baiu';
 import { BankMark } from '@/components/bank-mark';
 import { Button } from '@/components/button';
 import { Icon, type IconName } from '@/components/icon';
+import { MAX_CENTS } from '@/components/keypad';
 import { Plate, Rule } from '@/components/layout';
 import { Mark } from '@/components/mark';
 import { BANKS, bankById, KIND_HINT, KIND_LABEL } from '@/data/banks';
@@ -284,8 +285,8 @@ export default function NovaConta() {
             </View>
             <View style={{ flex: 1 }} />
             <Keypad
-              onDigit={(d) => setCents((c) => (c >= 1e10 ? c : c * 10 + d))}
-              onDouble={() => setCents((c) => (c >= 1e9 ? c : c * 100))}
+              onDigit={(d) => setCents((c) => (c * 10 + d > MAX_CENTS ? c : c * 10 + d))}
+              onDouble={() => setCents((c) => (c * 100 > MAX_CENTS ? c : c * 100))}
               onBack={() => setCents((c) => Math.floor(c / 10))}
             />
             <View style={[styles.pad, { paddingBottom: insets.bottom + 16, paddingTop: 8 }]}>
