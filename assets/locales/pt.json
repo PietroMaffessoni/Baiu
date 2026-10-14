@@ -1,4 +1,6 @@
 {
-  "CFBundleDisplayName": "Baiu",
-  "NSFaceIDUsageDescription": "O Baiu usa o Face ID para proteger o acesso às suas finanças."
+  "ios": {
+    "CFBundleDisplayName": "Baiu",
+    "NSFaceIDUsageDescription": "O Baiu usa o Face ID para proteger o acesso às suas finanças."
+  }
 }
