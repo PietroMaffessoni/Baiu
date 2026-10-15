@@ -1,100 +1,51 @@
 import type { Mood } from '@/lib/folego';
 
-/** Caixa de desenho do Baiu. O topo do corpo fica sempre na mesma altura, preso ao fio. */
+/**
+ * Caixa de desenho do Baiu. O centro do corpo fica sempre no mesmo lugar;
+ * acima da cabeça sobra espaço para os chapéus das datas comemorativas.
+ */
 export const VB_W = 200;
-export const VB_H = 240;
-export const TOP = 22;
+export const VB_H = 200;
 export const CX = 100;
+export const CY = 112;
 
+/** Murcho cede para baixo; estufado vira uma bola. */
 const SHAPE: Record<Mood, { rx: number; ryT: number; ryB: number }> = {
-  estufado: { rx: 86, ryT: 84, ryB: 86 },
-  cheio: { rx: 82, ryT: 79, ryB: 82 },
-  meio: { rx: 76, ryT: 70, ryB: 80 },
-  murcho: { rx: 68, ryT: 60, ryB: 78 },
-};
-
-export type Palette = {
-  core: string;
-  mid: string;
-  edge: string;
-  rim: string;
-  spot: string;
-  rib: string;
-  belly: string;
-  fin: string;
-  glow: number;
-};
-
-/** A pele acende conforme o fôlego: do papel apagado ao âmbar aceso. */
-export const PALETTE: Record<Mood, Palette> = {
-  estufado: {
-    core: '#FFF4D2',
-    mid: '#FFD37B',
-    edge: '#F6A43F',
-    rim: '#C9671F',
-    spot: '#B4581F',
-    rib: '#B8601E',
-    belly: '#FFF7E2',
-    fin: '#FFC160',
-    glow: 1,
-  },
-  cheio: {
-    core: '#FFEEC4',
-    mid: '#FFC765',
-    edge: '#EE9536',
-    rim: '#BC5E1C',
-    spot: '#A9521D',
-    rib: '#A9561B',
-    belly: '#FFF2D6',
-    fin: '#F7AE4C',
-    glow: 0.72,
-  },
-  meio: {
-    core: '#F3DCAB',
-    mid: '#E2AC62',
-    edge: '#C98238',
-    rim: '#965221',
-    spot: '#86471D',
-    rib: '#8C4E1F',
-    belly: '#F2E0BE',
-    fin: '#D99A52',
-    glow: 0.4,
-  },
-  murcho: {
-    core: '#DCC9A6',
-    mid: '#C19A6B',
-    edge: '#9E7445',
-    rim: '#6F4B27',
-    spot: '#634020',
-    rib: '#6A4725',
-    belly: '#D8C6A4',
-    fin: '#B08658',
-    glow: 0.12,
-  },
+  estufado: { rx: 74, ryT: 72, ryB: 74 },
+  cheio: { rx: 70, ryT: 66, ryB: 70 },
+  meio: { rx: 65, ryT: 58, ryB: 66 },
+  murcho: { rx: 60, ryT: 47, ryB: 62 },
 };
 
 export function geom(mood: Mood) {
   const { rx, ryT, ryB } = SHAPE[mood];
-  const cy = TOP + ryT;
+  const cy = CY;
   return {
     rx,
     ryT,
     ryB,
     cy,
+    top: cy - ryT,
     bottom: cy + ryB,
-    eyeY: cy - 4,
-    eyeDX: rx * 0.3,
-    mouthY: cy + ryB * 0.27,
-    cheekY: cy + ryB * 0.15,
-    cheekDX: rx * 0.52,
-    finY: cy + ryB * 0.2,
-    finX: rx - 7,
+    eyeY: cy - ryT * 0.08,
+    eyeDX: rx * 0.36,
+    /** Tamanho dos olhos acompanha o corpo. */
+    eyeR: 8.8 * (rx / 70),
+    mouthY: cy + ryB * 0.3,
+    cheekY: cy + ryB * 0.17,
+    cheekDX: rx * 0.6,
+    finY: cy + ryB * 0.16,
+    finX: rx - 6,
   };
 }
 
-/** Corpo como quatro curvas: topo e base podem ter raios diferentes (o murcho cede para baixo). */
-export function bodyPath(mood: Mood) {
-  const { rx, ryT, ryB, cy } = geom(mood);
+/** Corpo como quatro curvas: topo e base podem ter raios diferentes. */
+export function bodyPath(mood: Mood, scale = 1) {
+  const g = geom(mood);
+  const rx = g.rx * scale;
+  const ryT = g.ryT * scale;
+  const ryB = g.ryB * scale;
+  const cy = g.cy;
   const k = 0.5523;
   const x = CX;
   return [

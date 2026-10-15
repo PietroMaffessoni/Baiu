@@ -13,6 +13,7 @@ import { accountsCsv, transactionsCsv } from '@/lib/csv';
 import { authenticate, lockInfo, type LockInfo } from '@/lib/lock';
 import { remindersAllowed } from '@/lib/reminders';
 import { shareCsv } from '@/lib/share';
+import { useAuth } from '@/store/auth';
 import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
@@ -21,6 +22,7 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function Ajustes() {
   const { state, dispatch, eraseAll } = useStore();
+  const { profile, exitDemo } = useAuth();
   const insets = useSafeAreaInsets();
   const [lock, setLock] = useState<LockInfo | null>(null);
   const s = state.settings;
@@ -77,9 +79,9 @@ export default function Ajustes() {
 
   const eraseEverything = () =>
     confirm(
-      'Apagar todos os dados?',
-      'Contas, movimentos, vencimentos, investimentos e selos saem deste aparelho, junto com a chave de criptografia. Isso não pode ser desfeito.',
-      'Apagar tudo',
+      'Apagar os dados deste aparelho?',
+      'Contas, movimentos, vencimentos, investimentos e selos saem deste aparelho, junto com a chave de criptografia. Sua conta continua existindo. Isso não pode ser desfeito.',
+      'Apagar',
       () => {
         eraseAll();
       },
@@ -96,20 +98,27 @@ export default function Ajustes() {
         <View style={styles.group}>
           <Plate style={{ padding: 16, gap: 12 }}>
             <T variant="callout" tone="ink2">
-              Você está vendo dados de exemplo. Ao sair, o Baiu fica vazio para você cadastrar suas contas de verdade.
+              Você está vendo dados de exemplo. Para usar o Baiu com o seu dinheiro, saia do exemplo e crie sua conta.
             </T>
             <Button
               label="Sair do modo exemplo"
-              onPress={() =>
-                confirm('Sair do modo exemplo?', 'Os dados de exemplo serão apagados.', 'Sair', () => {
-                  dispatch({ type: 'exitDemo' });
-                  router.back();
-                })
-              }
+              onPress={() => confirm('Sair do modo exemplo?', 'Os dados de exemplo serão descartados.', 'Sair', exitDemo)}
             />
           </Plate>
         </View>
       )}
+
+      {profile ? (
+        <Group title="Conta">
+          <ListRow
+            icon="lock"
+            label={profile.fullName || 'Minha conta'}
+            hint={profile.email}
+            onPress={() => router.push('/minha-conta')}
+            chevron
+          />
+        </Group>
+      ) : null}
 
       <Group title="Privacidade e segurança">
         <ListRow
@@ -162,11 +171,19 @@ export default function Ajustes() {
         <ListRow
           icon="lock"
           label="Onde ficam"
-          hint="Só neste aparelho, criptografados. Nada é enviado para servidores."
+          hint="Seus registros financeiros ficam só neste aparelho, criptografados. No servidor ficam apenas nome, e-mail e celular da conta."
         />
       </Group>
 
       <Group title="Baiu">
+        <ListRow
+          icon="sparkle"
+          label="Personalizar o Baiu"
+          hint="Cor e enfeites de datas comemorativas."
+          onPress={() => router.push('/personalizar')}
+          chevron
+        />
+        <Rule inset={33} />
         <ListRow icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
         <Rule inset={33} />
         <ListRow icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />
@@ -193,9 +210,11 @@ export default function Ajustes() {
       </View>
 
       {/* ação destrutiva sozinha, no fim */}
-      <View style={[styles.group, { marginTop: 56 }]}>
-        <Button label="Apagar todos os dados" kind="danger" icon="trash" onPress={eraseEverything} />
-      </View>
+      {!state.demo ? (
+        <View style={[styles.group, { marginTop: 56 }]}>
+          <Button label="Apagar dados deste aparelho" kind="danger" icon="trash" onPress={eraseEverything} />
+        </View>
+      ) : null}
     </ScrollView>
   );
 }

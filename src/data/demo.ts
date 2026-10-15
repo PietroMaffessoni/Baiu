@@ -1,4 +1,5 @@
 import { addDays, startOfDay } from '@/lib/dates';
+import { DEFAULT_LOOK } from '@/lib/look';
 import type { Account, Bill, Holding, State, Tx } from './types';
 
 export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true };
@@ -10,6 +11,7 @@ export function createEmpty(now = new Date()): State {
     onboarded: false,
     demo: false,
     settings: { ...DEFAULT_SETTINGS },
+    baiu: { ...DEFAULT_LOOK },
     accounts: [],
     txs: [],
     bills: [],
@@ -278,6 +280,7 @@ export function createDemo(now = new Date()): State {
     onboarded: false,
     demo: true,
     settings: { ...DEFAULT_SETTINGS },
+    baiu: { ...DEFAULT_LOOK },
     accounts,
     txs,
     bills,

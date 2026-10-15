@@ -3,8 +3,8 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Baiu, levelScale } from '@/components/baiu/baiu';
-import { PALETTE, VB_W } from '@/components/baiu/geometry';
+import { Baiu, baiuHeight } from '@/components/baiu/baiu';
+import { useBaiuLook } from '@/components/baiu/use-look';
 import { BankMark } from '@/components/bank-mark';
 import { Button, IconButton } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
@@ -19,6 +19,7 @@ import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account } from '@/data/types';
 import { dueItems, dueLabel } from '@/lib/bills';
+import { paletteFor } from '@/lib/look';
 import { greeting, longToday } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
@@ -43,11 +44,12 @@ export default function Home() {
   const earned = allSeals.filter((x) => x.earned);
   const seals = earned.length > 0 ? earned.slice(-3).reverse() : allSeals.slice(0, 3);
 
-  const lanternW = Math.min(200, Math.round(width * 0.5));
-  const cord = insets.top + 26;
-  const lanternH = (lanternW * 240) / VB_W;
-  const stage = cord + lanternH * 0.94;
-  const glow = PALETTE[folego.mood.mood].glow;
+  const look = useBaiuLook();
+  const fishW = Math.min(230, Math.round(width * 0.58));
+  const fishTop = insets.top + 26;
+  const fishH = baiuHeight(fishW);
+  const stage = fishTop + fishH * 0.96;
+  const pal = paletteFor(look.color, folego.mood.mood);
   const hide = state.settings.hideValues;
   const hasAccounts = state.accounts.length > 0;
 
@@ -69,14 +71,15 @@ export default function Home() {
         width={width}
         height={stage + 260}
         cx={width / 2}
-        cy={cord + lanternH * 0.42 * levelScale(folego.score)}
-        intensity={0.35 + glow * 0.65}
+        cy={fishTop + fishH * 0.56}
+        intensity={0.35 + pal.glow * 0.65}
+        tint={pal.glowColor}
       />
 
-      {/* palco: a lanterna pendurada no topo da tela */}
+      {/* palco: o Baiu boiando no topo da tela */}
       <View style={{ height: stage }}>
-        <View style={[styles.lantern, { left: (width - lanternW) / 2 }]}>
-          <Baiu score={folego.score} width={lanternW} cord={cord} interactive />
+        <View style={[styles.fish, { left: (width - fishW) / 2, top: fishTop }]}>
+          <Baiu score={folego.score} width={fishW} interactive />
         </View>
         <View pointerEvents="box-none" style={[styles.topbar, { top: insets.top + 6 }]}>
           <View style={{ flexShrink: 1 }}>
@@ -317,7 +320,7 @@ function Flow({ label, value, tone }: { label: string; value: number; tone: 'jad
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.night },
-  lantern: { position: 'absolute', top: 0 },
+  fish: { position: 'absolute', top: 0 },
   topbar: {
     position: 'absolute',
     zIndex: 2,

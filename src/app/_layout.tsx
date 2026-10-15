@@ -10,7 +10,8 @@ import { Baiu } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { LockGate } from '@/components/lock-gate';
 import { useReminderRouting } from '@/lib/reminders';
-import { StoreProvider, useStore } from '@/store/store';
+import { AuthProvider, useAuth } from '@/store/auth';
+import { StoreProvider, useStore, type Owner } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, font, gutter } from '@/theme/tokens';
 
@@ -56,16 +57,29 @@ export default function RootLayout() {
   });
 
   return (
-    <StoreProvider>
-      <Navigation fontsLoaded={fontsLoaded} />
+    <AuthProvider>
+      <Owned fontsLoaded={fontsLoaded} />
+    </AuthProvider>
+  );
+}
+
+/** Cada conta (ou o modo exemplo) tem o próprio estado; trocar de dono recomeça do zero. */
+function Owned({ fontsLoaded }: { fontsLoaded: boolean }) {
+  const { status, profile, demo, recovering } = useAuth();
+  const owner: Owner = status === 'signedIn' && profile && !recovering ? profile.id : demo ? 'demo' : null;
+  return (
+    <StoreProvider key={owner ?? 'ninguem'} owner={owner}>
+      <Navigation fontsLoaded={fontsLoaded} authReady={status !== 'loading'} />
     </StoreProvider>
   );
 }
 
-function Navigation({ fontsLoaded }: { fontsLoaded: boolean }) {
-  const { state, hydrated, unreadable } = useStore();
-  const ready = fontsLoaded && hydrated;
-  useReminderRouting(ready && state.onboarded);
+function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authReady: boolean }) {
+  const { owner, hydrated, unreadable } = useStore();
+  const ready = fontsLoaded && authReady && hydrated;
+  const inApp = owner !== null;
+  const signedIn = inApp && owner !== 'demo';
+  useReminderRouting(ready && signedIn);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -81,17 +95,20 @@ function Navigation({ fontsLoaded }: { fontsLoaded: boolean }) {
       ) : (
         <LockGate>
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.night } }}>
-            <Stack.Protected guard={!state.onboarded}>
+            <Stack.Protected guard={!inApp}>
               <Stack.Screen name="boas-vindas" options={{ animation: 'fade' }} />
+              <Stack.Screen name="cadastro" />
+              <Stack.Screen name="entrar" />
+              <Stack.Screen name="verificar-email" />
+              <Stack.Screen name="recuperar-senha" />
             </Stack.Protected>
-            <Stack.Protected guard={state.onboarded}>
+            <Stack.Protected guard={inApp}>
               <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
               <Stack.Screen name="conta/[id]" options={{ ...pushedHeader, title: '' }} />
               <Stack.Screen name="vencimentos" options={{ ...pushedHeader, title: 'Vencimentos' }} />
               <Stack.Screen name="selos" options={{ ...pushedHeader, title: 'Selos' }} />
               <Stack.Screen name="ajustes" options={{ ...pushedHeader, title: 'Ajustes' }} />
-              <Stack.Screen name="privacidade" options={{ ...pushedHeader, title: 'Privacidade' }} />
-              <Stack.Screen name="termos" options={{ ...pushedHeader, title: 'Termos de uso' }} />
+              <Stack.Screen name="personalizar" options={{ ...pushedHeader, title: 'Personalizar o Baiu' }} />
               <Stack.Screen name="nova-conta" options={modal} />
               <Stack.Screen name="conta-editar" options={modal} />
               <Stack.Screen name="movimento/novo" options={modal} />
@@ -103,6 +120,12 @@ function Navigation({ fontsLoaded }: { fontsLoaded: boolean }) {
               <Stack.Screen name="investimento/[id]" options={sheet} />
               <Stack.Screen name="folego" options={sheet} />
             </Stack.Protected>
+            <Stack.Protected guard={signedIn}>
+              <Stack.Screen name="minha-conta" options={{ ...pushedHeader, title: 'Minha conta' }} />
+            </Stack.Protected>
+            {/* abertas para todos: o cadastro tem links para elas */}
+            <Stack.Screen name="privacidade" options={{ ...pushedHeader, title: 'Privacidade' }} />
+            <Stack.Screen name="termos" options={{ ...pushedHeader, title: 'Termos de uso' }} />
           </Stack>
         </LockGate>
       )}
@@ -122,7 +145,7 @@ function Unreadable() {
   return (
     <View style={[styles.unreadable, { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 24 }]}>
       <View style={{ alignItems: 'center' }}>
-        <Baiu score={5} width={140} still />
+        <Baiu score={5} width={164} still />
         <T variant="title2" align="center" style={{ marginTop: 18 }} accessibilityRole="header">
           Não deu para abrir seus dados
         </T>

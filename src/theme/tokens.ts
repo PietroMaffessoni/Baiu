@@ -1,5 +1,5 @@
 /**
- * Baiu: chão índigo, luz de lanterna, papel.
+ * Baiu: chão índigo, luz âmbar, papel.
  * Vermelhão e jade só aparecem como estado (selo, alerta, entrada).
  */
 export const color = {

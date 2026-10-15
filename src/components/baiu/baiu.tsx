@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { useEffect, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 import { Platform, Pressable, StyleSheet, View } from 'react-native';
 import Animated, {
   cancelAnimation,
@@ -15,24 +15,27 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { moodOf, type Mood } from '@/lib/folego';
-import { color } from '@/theme/tokens';
+import { paletteFor, type BaiuColor, type Season } from '@/lib/look';
 import { BaiuBody, BaiuEyes, BaiuFin, Halo } from './art';
-import { CX, geom, PALETTE, TOP, VB_H, VB_W } from './geometry';
+import { CX, geom, VB_H, VB_W } from './geometry';
+import { useBaiuLook } from './use-look';
 
 type Props = {
   /** Fôlego de 0 a 100. Define humor e tamanho. */
   score: number;
   /** Largura da caixa de desenho em px. */
   width?: number;
-  /** Comprimento do fio acima da lanterna. 0 = sem fio. */
-  cord?: number;
   /** Sem animação (miniaturas, legenda). */
   still?: boolean;
   /** Força um humor (legenda da escala). */
   mood?: Mood;
   interactive?: boolean;
-  /** Mostra o halo de luz. */
+  /** Mostra a luz suave atrás do Baiu. */
   halo?: boolean;
+  /** Força uma cor (prévia da personalização). */
+  color?: BaiuColor;
+  /** Força um enfeite; null tira o enfeite da data. */
+  season?: Season | null;
 };
 
 const FIN_SPEED: Record<Mood, number> = { estufado: 520, cheio: 700, meio: 950, murcho: 1500 };
@@ -42,24 +45,40 @@ export function levelScale(score: number) {
   return 0.8 + 0.2 * Math.min(1, Math.max(0, score / 100));
 }
 
-export function Baiu({ score, width = 180, cord = 0, still, mood: forced, interactive = false, halo = true }: Props) {
+/** Altura da caixa de desenho para uma largura. */
+export const baiuHeight = (width: number) => (width * VB_H) / VB_W;
+
+export function Baiu({
+  score,
+  width = 180,
+  still,
+  mood: forced,
+  interactive = false,
+  halo = true,
+  color: forcedColor,
+  season: forcedSeason,
+}: Props) {
   const mood = forced ?? moodOf(score).mood;
+  const look = useBaiuLook();
+  const tint = forcedColor ?? look.color;
+  const season = forcedSeason === undefined ? look.season : forcedSeason;
   const reduce = useReducedMotion();
   const animate = !still && !reduce;
   const [puffed, setPuffed] = useState(false);
 
   const f = width / VB_W;
-  const H = VB_H * f;
+  const H = baiuHeight(width);
   const g = geom(mood);
-  const pal = PALETTE[mood];
-  const haloSize = width * 2.1;
-  const bodyCenterY = cord + g.cy * f;
-  const anchorY = (TOP - 10) * f;
+  const pal = paletteFor(tint, mood);
+  // id único por Baiu: na web, dois desenhos na mesma página não podem dividir o degradê
+  const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
+  const id = `baiu-${uid}-${tint}-${mood}`;
+  const haloSize = width * 2;
+  const bodyCenterY = g.cy * f;
 
   const level = useSharedValue(levelScale(score));
-  const breath = useSharedValue(1);
+  const bob = useSharedValue(0);
   const puff = useSharedValue(0);
-  const sway = useSharedValue(0);
   const finL = useSharedValue(0);
   const finR = useSharedValue(0);
   const blink = useSharedValue(1);
@@ -70,19 +89,18 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
 
   useEffect(() => {
     if (!animate) {
-      breath.set(1);
-      sway.set(0);
+      bob.set(0);
       finL.set(0);
       finR.set(0);
       blink.set(1);
       return;
     }
     const sine = Easing.inOut(Easing.sin);
-    breath.set(withRepeat(withTiming(1.022, { duration: 2400, easing: sine }), -1, true));
-    sway.set(
+    // boia devagar, como peixe parado na água; murcho mal se mexe
+    bob.set(
       withSequence(
-        withTiming(-1, { duration: 1800, easing: sine }),
-        withRepeat(withTiming(1, { duration: 3600, easing: sine }), -1, true),
+        withTiming(-1, { duration: 1500, easing: sine }),
+        withRepeat(withTiming(1, { duration: mood === 'murcho' ? 4200 : 3000, easing: sine }), -1, true),
       ),
     );
     const speed = FIN_SPEED[mood];
@@ -96,29 +114,27 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
       ),
     );
     return () => {
-      [breath, sway, finL, finR, blink].forEach(cancelAnimation);
+      [bob, finL, finR, blink].forEach(cancelAnimation);
     };
-  }, [animate, mood, breath, sway, finL, finR, blink]);
+  }, [animate, mood, bob, finL, finR, blink]);
 
-  const total = cord + H;
-
-  const swayStyle = useAnimatedStyle(() => ({
-    transform: [{ translateY: -total / 2 }, { rotate: `${sway.get() * 2.2}deg` }, { translateY: total / 2 }],
+  const floatStyle = useAnimatedStyle(() => ({
+    transform: [{ translateY: bob.get() * H * 0.025 }, { rotate: `${bob.get() * 1.6}deg` }],
   }));
 
   const bodyStyle = useAnimatedStyle(() => {
-    const s = level.get() * breath.get() * (1 + 0.1 * puff.get());
-    const p = anchorY - H / 2;
+    const s = level.get() * (1 + 0.1 * puff.get());
+    const p = bodyCenterY - H / 2;
     return { transform: [{ translateY: p }, { scale: s }, { translateY: -p }] };
   });
 
   const haloStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, pal.glow * (0.85 + (breath.get() - 1) * 6) + puff.get() * 0.5),
+    opacity: Math.min(1, pal.glow * 0.9 + puff.get() * 0.5),
     transform: [{ scale: level.get() * (1 + 0.18 * puff.get()) }],
   }));
 
   const finLStyle = useAnimatedStyle(() => {
-    const deg = (-10 + finL.get() * 24 + puff.get() * 14) * 1;
+    const deg = -10 + finL.get() * 24 + puff.get() * 14;
     const px = (CX - g.finX) * f - width / 2;
     const py = g.finY * f - H / 2;
     return {
@@ -132,7 +148,7 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
     };
   });
   const finRStyle = useAnimatedStyle(() => {
-    const deg = (-10 + finR.get() * 24 + puff.get() * 14) * -1;
+    const deg = -(-10 + finR.get() * 24 + puff.get() * 14);
     const px = (CX + g.finX) * f - width / 2;
     const py = g.finY * f - H / 2;
     return {
@@ -164,16 +180,16 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
 
   const label = `Baiu, ${moodOf(score).label.toLowerCase()}. Fôlego ${score}.`;
 
-  const lantern = (
+  const fish = (
     <Animated.View style={[styles.abs, { width, height: H }, bodyStyle]}>
       <Animated.View style={[styles.abs, finLStyle]}>
-        <BaiuFin mood={mood} width={width} side={-1} />
+        <BaiuFin mood={mood} width={width} side={-1} pal={pal} />
       </Animated.View>
       <Animated.View style={[styles.abs, finRStyle]}>
-        <BaiuFin mood={mood} width={width} side={1} />
+        <BaiuFin mood={mood} width={width} side={1} pal={pal} />
       </Animated.View>
       <View style={styles.abs}>
-        <BaiuBody mood={mood} width={width} puffed={puffed} />
+        <BaiuBody mood={mood} width={width} pal={pal} id={id} puffed={puffed} season={season} />
       </View>
       <Animated.View style={[styles.abs, eyeStyle]}>
         <BaiuEyes mood={mood} width={width} puffed={puffed} />
@@ -182,8 +198,7 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
   );
 
   return (
-    <Animated.View style={[{ width, height: total }, swayStyle]}>
-      {cord > 0 && <View style={[styles.cord, { left: width / 2 - 0.7, height: cord + 2 }]} />}
+    <Animated.View style={[{ width, height: H }, floatStyle]}>
       {halo && (
         <Animated.View
           pointerEvents="none"
@@ -192,7 +207,7 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
             { width: haloSize, height: haloSize, left: (width - haloSize) / 2, top: bodyCenterY - haloSize / 2 },
             haloStyle,
           ]}>
-          <Halo size={haloSize} />
+          <Halo size={haloSize} tint={pal.glowColor} id={id} />
         </Animated.View>
       )}
       {interactive ? (
@@ -202,16 +217,16 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
           accessibilityRole="button"
           accessibilityLabel={label}
           accessibilityHint="Segure para o Baiu estufar"
-          style={[styles.abs, { top: cord, width, height: H }]}>
-          {lantern}
+          style={[styles.abs, { width, height: H }]}>
+          {fish}
         </Pressable>
       ) : (
         <View
           accessible
           accessibilityRole="image"
           accessibilityLabel={label}
-          style={[styles.abs, { top: cord, width, height: H }]}>
-          {lantern}
+          style={[styles.abs, { width, height: H }]}>
+          {fish}
         </View>
       )}
     </Animated.View>
@@ -220,5 +235,4 @@ export function Baiu({ score, width = 180, cord = 0, still, mood: forced, intera
 
 const styles = StyleSheet.create({
   abs: { position: 'absolute', left: 0, top: 0 },
-  cord: { position: 'absolute', top: -2, width: 1.4, backgroundColor: color.paper, opacity: 0.45 },
 });

@@ -21,7 +21,7 @@ Ficha pronta para copiar no App Store Connect, e o passo a passo do que precisa 
 
 ## Texto promocional
 
-Cadastre suas contas, registre entradas e gastos e veja o Baiu encher a cada bom hábito. Tudo fica só no seu celular, criptografado.
+Cadastre suas contas, registre entradas e gastos e veja o Baiu encher a cada bom hábito. Seus registros financeiros ficam só no seu celular, criptografados.
 
 ## Palavras-chave
 
@@ -29,7 +29,7 @@ finanças,orçamento,gastos,controle financeiro,reserva,investimentos,boletos,ec
 
 ## Descrição
 
-O Baiu é um baiacu-lanterna que acende conforme você cuida do seu dinheiro. Quanto melhores os hábitos, mais cheio e mais brilhante ele fica.
+O Baiu é um baiacu que enche conforme você cuida do seu dinheiro. Quanto melhores os hábitos, mais cheio e mais feliz ele fica.
 
 REÚNA SUAS CONTAS
 Cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma tudo e mostra seu saldo e seu patrimônio em um lugar só.
@@ -46,17 +46,28 @@ Cadastre boletos, aluguel e contas fixas. O Baiu avisa um dia antes e no dia, e 
 ACOMPANHE SEUS INVESTIMENTOS
 Registre suas aplicações, atualize os valores e veja quanto renderam no mês e quantos meses seguidos você investiu.
 
+DO SEU JEITO
+Escolha a cor do Baiu e veja ele se vestir sozinho no Natal, na Páscoa, no Halloween e em outras datas.
+
 GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
 PRIVADO DE VERDADE
-Sem login, sem servidor e sem rastreamento. Seus dados ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho. Dá para bloquear o app com Face ID e esconder os valores com um toque.
+Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Dá para bloquear o app com Face ID e esconder os valores com um toque.
 
 O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não faz recomendação de investimento.
 
 ## Privacidade do app
 
-No App Store Connect, em Privacidade do app, responda que **não coleta dados** deste app. É a resposta correta: nada sai do aparelho, não há analytics, anúncios nem relatórios de erro remotos.
+Em App Store Connect, Privacidade do app, declare que o app **coleta dados**, com estas respostas:
+
+| Tipo de dado | Vinculado à pessoa | Usado para rastreamento | Finalidade |
+| --- | --- | --- | --- |
+| Informações de contato: Nome | Sim | Não | Funcionalidade do app |
+| Informações de contato: Endereço de e-mail | Sim | Não | Funcionalidade do app |
+| Informações de contato: Número de telefone | Sim | Não | Funcionalidade do app |
+
+Todos os outros tipos: não coletados. Os registros financeiros não saem do aparelho, então não entram na declaração. O manifesto de privacidade do app já declara esses três tipos.
 
 ## Criptografia (conformidade de exportação)
 
@@ -64,10 +75,10 @@ O app já declara `ITSAppUsesNonExemptEncryption = false`, então o App Store Co
 
 ## Informações para a revisão da Apple
 
-- Login: não é necessário.
+- Login: necessário. Crie pelo app uma conta só para a revisão e informe e-mail e senha nos campos de login de demonstração.
 - Notas para o revisor:
 
-> O Baiu não tem login nem servidor. Para ver o app com dados, toque em "Explorar com dados de exemplo" na primeira tela. Para testar o uso real, toque em "Começar", cadastre uma conta e registre um movimento pelo botão + na tela inicial. Todos os dados ficam no aparelho, criptografados. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados.
+> Para ver o app com dados prontos, toque em "Explorar com dados de exemplo" na primeira tela; essa é a única parte sem conta. Para o uso real, entre com a conta de demonstração informada acima, cadastre uma conta bancária e registre um movimento pelo botão + na tela inicial. Os registros financeiros ficam só no aparelho, criptografados; o servidor guarda apenas nome, e-mail e celular. A conta pode ser excluída em Ajustes, Minha conta, Excluir conta. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados.
 
 - Contato da revisão: seu nome, telefone e e-mail.
 
@@ -84,6 +95,7 @@ As capturas já estão prontas em `store/imagens/app-store/`, no tamanho de iPho
 | 5 | `05-investir.jpg` | Investimentos em dia |
 | 6 | `06-vencimentos.jpg` | Nenhum vencimento esquecido |
 | 7 | `07-contas.jpg` | Tudo num lugar só |
+| 8 | `08-personalizar.jpg` | Do seu jeito |
 
 Elas usam os dados de exemplo do próprio app.
 

@@ -1,5 +1,6 @@
 import { createDemo, createEmpty } from '@/data/demo';
 import type { Account, Bill, Holding, Settings, State, Tx } from '@/data/types';
+import { isBaiuColor, type BaiuLook } from '@/lib/look';
 import { computeFolego } from '@/lib/folego';
 import { applyTx, newId, round2, validateTx } from '@/lib/ledger';
 import { newlyEarned } from '@/lib/seals';
@@ -19,6 +20,7 @@ export type Action =
   | { type: 'exitDemo' }
   | { type: 'wipe' }
   | { type: 'setSetting'; key: keyof Settings; value: boolean }
+  | { type: 'setBaiu'; patch: Partial<BaiuLook> }
   | { type: 'addAccount'; account: Account }
   | { type: 'updateAccount'; id: string; patch: Partial<Pick<Account, 'nickname' | 'balance' | 'dueDay' | 'limit'>> }
   | { type: 'removeAccount'; id: string }
@@ -104,13 +106,24 @@ function core(s: State, action: Action): State {
     case 'onboard':
       return { ...s, onboarded: true };
     case 'loadDemo':
-      return { ...createDemo(), onboarded: true, settings: s.settings };
+      return { ...createDemo(), onboarded: true, settings: s.settings, baiu: s.baiu };
     case 'exitDemo':
-      return { ...createEmpty(), onboarded: true, settings: { ...s.settings } };
+      return { ...createEmpty(), onboarded: true, settings: { ...s.settings }, baiu: { ...s.baiu } };
     case 'wipe':
       return createEmpty();
     case 'setSetting':
       return { ...s, settings: { ...s.settings, [action.key]: action.value } };
+    case 'setBaiu': {
+      const { color, seasonal } = action.patch;
+      if (color !== undefined && !isBaiuColor(color)) return s;
+      return {
+        ...s,
+        baiu: {
+          color: color ?? s.baiu.color,
+          seasonal: typeof seasonal === 'boolean' ? seasonal : s.baiu.seasonal,
+        },
+      };
+    }
 
     case 'addAccount': {
       const a = action.account;

@@ -1,5 +1,6 @@
 import { DEFAULT_SETTINGS } from '@/data/demo';
 import type { State } from '@/data/types';
+import { DEFAULT_LOOK, isBaiuColor } from './look';
 
 /**
  * Normaliza o que veio do disco. Campos novos ganham valor padrão; formatos
@@ -15,6 +16,10 @@ export function migrate(raw: unknown): State | null {
     onboarded: !!s.onboarded,
     demo: !!s.demo,
     settings: { ...DEFAULT_SETTINGS, ...(s.settings ?? {}) },
+    baiu: {
+      color: isBaiuColor(s.baiu?.color) ? s.baiu.color : DEFAULT_LOOK.color,
+      seasonal: typeof s.baiu?.seasonal === 'boolean' ? s.baiu.seasonal : DEFAULT_LOOK.seasonal,
+    },
     accounts: s.accounts,
     txs: s.txs,
     bills: Array.isArray(s.bills) ? s.bills : [],

@@ -1,3 +1,5 @@
+import type { BaiuLook } from '@/lib/look';
+
 export type AccountKind = 'corrente' | 'reserva' | 'cartao' | 'investimento';
 
 export type Account = {
@@ -108,6 +110,8 @@ export type State = {
   /** Dados de exemplo carregados. */
   demo: boolean;
   settings: Settings;
+  /** Cor do Baiu e enfeites de datas comemorativas. */
+  baiu: BaiuLook;
   accounts: Account[];
   txs: Tx[];
   bills: Bill[];

@@ -16,6 +16,7 @@ Ficha pronta para copiar no Play Console e o passo a passo da publicação. As i
 | E-mail de contato | suporte.baiu@gmail.com |
 | Site | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md |
 | Política de privacidade | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md |
+| Exclusão de conta | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/excluir-conta.md |
 
 ## Descrição curta
 
@@ -30,7 +31,7 @@ Organize contas, gastos e investimentos. O Baiu enche a cada bom hábito.
 Até 4.000 caracteres.
 
 ```
-O Baiu é um baiacu-lanterna que acende conforme você cuida do seu dinheiro. Quanto melhores os hábitos, mais cheio e mais brilhante ele fica.
+O Baiu é um baiacu que enche conforme você cuida do seu dinheiro. Quanto melhores os hábitos, mais cheio e mais feliz ele fica.
 
 REÚNA SUAS CONTAS
 Cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma tudo e mostra seu saldo e seu patrimônio em um lugar só.
@@ -47,11 +48,14 @@ Cadastre boletos, aluguel e contas fixas. O Baiu avisa um dia antes e no dia, e 
 ACOMPANHE SEUS INVESTIMENTOS
 Registre suas aplicações, atualize os valores e veja quanto renderam no mês e quantos meses seguidos você investiu.
 
+DO SEU JEITO
+Escolha a cor do Baiu e veja ele se vestir sozinho no Natal, na Páscoa, no Halloween e em outras datas.
+
 GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
 PRIVADO DE VERDADE
-Sem login, sem servidor e sem rastreamento. Seus dados ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
+Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Dá para bloquear o app com a biometria e esconder os valores com um toque.
 
 O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não faz recomendação de investimento.
 ```
@@ -62,7 +66,7 @@ O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, nã
 | --- | --- | --- |
 | Ícone | `icone-512.png` | 512 × 512, PNG |
 | Gráfico de destaque | `banner-1024x500.jpg` | 1024 × 500, JPEG ou PNG sem transparência |
-| Capturas de celular | `01-inicio.jpg` a `07-contas.jpg` | de 2 a 8, proporção 9:16 |
+| Capturas de celular | `01-inicio.jpg` a `08-personalizar.jpg` | de 2 a 8, proporção 9:16 |
 
 As capturas usam os dados de exemplo do próprio app.
 
@@ -73,7 +77,7 @@ Respostas para a seção Política, Conteúdo do app.
 | Formulário | Resposta |
 | --- | --- |
 | Política de privacidade | A URL da tabela acima |
-| Acesso ao app | Todas as funcionalidades estão disponíveis sem acesso especial |
+| Acesso ao app | Algumas funcionalidades exigem login. Informe o e-mail e a senha da conta criada para a revisão |
 | Anúncios | Não, o app não contém anúncios |
 | Classificação do conteúdo | Categoria "Utilitário, produtividade, comunicação ou outro"; responda "não" a todas as perguntas. Deve resultar em Livre |
 | Público-alvo | 18 anos ou mais. Responda que o app não é voltado a crianças |
@@ -93,9 +97,18 @@ Abra o formulário e leia as opções. Se não houver uma opção específica pa
 
 | Pergunta | Resposta |
 | --- | --- |
-| O app coleta ou compartilha algum dos tipos de dados exigidos? | Não |
+| O app coleta ou compartilha algum dos tipos de dados exigidos? | Sim |
+| Todos os dados coletados são criptografados em trânsito? | Sim |
+| Os usuários podem pedir a exclusão dos dados? | Sim, no app e pela URL de exclusão de conta |
+| Informações pessoais: Nome | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
+| Informações pessoais: Endereço de e-mail | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
+| Informações pessoais: Número de telefone | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 
-Os dados do Baiu ficam só no aparelho e nunca são enviados para fora dele. Pelas regras do Google, dados processados apenas no aparelho não contam como coleta. Com essa resposta, o formulário termina e a ficha mostra "Nenhum dado coletado" e "Nenhum dado compartilhado com terceiros".
+Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. O Supabase é prestador de serviço, então não conta como compartilhamento.
+
+### Exclusão de conta
+
+Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A página explica como excluir pelo app e por e-mail.
 
 ## Passo a passo para publicar
 

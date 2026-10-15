@@ -111,7 +111,7 @@ function LockScreen({ onUnlock }: { onUnlock: () => void }) {
         { paddingTop: insets.top + 60, paddingBottom: insets.bottom + 24 },
       ]}>
       <View style={{ alignItems: 'center' }}>
-        <Baiu score={folego.score} width={150} still />
+        <Baiu score={folego.score} width={176} still />
         <T variant="title2" align="center" style={{ marginTop: 18 }} accessibilityRole="header">
           Baiu bloqueado
         </T>

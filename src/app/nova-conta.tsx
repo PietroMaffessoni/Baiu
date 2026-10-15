@@ -301,7 +301,7 @@ export default function NovaConta() {
           entering={FadeIn.duration(240)}
           style={[styles.pad, styles.done, { paddingBottom: insets.bottom + 16 }]}>
           <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center' }}>
-            <Baiu score={result.after} width={170} interactive />
+            <Baiu score={result.after} width={196} interactive />
             <Animated.View
               entering={FadeInDown.delay(250).duration(320)}
               style={{ alignItems: 'center', marginTop: 18 }}>
