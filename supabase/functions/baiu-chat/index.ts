@@ -9,6 +9,7 @@
 //   ANTHROPIC_API_KEY     obrigatório
 //   BAIU_AI_MODEL         opcional, padrão claude-opus-5-5
 //   BAIU_AI_DAILY_LIMIT   opcional, padrão 30 perguntas por dia
+//   REVENUECAT_SECRET_KEY opcional: com ela, só quem assina conversa com a IA
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
 //
 // Sem dependências externas: o mesmo arquivo roda no Deno do Supabase e nos
@@ -85,6 +86,61 @@ export function systemFor(context: unknown, now = new Date()): string {
   return `${SYSTEM_PROMPT}\n\nHoje é ${today}.\n\n${data}`;
 }
 
+const REVENUECAT = 'https://api.revenuecat.com/v1';
+/** Quem já foi conferido com assinatura ativa: id -> até quando a conferência vale. */
+const paid = new Map<string, number>();
+export function _resetSubscriptions() {
+  paid.clear();
+}
+
+type RevenueCatEntitlement = { expires_date?: string | null; grace_period_expires_date?: string | null };
+
+/**
+ * A pessoa tem a assinatura ativa no RevenueCat? Sem REVENUECAT_SECRET_KEY, não
+ * há cobrança e tudo fica liberado. Com o RevenueCat fora do ar, libera (quem
+ * paga não fica sem o serviço); com a chave recusada, bloqueia e avisa no log.
+ */
+async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured'> {
+  const key = env('REVENUECAT_SECRET_KEY');
+  if (!key) return 'ok';
+  const now = Date.now();
+  if ((paid.get(uid) ?? 0) > now) return 'ok';
+  let r: Response;
+  try {
+    r = await http(`${REVENUECAT}/subscribers/${encodeURIComponent(uid)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch {
+    console.error('baiu-chat: RevenueCat sem resposta; liberado');
+    return 'ok';
+  }
+  if (r.status === 401 || r.status === 403) {
+    console.error('baiu-chat: RevenueCat recusou a chave', r.status);
+    return 'misconfigured';
+  }
+  if (!r.ok) {
+    console.error('baiu-chat: RevenueCat respondeu', r.status);
+    return r.status === 429 || r.status >= 500 ? 'ok' : 'none';
+  }
+  let ent: RevenueCatEntitlement | undefined;
+  try {
+    const data = (await r.json()) as { subscriber?: { entitlements?: Record<string, RevenueCatEntitlement> } };
+    ent = data.subscriber?.entitlements?.[env('REVENUECAT_ENTITLEMENT') || 'assinatura'];
+  } catch {
+    return 'ok';
+  }
+  if (!ent) return 'none';
+  // sem data de fim: acesso vitalício (ex.: cortesia dada pelo painel)
+  const until = ent.expires_date
+    ? Math.max(Date.parse(ent.expires_date) || 0, Date.parse(ent.grace_period_expires_date ?? '') || 0)
+    : Infinity;
+  if (until <= now) return 'none';
+  paid.set(uid, Math.min(until, now + 10 * 60_000));
+  return 'ok';
+}
+
 function bearer(req: Request) {
   const h = req.headers.get('Authorization') ?? '';
   return /^Bearer\s+\S+$/i.test(h) ? h : null;
@@ -115,6 +171,26 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   if (!messages || typeof version !== 'string' || !VERSION_RE.test(version)) return fail(400, 'invalid');
   const context = body.context && typeof body.context === 'object' ? body.context : null;
   if (context && JSON.stringify(context).length > MAX_CONTEXT) return fail(413, 'invalid');
+
+  // a IA faz parte da assinatura: confere quem é e se assina
+  if (env('REVENUECAT_SECRET_KEY')) {
+    let uid: string | undefined;
+    try {
+      const who = await http(`${base}/auth/v1/user`, { method: 'GET', headers: { Authorization: auth, apikey } });
+      if (who.status === 401 || who.status === 403) return fail(401, 'session');
+      if (!who.ok) {
+        console.error('baiu-chat: login respondeu', who.status);
+        return fail(502, 'unknown');
+      }
+      uid = ((await who.json()) as { id?: string }).id;
+    } catch {
+      return fail(502, 'unknown');
+    }
+    if (!uid) return fail(401, 'session');
+    const paying = await subscription(uid, env, http);
+    if (paying === 'misconfigured') return fail(503, 'not_configured');
+    if (paying === 'none') return fail(402, 'subscription');
+  }
 
   // login, consentimento e limite do dia, de uma vez, no banco
   const limit = Math.max(1, Number(env('BAIU_AI_DAILY_LIMIT')) || DEFAULT_LIMIT);

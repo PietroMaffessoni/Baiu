@@ -1,6 +1,6 @@
 # Servidor de contas do Baiu (Supabase)
 
-O cadastro, o login, a conversa com IA e a conexão com bancos do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho.
+O cadastro, o login, a conversa com IA, a conexão com bancos e a conferência da assinatura do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho.
 
 Siga os passos na ordem. Cada um diz onde clicar no painel do Supabase.
 
@@ -142,6 +142,60 @@ A função fica em `supabase/functions/bank/index.ts`, num arquivo só. Publique
 2. Entre com uma conta, toque em **Conectar banco**, escolha **Pluggy Bank** e use usuário `user-ok` e senha `password-ok`.
 3. Confira se as contas, os movimentos e os investimentos aparecem, e se a tabela `bank_connections` ganhou uma linha.
 
-## 9. Conta para a revisão das lojas
+## 9. Assinatura (RevenueCat)
+
+Sem este passo o app funciona sem cobrança. Antes, configure os produtos nas lojas: `store/app-store.md` e `store/google-play.md`, seção Assinatura.
+
+### 9.1 Conta no RevenueCat
+
+1. Crie a conta em app.revenuecat.com e um projeto chamado **Baiu**.
+2. Adicione o app da **App Store** (bundle `com.pitroibas.baiu`) com a chave de compra dentro do app gerada no App Store Connect, e o app do **Google Play** (pacote `com.pitroibas.baiu`) com a conta de serviço. Os arquivos vão direto para o painel, nunca por mensagem.
+3. Em **Product catalog, Entitlements**, crie o direito de uso com o identificador exato `assinatura` e ligue a ele os produtos `baiu_mensal` (App Store) e `baiu_mensal:mensal` (Google Play).
+4. Em **Offerings**, deixe a oferta `default` como atual, com o pacote **Monthly** apontando para os dois produtos. Um plano anual entra como pacote **Annual**, sem mexer no app.
+5. Em **Project settings**, confira que **Restore behavior** está em "Transfer to new App User ID" (o padrão).
+
+### 9.2 Chaves no app
+
+Em **Project settings, API keys**, copie as chaves públicas do SDK: a da App Store começa com `appl_` e a do Google Play com `goog_`. Elas são feitas para ficar no app. Coloque no `.env.local` e no EAS:
+
+```bash
+npx eas-cli env:create --name EXPO_PUBLIC_REVENUECAT_IOS_KEY --value "appl_..." --environment production --environment preview --environment development --visibility plaintext
+npx eas-cli env:create --name EXPO_PUBLIC_REVENUECAT_ANDROID_KEY --value "goog_..." --environment production --environment preview --environment development --visibility plaintext
+```
+
+Sem essas chaves, o app não cobra ninguém. Não publique nas lojas sem elas.
+
+### 9.3 Segredo no servidor
+
+Na mesma página, crie uma **Secret API key** da versão 1 (começa com `sk_`). Ela é como uma senha: nunca vai para o app, para o GitHub nem para mensagens. Em **Edge Functions, Secrets**, adicione:
+
+| Nome | Valor |
+| --- | --- |
+| `REVENUECAT_SECRET_KEY` | a chave secreta |
+
+Com ela, as funções `bank` e `baiu-chat` só atendem quem tem a assinatura ativa. Desconectar bancos e excluir a conta continuam liberados.
+
+### 9.4 Publicar as funções
+
+1. Publique a função nova `supabase/functions/subscription/index.ts` com o nome `subscription`, do mesmo jeito que a `baiu-chat` (passo 7.3), e desligue **Enforce JWT verification**. Ela apaga o cadastro no RevenueCat quando a pessoa exclui a conta.
+2. Publique de novo a `bank` e a `baiu-chat`: as duas mudaram para conferir a assinatura.
+
+### 9.5 Conferir
+
+1. Instale um build de desenvolvimento ou de teste (as compras não funcionam no Expo Go nem na web) e entre no celular com a conta Sandbox da Apple ou com um testador de licença do Google.
+2. Crie uma conta no app. A tela de assinatura aparece com "Começar meu mês grátis". Assine.
+3. Confira em Ajustes, Assinatura: "Mês grátis até…" e o botão de cancelar. No RevenueCat, em **Customers**, a pessoa aparece só com o código da conta.
+4. Cancele pela loja e volte ao app: a tela mostra "Assinatura cancelada". No sandbox, o mês acaba em minutos e o app volta para a tela de assinatura, agora sem o mês grátis.
+5. Exclua a conta de teste e confira que ela some de **Customers**.
+
+## 10. Conta para a revisão das lojas
 
 A Apple e o Google precisam entrar no app. Crie pelo próprio app uma conta só para isso, com um e-mail que vocês controlem, e informe e-mail e senha nas notas de revisão das duas lojas.
+
+## 11. Pedido de exclusão por e-mail
+
+Quem não consegue abrir o app pode pedir a exclusão por e-mail (`docs/excluir-conta.md`). Depois de confirmar que o pedido veio do e-mail cadastrado, apague tudo o que o app apagaria sozinho:
+
+1. Na Pluggy, em **Items**, apague as conexões com o id da pessoa (aparece como `clientUserId`).
+2. No RevenueCat, em **Customers**, procure o id da pessoa e use **Delete customer**. Se a assinatura ainda estiver ativa, avise a pessoa de que o cancelamento é feito na loja.
+3. No Supabase, em **Authentication, Users**, apague o usuário. Os aceites e as conexões saem junto.

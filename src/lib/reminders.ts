@@ -13,6 +13,9 @@ const CHANNEL = 'vencimentos';
 /** Canal e identificador dos avisos de gastos do Baiu (src/lib/assistant/notify.ts). */
 export const ALERTS_CHANNEL = 'avisos';
 export const ALERTS_ID = 'baiu-avisos';
+/** Aviso de que o mês grátis da assinatura está acabando. */
+const TRIAL_CHANNEL = 'assinatura';
+const TRIAL_ID = 'baiu-assinatura';
 const MAX_BILLS = 30; // iOS guarda até 64 agendamentos; dois por vencimento
 
 let configured = false;
@@ -39,6 +42,11 @@ export async function configureReminders() {
       description: 'Quando um gasto foge do normal',
       importance: Notifications.AndroidImportance.DEFAULT,
     });
+    await Notifications.setNotificationChannelAsync(TRIAL_CHANNEL, {
+      name: 'Assinatura',
+      description: 'Aviso antes da primeira cobrança',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
   }
 }
 
@@ -56,10 +64,12 @@ export async function remindersAllowed(ask: boolean): Promise<boolean> {
 
 export async function syncReminders(bills: Bill[], enabled: boolean) {
   await configureReminders();
-  // refaz só os lembretes de vencimento; o aviso de gastos tem vida própria
+  // refaz só os lembretes de vencimento; os avisos de gastos e da assinatura têm vida própria
   const scheduled = await Notifications.getAllScheduledNotificationsAsync();
   for (const n of scheduled) {
-    if (n.identifier !== ALERTS_ID) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    if (n.identifier !== ALERTS_ID && n.identifier !== TRIAL_ID) {
+      await Notifications.cancelScheduledNotificationAsync(n.identifier);
+    }
   }
   if (!enabled || !(await remindersAllowed(false))) return;
 
@@ -90,6 +100,25 @@ export async function syncReminders(bills: Bill[], enabled: boolean) {
   }
 }
 
+/**
+ * Avisa antes de o mês grátis virar cobrança (`days` antes do fim).
+ * `at` null cancela: a pessoa cancelou, já pagou ou desligou o aviso.
+ */
+export async function syncTrialReminder(at: Date | null, days: number) {
+  await configureReminders();
+  await Notifications.cancelScheduledNotificationAsync(TRIAL_ID).catch(() => {});
+  if (!at || at.getTime() <= Date.now() || !(await remindersAllowed(false))) return;
+  await Notifications.scheduleNotificationAsync({
+    identifier: TRIAL_ID,
+    content: {
+      title: 'Seu mês grátis está acabando',
+      body: `A assinatura do Baiu começa a ser cobrada ${days <= 1 ? 'amanhã' : `em ${days} dias`}. Se não quiser continuar, cancele em Ajustes, Assinatura.`,
+      data: { url: '/assinatura' },
+    },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.DATE, date: at, channelId: TRIAL_CHANNEL },
+  });
+}
+
 export async function clearReminders() {
   await Notifications.cancelAllScheduledNotificationsAsync();
 }
@@ -101,7 +130,7 @@ export function useReminderRouting(enabled: boolean) {
     let alive = true;
     const go = (n: Notifications.Notification) => {
       const url = n.request.content.data?.url;
-      if (typeof url === 'string' && url.startsWith('/')) router.push(url as '/vencimentos' | '/baiu');
+      if (typeof url === 'string' && url.startsWith('/')) router.push(url as '/vencimentos' | '/baiu' | '/assinatura');
     };
     Notifications.getLastNotificationResponseAsync().then((r) => {
       if (alive && r?.notification) go(r.notification);

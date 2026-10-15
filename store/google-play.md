@@ -10,7 +10,7 @@ Ficha pronta para copiar no Play Console e o passo a passo da publicação. As i
 | Nome do pacote | com.pitroibas.baiu |
 | Idioma padrão | Português (Brasil) – pt-BR |
 | App ou jogo | App |
-| Gratuito ou pago | Gratuito |
+| Gratuito ou pago | Gratuito, com compras no app (assinatura mensal com primeiro mês grátis) |
 | Categoria | Finanças |
 | Tags sugeridas | Finanças pessoais, Orçamento |
 | E-mail de contato | suporte.baiu@gmail.com |
@@ -63,6 +63,11 @@ Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três 
 PRIVADO DE VERDADE
 Sem anúncios e sem rastreamento. Seus registros financeiros ficam no seu celular, criptografados com uma chave guardada no próprio aparelho; nem os dados dos bancos conectados ficam no nosso servidor. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
 
+ASSINATURA
+O primeiro mês é grátis. Depois, a assinatura do Baiu é cobrada todo mês pela Google Play e renova sozinha até você cancelar. Cancele quando quiser em Ajustes, Assinatura, até 24 horas antes da renovação. O Baiu avisa 2 dias antes de o mês grátis acabar.
+Termos de uso: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/termos.md
+Política de privacidade: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md
+
 O Baiu é uma ferramenta de organização. Ele não movimenta dinheiro e não indica ativos específicos: as dicas são educativas.
 ```
 
@@ -109,15 +114,35 @@ Abra o formulário e leia as opções. Com a conexão de bancos, o Baiu agrega c
 | Informações pessoais: Nome | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Endereço de e-mail | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Número de telefone | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
-| Informações financeiras: Histórico de compras | Coletado, não compartilhado, opcional, para funcionalidade do app |
+| Informações pessoais: IDs de usuário | Coletado, não compartilhado, obrigatório, para funcionalidade do app e gerenciamento da conta |
+| Informações financeiras: Histórico de compras | Coletado, não compartilhado, obrigatório, para funcionalidade do app |
 | Informações financeiras: Outras informações financeiras | Coletado, não compartilhado, opcional, para funcionalidade do app |
 | Atividade no app: Outros conteúdos gerados pelo usuário | Coletado, não compartilhado, opcional, para funcionalidade do app |
 
-Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As linhas opcionais vêm de duas funções: os bancos conectados pelo Open Finance (movimentos, saldos e investimentos chegam pela Pluggy e passam pelo nosso servidor até o aparelho) e a conversa com IA (a pergunta e um resumo dos números vão para a Anthropic). O Supabase, a Pluggy e a Anthropic são prestadores de serviço, então não contam como compartilhamento.
+Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As linhas opcionais vêm de duas funções: os bancos conectados pelo Open Finance (movimentos, saldos e investimentos chegam pela Pluggy e passam pelo nosso servidor até o aparelho) e a conversa com IA (a pergunta e um resumo dos números vão para a Anthropic). O histórico de compras e o ID de usuário vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos do Google Play para saber se a assinatura está ativa. O Supabase, a Pluggy, a Anthropic e o RevenueCat são prestadores de serviço, então não contam como compartilhamento.
 
 ### Exclusão de conta
 
 Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A página explica como excluir pelo app e por e-mail.
+
+## Assinatura (compras no app)
+
+1. Em **Configuração, Perfil de pagamentos**, crie o perfil de comerciante e preencha os dados bancários. Sem ele, não dá para vender.
+2. O Google só libera a criação de assinaturas depois que um build com a biblioteca de compras foi enviado. Envie primeiro o `.aab` para o teste fechado (passo 4 abaixo).
+3. Em **Monetizar, Produtos, Assinaturas**, crie:
+
+| Campo | Valor |
+| --- | --- |
+| ID do produto | `baiu_mensal` |
+| Nome | Baiu mensal |
+| Plano básico | ID `mensal`, renovação automática, a cada 1 mês, preço escolhido (por exemplo, R$ 14,90) |
+| Oferta | ID `mes-gratis`, teste gratuito de 1 mês, para quem nunca teve esta assinatura |
+
+4. Ative o plano básico e a oferta.
+5. Em **Configuração, Teste de licença**, adicione os e-mails de quem vai testar: as compras deles não são cobradas.
+6. O RevenueCat precisa ler as compras: siga o guia dele para dar acesso a uma conta de serviço (pode ser a mesma do envio automático, com a permissão de dados financeiros) e para ligar as notificações em tempo real (Pub/Sub). O arquivo da conta de serviço vai direto para o painel do RevenueCat, nunca por mensagem.
+
+O resto da configuração está em `supabase/LEIA-ME.md`, passo 9.
 
 ## Passo a passo para publicar
 

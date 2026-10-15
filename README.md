@@ -2,7 +2,7 @@
 
 Gestão financeira pessoal com um mascote que reage ao seu dinheiro. O Baiu é um baiacu: quanto melhor você cuida das finanças, mais ele enche e mais forte é o brilho dele.
 
-Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
+Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o primeiro mês é grátis); sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
 
 ## O que o app faz
 
@@ -10,6 +10,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, s�
 | --- | --- |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
 | Bancos conectados | Open Finance pela Pluggy: contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
+| Assinatura | Primeiro mês grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |
 | Contas | Conta corrente, reserva, cartão de crédito e corretora, conectadas ou com saldo informado pelo usuário |
 | Movimentos | Entradas, saídas e transferências, com categoria, forma de pagamento e data; editar e apagar |
 | Cartão | Fatura como dívida; transferir para o cartão paga a fatura |
@@ -51,6 +52,16 @@ A regra está em `src/lib/folego.ts`.
 4. **Atualizar:** ao abrir o app e ao voltar para ele (no máximo a cada 30 minutos), puxando a tela inicial para baixo, ou em Bancos conectados.
 5. **Conferir:** o que o Baiu não teve certeza vai para "Confira". Corrigir uma categoria corrige os parecidos e vale para os próximos.
 
+## Como a assinatura funciona
+
+1. **Assinar:** depois do cadastro, a tela `src/app/assinatura.tsx` mostra o que está incluso, o preço e as condições. A compra acontece na loja do celular; o Baiu nunca vê dados de pagamento.
+2. **Conferir:** o RevenueCat (`src/lib/subscription/revenuecat.ts`) confere os recibos e conhece a pessoa só pelo id da conta. Sem assinatura ativa, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os registros.
+3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Pluggy ou com a IA. Desconectar bancos e excluir a conta funcionam sempre.
+4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim do mês grátis, uma notificação avisa.
+5. **Excluir a conta:** a função `supabase/functions/subscription` apaga o cadastro no RevenueCat.
+
+Sem as chaves do RevenueCat no build, a cobrança fica desligada e o app, liberado.
+
 ## Como o assistente funciona
 
 Os avisos e as contas que se repetem são calculados no aparelho (`src/lib/assistant/insights.ts`): o Baiu agrupa gastos parecidos ("Açaí do Zé" e "Açaí Concept" viram açaí; Enel e Cemig viram conta de luz) e compara com o mês passado. Um aviso por vez vira notificação, entre 10h e 20h, sem valores.
@@ -71,7 +82,7 @@ cp .env.example .env.local   # preencha com a URL e a chave pública do Supabase
 npx expo start
 ```
 
-O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista.
+O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista e a assinatura usa uma loja de teste.
 
 O Face ID, as notificações e o cofre no Keychain precisam de um build de desenvolvimento ou de teste. No Expo Go parte disso não funciona.
 
@@ -84,7 +95,7 @@ npx eas-cli build --platform ios --profile preview       # pede o login da Apple
 
 ```bash
 npm test            # testes de lógica (saldos, fôlego, vencimentos, investimentos, cripto, CSV, contas)
-npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA e dos bancos, sem internet
+npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA, dos bancos e da assinatura, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
@@ -102,10 +113,11 @@ src/
   lib/auth/       validação do cadastro, cliente do Supabase e servidor falso para testes
   lib/assistant/  avisos, respostas prontas, resumo enviado à IA e IA falsa para testes
   lib/bank/       categorias automáticas, junção dos dados do banco e banco de teste
+  lib/subscription/ assinatura: lojas pelo RevenueCat, estado, avisos e loja de teste
   store/          estado do app e redutor
   theme/          cores, fontes e tipografia
 docs/             privacidade, termos, suporte e exclusão de conta, publicados pelo GitHub
-supabase/         SQL do servidor, funções da IA e dos bancos, modelos de e-mail e guia de configuração
+supabase/         SQL do servidor, funções da IA, dos bancos e da assinatura, modelos de e-mail e guia de configuração
 store/            fichas da App Store e do Google Play e imagens das lojas
 ```
 

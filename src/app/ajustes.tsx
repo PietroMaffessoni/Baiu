@@ -14,6 +14,8 @@ import { accountsCsv, transactionsCsv } from '@/lib/csv';
 import { authenticate, lockInfo, type LockInfo } from '@/lib/lock';
 import { remindersAllowed } from '@/lib/reminders';
 import { shareCsv } from '@/lib/share';
+import { describe } from '@/lib/subscription/status';
+import { useSubscription } from '@/lib/subscription/use-subscription';
 import { useAuth } from '@/store/auth';
 import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
@@ -27,6 +29,7 @@ export default function Ajustes() {
   const insets = useSafeAreaInsets();
   const [lock, setLock] = useState<LockInfo | null>(null);
   const ai = useAssistant();
+  const sub = useSubscription();
   const s = state.settings;
 
   useEffect(() => {
@@ -142,6 +145,18 @@ export default function Ajustes() {
             onPress={() => router.push('/minha-conta')}
             chevron
           />
+          {sub.enabled ? (
+            <>
+              <Rule inset={33} />
+              <ListRow
+                icon="receipt"
+                label="Assinatura"
+                hint={sub.ent ? describe(sub.ent).title : 'Planos, cobrança e cancelamento.'}
+                onPress={() => router.push('/assinatura')}
+                chevron
+              />
+            </>
+          ) : null}
         </Group>
       ) : null}
 

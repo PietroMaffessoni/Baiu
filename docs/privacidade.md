@@ -14,6 +14,8 @@ Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, 
 
 A conversa com inteligência artificial é opcional. Se você ligar, cada pergunta vai para a Anthropic com um resumo dos seus números, sem nome, e-mail, celular ou bancos. Dá para desligar quando quiser.
 
+O Baiu é uma assinatura, com o primeiro mês grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.
+
 Não vendemos dados, não usamos publicidade e não rastreamos você.
 
 ## Dados da conta, no servidor
@@ -66,6 +68,16 @@ As mensagens passam pelo nosso servidor só para conferir seu login, seu aceite 
 
 Não escreva na conversa dados que você não quer compartilhar, como CPF, senhas ou números de cartão. O Baiu nunca pede esses dados.
 
+## Assinatura
+
+O Baiu é cobrado por assinatura, com o primeiro mês grátis. A compra, a cobrança, a forma de pagamento e os reembolsos ficam com a App Store (Apple) ou com o Google Play (Google), conforme as regras e a política de privacidade de cada loja. O Baiu não recebe o número do seu cartão nem outros dados de pagamento.
+
+Para saber se a sua assinatura está ativa, usamos o RevenueCat, empresa dos Estados Unidos que confere os recibos das lojas, como operadora. Ele recebe o código aleatório que identifica sua conta no Baiu (nunca o nome, o e-mail ou o celular), os recibos da loja (plano, preço, datas de compra, de renovação e de cancelamento) e dados técnicos do aparelho, como modelo, sistema, versão do app, país da loja e endereço IP.
+
+O nosso servidor consulta o RevenueCat só para liberar as funções que dependem da assinatura, como os bancos conectados e a conversa com IA. Não guardamos seu histórico de compras no nosso servidor.
+
+Ao excluir sua conta, apagamos seu cadastro no RevenueCat. As lojas mantêm o registro das compras conforme as regras delas e as obrigações fiscais.
+
 ## Para que usamos e com qual base legal
 
 Criar e manter sua conta, permitir o login, confirmar seu e-mail, recuperar a senha e responder seus pedidos de suporte: execução do contrato de uso do app (art. 7º, V, da LGPD).
@@ -80,6 +92,8 @@ Conversa com IA, incluindo o envio da pergunta e do resumo dos seus números à 
 
 Contar as perguntas feitas à IA para aplicar o limite diário: execução do contrato e legítimo interesse em manter o serviço funcionando para todos (art. 7º, V e IX).
 
+Assinatura: conferir se ela está ativa, liberar as funções que dependem dela e avisar antes do fim do mês grátis: execução do contrato (art. 7º, V). O envio ao RevenueCat, nos Estados Unidos, é necessário para executar esse contrato (art. 33, IX).
+
 O celular só é usado para falar com você sobre a sua conta. Não enviamos propaganda.
 
 ## Com quem os dados são compartilhados
@@ -92,6 +106,10 @@ Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códig
 
 Anthropic, PBC: fornece a inteligência artificial da conversa com o Baiu, como operadora, só se você ativar essa função. Fica nos Estados Unidos, o que configura transferência internacional, autorizada pelo seu consentimento específico (art. 33, VIII).
 
+Apple e Google: as lojas processam a compra e a cobrança da assinatura, conforme as políticas delas. O Baiu recebe delas apenas o recibo da compra, sem dados de pagamento.
+
+RevenueCat: confere os recibos das lojas e informa se a assinatura está ativa, como operador. Fica nos Estados Unidos, o que configura transferência internacional, necessária para executar o contrato de assinatura (art. 33, IX), com as garantias contratuais do provedor.
+
 Não compartilhamos dados com anunciantes, bancos ou parceiros comerciais. Autoridades só recebem dados mediante ordem judicial ou exigência legal.
 
 ## Por quanto tempo guardamos
@@ -102,13 +120,15 @@ Conexões com bancos: enquanto estiverem ativas. Ao desconectar um banco, ou ao 
 
 O registro do aceite da conversa com IA fica guardado enquanto a conta existir, como prova do consentimento, mesmo depois de você desligar. O contador de uso da IA é apagado depois de 30 dias.
 
+Cadastro da assinatura no RevenueCat: enquanto sua conta existir. É apagado quando você exclui a conta.
+
 Os registros financeiros do aparelho são apagados quando você exclui a conta, apaga os dados em Ajustes ou desinstala o app.
 
 ## Seus direitos
 
 Pela LGPD (art. 18), você pode confirmar se tratamos seus dados, acessá-los, corrigi-los, pedir anonimização, bloqueio ou eliminação, pedir a portabilidade, saber com quem foram compartilhados, revogar consentimentos e reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
-No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; ligue, desligue e veja o que a conversa com IA envia em Ajustes, Assistente; desconecte bancos em Ajustes, Bancos conectados; e exclua a conta em Minha conta, Excluir conta.
+No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; ligue, desligue e veja o que a conversa com IA envia em Ajustes, Assistente; desconecte bancos em Ajustes, Bancos conectados; veja, cancele ou peça reembolso da assinatura em Ajustes, Assinatura; e exclua a conta em Minha conta, Excluir conta.
 
 Para qualquer outro pedido, escreva para suporte.baiu@gmail.com. Respondemos no prazo da LGPD, de até 15 dias.
 
@@ -122,7 +142,7 @@ Se acontecer um incidente de segurança que possa trazer risco a você, avisarem
 
 Face ID, Touch ID ou biometria: usados apenas para desbloquear o app, se você ligar essa opção. A verificação é feita pelo sistema do aparelho; o Baiu só recebe a resposta de sucesso ou falha.
 
-Notificações: usadas para lembrar vencimentos e para avisar quando o Baiu nota um gasto fora do normal. Tudo é agendado no próprio aparelho e o texto não mostra valores. Os avisos de gastos podem ser desligados em Ajustes.
+Notificações: usadas para lembrar vencimentos, para avisar quando o Baiu nota um gasto fora do normal e para avisar 2 dias antes de o mês grátis da assinatura acabar. Tudo é agendado no próprio aparelho e o texto não mostra valores. Os avisos de gastos e da assinatura podem ser desligados em Ajustes.
 
 ## Backups e troca de aparelho
 

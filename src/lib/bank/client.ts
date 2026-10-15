@@ -11,7 +11,7 @@ export const BANK_CONSENT_VERSION = '2026-10-15';
 /** Para onde o banco devolve a pessoa depois de autorizar no app dele. */
 export const OAUTH_REDIRECT = 'baiu://open-finance';
 
-export type BankErrorCode = 'not_configured' | 'network' | 'session' | 'not_found' | 'busy' | 'unknown';
+export type BankErrorCode = 'not_configured' | 'network' | 'session' | 'not_found' | 'busy' | 'subscription' | 'unknown';
 
 export class BankFailure extends Error {
   constructor(public code: BankErrorCode) {
@@ -26,6 +26,7 @@ export const BANK_MESSAGES: Record<BankErrorCode, string> = {
   session: 'Sua sessão terminou. Entre de novo.',
   not_found: 'Essa conexão não existe mais. Conecte o banco de novo.',
   busy: 'O serviço de conexão está ocupado agora. Tente daqui a pouco.',
+  subscription: 'Bancos conectados fazem parte da assinatura, que não está ativa. Veja em Ajustes, Assinatura.',
   unknown: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
 };
 
@@ -48,6 +49,7 @@ export interface BankBackend {
 
 const STATUS: Record<number, BankErrorCode> = {
   401: 'session',
+  402: 'subscription',
   403: 'not_found',
   404: 'not_found',
   429: 'busy',

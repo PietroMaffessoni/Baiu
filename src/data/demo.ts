@@ -2,7 +2,7 @@ import { addDays, startOfDay } from '@/lib/dates';
 import { DEFAULT_LOOK } from '@/lib/look';
 import type { Account, Assistant, Bank, Bill, Holding, State, Tx } from './types';
 
-export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true, alerts: true };
+export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true, alerts: true, trialReminder: true };
 
 export function createBank(): Bank {
   return { items: [], ignored: {}, hiddenAccounts: {}, rules: {} };

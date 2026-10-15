@@ -150,6 +150,8 @@ export type Settings = {
   reminders: boolean;
   /** Avisa por notificação quando o Baiu nota um gasto fora do normal. */
   alerts: boolean;
+  /** Avisa dois dias antes de o mês grátis da assinatura virar cobrança. */
+  trialReminder: boolean;
 };
 
 /** Sugestão de vencimento que o Baiu tira de uma conta que se repete. */

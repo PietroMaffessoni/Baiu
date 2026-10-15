@@ -32,6 +32,7 @@ const FALLBACK: Record<AssistantErrorCode, string> = {
   not_configured: 'A conversa com IA ainda não está disponível. Vai uma resposta pronta.',
   session: 'Sua sessão terminou. Entre de novo para conversar com a IA. Por enquanto, uma resposta pronta.',
   consent: 'Preciso que você ative de novo a conversa com IA. Por enquanto, uma resposta pronta.',
+  subscription: 'A conversa com IA faz parte da assinatura, que não está ativa. Por enquanto, uma resposta pronta.',
   unknown: 'Algo deu errado do meu lado. Vai uma resposta pronta.',
 };
 

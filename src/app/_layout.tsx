@@ -12,6 +12,7 @@ import { LockGate } from '@/components/lock-gate';
 import { useAssistantUpkeep } from '@/lib/assistant/use-assistant';
 import { useBankUpkeep } from '@/lib/bank/use-bank';
 import { useReminderRouting } from '@/lib/reminders';
+import { useSubscriptionUpkeep } from '@/lib/subscription/use-subscription';
 import { AuthProvider, useAuth } from '@/store/auth';
 import { StoreProvider, useStore, type Owner } from '@/store/store';
 import { T } from '@/theme/text';
@@ -77,13 +78,16 @@ function Owned({ fontsLoaded }: { fontsLoaded: boolean }) {
 }
 
 function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authReady: boolean }) {
-  const { owner, hydrated, unreadable } = useStore();
-  const ready = fontsLoaded && authReady && hydrated;
+  const { owner, hydrated, unreadable, state } = useStore();
   const inApp = owner !== null;
   const signedIn = inApp && owner !== 'demo';
+  // sem assinatura ativa, só a tela de assinar, a conta e os textos legais ficam abertos
+  const sub = useSubscriptionUpkeep(signedIn ? owner : null, state.settings.trialReminder);
+  const locked = signedIn && sub.locked;
+  const ready = fontsLoaded && authReady && hydrated && sub.ready;
   useReminderRouting(ready && signedIn);
-  useAssistantUpkeep(ready && signedIn && !unreadable);
-  useBankUpkeep(ready && signedIn && !unreadable);
+  useAssistantUpkeep(ready && signedIn && !unreadable && !locked);
+  useBankUpkeep(ready && signedIn && !unreadable && !locked);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -106,7 +110,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="verificar-email" />
               <Stack.Screen name="recuperar-senha" />
             </Stack.Protected>
-            <Stack.Protected guard={inApp}>
+            <Stack.Protected guard={inApp && !locked}>
               <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
               <Stack.Screen name="conta/[id]" options={{ ...pushedHeader, title: '' }} />
               <Stack.Screen name="vencimentos" options={{ ...pushedHeader, title: 'Vencimentos' }} />
@@ -131,6 +135,8 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="folego" options={sheet} />
             </Stack.Protected>
             <Stack.Protected guard={signedIn}>
+              {/* primeira da lista: é para onde vai quem está sem assinatura */}
+              <Stack.Screen name="assinatura" options={{ ...pushedHeader, title: 'Assinatura' }} />
               <Stack.Screen name="minha-conta" options={{ ...pushedHeader, title: 'Minha conta' }} />
             </Stack.Protected>
             {/* abertas para todos: o cadastro tem links para elas */}

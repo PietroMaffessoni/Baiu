@@ -11,6 +11,7 @@
 // Segredos (Edge Functions, Secrets):
 //   PLUGGY_CLIENT_ID, PLUGGY_CLIENT_SECRET   obrigatórios
 //   PLUGGY_SANDBOX=1                         opcional: mostra os bancos de teste no widget
+//   REVENUECAT_SECRET_KEY                    com ela, só quem assina conecta e atualiza bancos
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
 //
 // Sem dependências externas: roda no Deno do Supabase e nos testes em Node
@@ -45,6 +46,61 @@ class Stop extends Error {
     this.status = status;
     this.code = code;
   }
+}
+
+const REVENUECAT = 'https://api.revenuecat.com/v1';
+/** Quem já foi conferido com assinatura ativa: id -> até quando a conferência vale. */
+const paid = new Map<string, number>();
+export function _resetSubscriptions() {
+  paid.clear();
+}
+
+type RevenueCatEntitlement = { expires_date?: string | null; grace_period_expires_date?: string | null };
+
+/**
+ * A pessoa tem a assinatura ativa no RevenueCat? Sem REVENUECAT_SECRET_KEY, não
+ * há cobrança e tudo fica liberado. Com o RevenueCat fora do ar, libera (quem
+ * paga não fica sem o serviço); com a chave recusada, bloqueia e avisa no log.
+ */
+async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured'> {
+  const key = env('REVENUECAT_SECRET_KEY');
+  if (!key) return 'ok';
+  const now = Date.now();
+  if ((paid.get(uid) ?? 0) > now) return 'ok';
+  let r: Response;
+  try {
+    r = await http(`${REVENUECAT}/subscribers/${encodeURIComponent(uid)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch {
+    console.error('bank: RevenueCat sem resposta; liberado');
+    return 'ok';
+  }
+  if (r.status === 401 || r.status === 403) {
+    console.error('bank: RevenueCat recusou a chave', r.status);
+    return 'misconfigured';
+  }
+  if (!r.ok) {
+    console.error('bank: RevenueCat respondeu', r.status);
+    return r.status === 429 || r.status >= 500 ? 'ok' : 'none';
+  }
+  let ent: RevenueCatEntitlement | undefined;
+  try {
+    const data = (await r.json()) as { subscriber?: { entitlements?: Record<string, RevenueCatEntitlement> } };
+    ent = data.subscriber?.entitlements?.[env('REVENUECAT_ENTITLEMENT') || 'assinatura'];
+  } catch {
+    return 'ok';
+  }
+  if (!ent) return 'none';
+  // sem data de fim: acesso vitalício (ex.: cortesia dada pelo painel)
+  const until = ent.expires_date
+    ? Math.max(Date.parse(ent.expires_date) || 0, Date.parse(ent.grace_period_expires_date ?? '') || 0)
+    : Infinity;
+  if (until <= now) return 'none';
+  paid.set(uid, Math.min(until, now + 10 * 60_000));
+  return 'ok';
 }
 
 /** Chave de API do provedor, guardada por uma hora e meia (ela vale duas). */
@@ -136,6 +192,13 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     const who = await supa('/auth/v1/user', { method: 'GET' });
     const uid = ((await who.json()) as { id?: string }).id;
     if (!uid) throw new Stop(401, 'session');
+
+    // conectar e atualizar fazem parte da assinatura; desconectar fica sempre liberado
+    if (body.action === 'token' || body.action === 'link' || body.action === 'sync' || body.action === 'refresh') {
+      const paying = await subscription(uid, env, http);
+      if (paying === 'misconfigured') throw new Stop(503, 'not_configured');
+      if (paying === 'none') throw new Stop(402, 'subscription');
+    }
 
     const owned = async (itemId: unknown) => {
       if (typeof itemId !== 'string' || !/^[\w-]{1,100}$/.test(itemId)) throw new Stop(400, 'invalid');

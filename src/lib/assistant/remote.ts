@@ -15,7 +15,15 @@ export type AskMessage = { role: 'user' | 'assistant'; content: string };
 export type AskInput = { messages: AskMessage[]; context: AssistantContext | null };
 export type AskResult = { text: string; remaining?: number };
 
-export type AssistantErrorCode = 'not_configured' | 'network' | 'consent' | 'quota' | 'session' | 'busy' | 'unknown';
+export type AssistantErrorCode =
+  | 'not_configured'
+  | 'network'
+  | 'consent'
+  | 'quota'
+  | 'session'
+  | 'busy'
+  | 'subscription'
+  | 'unknown';
 
 export class AssistantFailure extends Error {
   constructor(public code: AssistantErrorCode) {
@@ -57,6 +65,7 @@ export function toApiMessages(chat: ChatMsg[]): AskMessage[] {
 
 const STATUS: Record<number, AssistantErrorCode> = {
   401: 'session',
+  402: 'subscription',
   403: 'consent',
   404: 'not_configured',
   429: 'quota',
@@ -74,7 +83,13 @@ async function failureFrom(e: unknown): Promise<AssistantFailure> {
       code = ((await res?.clone().json()) as { error?: string } | undefined)?.error;
     } catch {}
     if (code === 'busy') return new AssistantFailure('busy');
-    if (code === 'quota' || code === 'consent' || code === 'session' || code === 'not_configured') {
+    if (
+      code === 'quota' ||
+      code === 'consent' ||
+      code === 'session' ||
+      code === 'not_configured' ||
+      code === 'subscription'
+    ) {
       return new AssistantFailure(code);
     }
     return new AssistantFailure(STATUS[res?.status ?? 0] ?? 'unknown');

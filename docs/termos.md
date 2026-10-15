@@ -20,6 +20,20 @@ Guarde sua senha com cuidado e não a compartilhe. Se suspeitar de acesso indevi
 
 Você pode excluir sua conta a qualquer momento em Minha conta. Podemos suspender contas usadas para fraude ou para atacar o serviço.
 
+## Assinatura e pagamento
+
+Para usar o Baiu com a sua conta é preciso ter uma assinatura ativa. O modo exemplo continua gratuito.
+
+Mês grátis: quem assina pela primeira vez usa o Baiu por 1 mês sem pagar. O período grátis vale uma vez por pessoa, conforme as regras da loja.
+
+Cobrança: ao fim do mês grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.
+
+Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim do mês grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de o mês grátis acabar.
+
+Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.
+
+Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes.
+
 ## Sugestões e conversas não são recomendação
 
 O fôlego, os selos, os próximos passos, os avisos e as respostas do Baiu, inclusive as da inteligência artificial, são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.

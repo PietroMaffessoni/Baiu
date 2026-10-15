@@ -6,5 +6,6 @@ export async function remindersAllowed(_ask: boolean) {
   return false;
 }
 export async function syncReminders(_bills: Bill[], _enabled: boolean) {}
+export async function syncTrialReminder(_at: Date | null, _days: number) {}
 export async function clearReminders() {}
 export function useReminderRouting(_enabled: boolean) {}

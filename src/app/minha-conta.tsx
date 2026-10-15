@@ -10,6 +10,10 @@ import { Plate, Rule } from '@/components/layout';
 import { AuthFailure, authMessage } from '@/lib/auth';
 import { BankFailure, bankBackend } from '@/lib/bank/client';
 import { checkName, checkPassword, checkPhone, formatName, formatPhone, passwordProblem } from '@/lib/auth/validation';
+import { SubFailure, type SubscriptionBackend } from '@/lib/subscription/backend';
+import { subscriptionBackend } from '@/lib/subscription/client';
+import { STORE_NAMES } from '@/lib/subscription/status';
+import { useSubscription } from '@/lib/subscription/use-subscription';
 import { useAuth } from '@/store/auth';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
@@ -31,9 +35,26 @@ async function disconnectBanks() {
   }
 }
 
+/** Apaga o cadastro no RevenueCat. A assinatura em si é da loja: quem cancela é a pessoa, lá. */
+async function forgetSubscription(backend: SubscriptionBackend = subscriptionBackend) {
+  try {
+    await backend.forget();
+  } catch (e) {
+    throw new AuthFailure(
+      'network',
+      e instanceof SubFailure && e.code === 'network'
+        ? 'Sem internet para encerrar o cadastro da assinatura. Confira a rede e tente de novo.'
+        : 'Não deu para encerrar o cadastro da assinatura antes de excluir a conta. Tente de novo em instantes.',
+    );
+  }
+}
+
 export default function MinhaConta() {
   const { profile, updateProfile, changePassword, deleteAccount, signOut } = useAuth();
   const insets = useSafeAreaInsets();
+  const sub = useSubscription();
+  // excluir a conta não cancela a cobrança na loja: avisa antes
+  const renewing = sub.ent?.active && sub.ent.willRenew ? (sub.ent.store ? STORE_NAMES[sub.ent.store] : 'loja') : null;
 
   if (!profile) return <View style={styles.screen} />;
 
@@ -55,7 +76,8 @@ export default function MinhaConta() {
           <View style={{ paddingVertical: 14, gap: 8 }}>
             <T variant="callout" tone="ink2">
               No servidor do Baiu ficam só o nome, o e-mail, o celular e o registro de quando você aceitou os termos.
-              Contas, movimentos e investimentos ficam apenas neste aparelho, criptografados.
+              Contas, movimentos e investimentos ficam apenas neste aparelho, criptografados. A assinatura é cobrada
+              pela loja do seu celular; o Baiu não vê seus dados de pagamento.
             </T>
             <T variant="callout" tone="ink2">
               Você pode corrigir seus dados aqui, exportar seus registros em Ajustes e excluir a conta abaixo. Para
@@ -80,7 +102,15 @@ export default function MinhaConta() {
           />
         </View>
 
-        <DeleteAccount onDelete={(password) => deleteAccount(password, disconnectBanks)} />
+        <DeleteAccount
+          renewing={renewing}
+          onDelete={(password) =>
+            deleteAccount(password, async () => {
+              await disconnectBanks();
+              await forgetSubscription();
+            })
+          }
+        />
       </ScrollView>
     </KeyboardAvoidingView>
   );
@@ -268,7 +298,14 @@ function PasswordForm({
   );
 }
 
-function DeleteAccount({ onDelete }: { onDelete: (password: string) => Promise<void> }) {
+function DeleteAccount({
+  onDelete,
+  renewing,
+}: {
+  onDelete: (password: string) => Promise<void>;
+  /** Nome da loja quando a assinatura vai renovar. */
+  renewing: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -297,6 +334,14 @@ function DeleteAccount({ onDelete }: { onDelete: (password: string) => Promise<v
             Sua conta sai do servidor do Baiu, e os registros financeiros desta conta são apagados deste aparelho. Isso
             não pode ser desfeito. Se quiser uma cópia, exporte seus movimentos em Ajustes antes.
           </T>
+          {renewing ? (
+            <View style={{ marginBottom: 16, gap: 10 }}>
+              <T variant="callout" tone="vermilion">
+                Sua assinatura continua ativa na {renewing}. Excluir a conta não cancela a cobrança: cancele antes.
+              </T>
+              <Button label="Cancelar a assinatura primeiro" kind="secondary" onPress={() => router.push('/assinatura')} />
+            </View>
+          ) : null}
           <PasswordField label="Sua senha" value={password} onChangeText={setPassword} placeholder="Para confirmar" />
           <FormError message={error} />
           <Button

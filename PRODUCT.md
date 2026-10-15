@@ -33,7 +33,7 @@ Uso no celular, em sessões curtas: conferir saldo consolidado, ver um gasto que
 - v0 (esta entrega): foco no visual, navegável no Expo Go. Contas, transações, orçamentos e investimentos são dados de demonstração locais.
 - Conexão real com bancos pelo Open Finance, via Pluggy (agregador). Contas manuais continuam possíveis.
 - Sem backend e sem login real na v0.
-- Indefinido: fórmula final do índice de saúde financeira (a v0 usa uma regra simples e explicável), monetização. Provedor de Open Finance escolhido: Pluggy (contrato pendente).
+- Indefinido: fórmula final do índice de saúde financeira (a v0 usa uma regra simples e explicável). Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas (preço a definir). Provedor de Open Finance escolhido: Pluggy (contrato pendente).
 - Indefinido: suporte a tablet. A v0 foi desenhada para celular; o iOS está limitado a iPhone, mas o Android ainda instala em tablets.
 
 ## Brand Commitments

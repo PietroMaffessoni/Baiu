@@ -27,6 +27,8 @@ import { greeting, longToday } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
 import { sealsFor } from '@/lib/seals';
+import { trialDaysLeft } from '@/lib/subscription/status';
+import { useSubscriptionState } from '@/lib/subscription/use-subscription';
 import { dailySpending, last30, sortedTxs } from '@/lib/summary';
 import { useAuth } from '@/store/auth';
 import { useAccountsById, useFolego, useStore } from '@/store/store';
@@ -55,6 +57,8 @@ export default function Home() {
   const bankStatus = useBankStatus();
   const linked = state.bank.items.length > 0;
   const toReview = state.txs.filter((t) => t.review).length;
+  const sub = useSubscriptionState();
+  const trialLeft = sub.ent ? trialDaysLeft(sub.ent) : null;
   const broken = state.bank.items.filter((i) => i.status === 'reconectar');
 
   const look = useBaiuLook();
@@ -181,6 +185,23 @@ export default function Home() {
           title={`${broken[0].name} precisa reconectar`}
           text="A autorização venceu ou o banco pediu uma confirmação. Sem isso, os movimentos novos não chegam."
           onPress={() => router.push('/bancos')}
+        />
+      ) : null}
+      {sub.ent?.status === 'pagamento' ? (
+        <Notice
+          icon="warning"
+          tone="vermilion"
+          title="Problema no pagamento da assinatura"
+          text="A loja não conseguiu cobrar. Atualize a forma de pagamento para não perder o acesso."
+          onPress={() => router.push('/assinatura')}
+        />
+      ) : trialLeft !== null && trialLeft <= 3 ? (
+        <Notice
+          icon="warning"
+          tone="lantern"
+          title={trialLeft <= 1 ? 'Seu mês grátis acaba amanhã' : `Seu mês grátis acaba em ${trialLeft} dias`}
+          text="Depois, a assinatura começa a ser cobrada. Toque para ver os detalhes ou cancelar."
+          onPress={() => router.push('/assinatura')}
         />
       ) : null}
       {toReview > 0 ? (
