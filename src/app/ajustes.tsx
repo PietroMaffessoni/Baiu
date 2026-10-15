@@ -145,6 +145,22 @@ export default function Ajustes() {
         </Group>
       ) : null}
 
+      {!state.demo ? (
+        <Group title="Bancos">
+          <ListRow
+            icon="bank"
+            label="Bancos conectados"
+            hint={
+              state.bank.items.length
+                ? `${state.bank.items.length} ${state.bank.items.length === 1 ? 'banco conectado' : 'bancos conectados'} pelo Open Finance.`
+                : 'Conecte seus bancos e o Baiu registra tudo sozinho.'
+            }
+            onPress={() => router.push('/bancos')}
+            chevron
+          />
+        </Group>
+      ) : null}
+
       <Group title="Privacidade e segurança">
         <ListRow
           icon={s.hideValues ? 'eyeOff' : 'eye'}
@@ -198,8 +214,8 @@ export default function Ajustes() {
           label="Onde ficam"
           hint={
             ai.mode === 'ligada'
-              ? 'Seus registros ficam só neste aparelho, criptografados. Com a conversa com IA ligada, cada pergunta leva um resumo dos números, sem dados pessoais.'
-              : 'Seus registros financeiros ficam só neste aparelho, criptografados. No servidor ficam apenas nome, e-mail e celular da conta.'
+              ? 'Seus registros ficam só neste aparelho, criptografados. Bancos conectados mandam os dados direto para cá. Com a conversa com IA ligada, cada pergunta leva um resumo dos números, sem dados pessoais.'
+              : 'Seus registros financeiros ficam só neste aparelho, criptografados. Bancos conectados mandam os dados direto para cá; no servidor ficam só seus dados de cadastro.'
           }
         />
       </Group>

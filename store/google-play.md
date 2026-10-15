@@ -33,11 +33,14 @@ Até 4.000 caracteres.
 ```
 O Baiu é um baiacu que enche conforme você cuida do seu dinheiro. Quanto melhores os hábitos, mais cheio e mais feliz ele fica.
 
+CONECTE SEUS BANCOS
+Pelo Open Finance, o sistema oficial do Banco Central, o Baiu traz suas contas, cartões, investimentos e cada entrada e saída, já separadas por categoria: salário, mercado, transporte, contas da casa. Você só confere. A senha fica no banco e o acesso é só para leitura.
+
 REÚNA SUAS CONTAS
-Cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma tudo e mostra seu saldo e seu patrimônio em um lugar só.
+Conecte ou cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma tudo e mostra seu saldo e seu patrimônio em um lugar só.
 
 REGISTRE O QUE ENTRA E O QUE SAI
-Entradas, gastos e transferências em poucos toques, com categorias, forma de pagamento e data. O extrato mostra cada dia do mês e quanto você guardou.
+Com os bancos conectados, tudo chega sozinho. Nas contas manuais, entradas, gastos e transferências em poucos toques. O extrato mostra cada dia do mês e quanto você guardou.
 
 CONVERSE COM O BAIU
 O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. A conversa com inteligência artificial é opcional e só começa com a sua permissão.
@@ -58,9 +61,9 @@ GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
 PRIVADO DE VERDADE
-Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
+Sem anúncios e sem rastreamento. Seus registros financeiros ficam no seu celular, criptografados com uma chave guardada no próprio aparelho; nem os dados dos bancos conectados ficam no nosso servidor. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
 
-O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não indica ativos específicos: as dicas são educativas.
+O Baiu é uma ferramenta de organização. Ele não movimenta dinheiro e não indica ativos específicos: as dicas são educativas.
 ```
 
 ## Imagens
@@ -94,7 +97,7 @@ Respostas para a seção Política, Conteúdo do app.
 
 O Baiu não oferece conta, empréstimo, pagamento, transferência real, negociação de ativos nem consultoria. Ele só organiza informações que o próprio usuário digita.
 
-Abra o formulário e leia as opções. Se não houver uma opção específica para gestão de finanças pessoais ou orçamento, marque que o app não oferece recursos financeiros.
+Abra o formulário e leia as opções. Com a conexão de bancos, o Baiu agrega contas pelo Open Finance (só leitura), sem fazer pagamentos nem empréstimos. Marque a opção de gestão de finanças pessoais ou agregação de contas, se houver; não marque pagamentos, empréstimos nem investimentos.
 
 ### Segurança dos dados
 
@@ -106,10 +109,11 @@ Abra o formulário e leia as opções. Se não houver uma opção específica pa
 | Informações pessoais: Nome | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Endereço de e-mail | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Número de telefone | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
+| Informações financeiras: Histórico de compras | Coletado, não compartilhado, opcional, para funcionalidade do app |
 | Informações financeiras: Outras informações financeiras | Coletado, não compartilhado, opcional, para funcionalidade do app |
 | Atividade no app: Outros conteúdos gerados pelo usuário | Coletado, não compartilhado, opcional, para funcionalidade do app |
 
-Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As duas linhas opcionais vêm da conversa com IA: com ela ligada, a pergunta e um resumo dos números vão para a Anthropic. O Supabase e a Anthropic são prestadores de serviço, então não contam como compartilhamento.
+Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As linhas opcionais vêm de duas funções: os bancos conectados pelo Open Finance (movimentos, saldos e investimentos chegam pela Pluggy e passam pelo nosso servidor até o aparelho) e a conversa com IA (a pergunta e um resumo dos números vão para a Anthropic). O Supabase, a Pluggy e a Anthropic são prestadores de serviço, então não contam como compartilhamento.
 
 ### Exclusão de conta
 

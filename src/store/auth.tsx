@@ -26,7 +26,8 @@ type Ctx = {
   cancelReset: () => Promise<void>;
   changePassword: (current: string, next: string) => Promise<void>;
   updateProfile: (p: { fullName: string; phone: string }) => Promise<void>;
-  deleteAccount: (password: string) => Promise<void>;
+  /** `beforeDelete` roda depois de conferir a senha e antes de excluir (ex.: desconectar bancos). */
+  deleteAccount: (password: string, beforeDelete?: () => Promise<void>) => Promise<void>;
   signOut: () => Promise<void>;
 };
 
@@ -108,13 +109,14 @@ export function AuthProvider({ children, backend = auth }: { children: ReactNode
         await backend.updatePassword(next);
       },
       updateProfile: async (p) => apply(await backend.updateProfile(p)),
-      deleteAccount: async (password) => {
+      deleteAccount: async (password, beforeDelete) => {
         const p = requireProfile();
         await backend.confirmPassword(p.email, password).catch((e) => {
           throw e instanceof AuthFailure && e.code === 'invalid_credentials'
             ? new AuthFailure('invalid_credentials', 'Senha incorreta.')
             : e;
         });
+        await beforeDelete?.();
         blockSaves(p.id, true);
         try {
           await backend.deleteAccount();

@@ -10,6 +10,7 @@ import { Baiu } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { LockGate } from '@/components/lock-gate';
 import { useAssistantUpkeep } from '@/lib/assistant/use-assistant';
+import { useBankUpkeep } from '@/lib/bank/use-bank';
 import { useReminderRouting } from '@/lib/reminders';
 import { AuthProvider, useAuth } from '@/store/auth';
 import { StoreProvider, useStore, type Owner } from '@/store/store';
@@ -82,6 +83,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
   const signedIn = inApp && owner !== 'demo';
   useReminderRouting(ready && signedIn);
   useAssistantUpkeep(ready && signedIn && !unreadable);
+  useBankUpkeep(ready && signedIn && !unreadable);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -113,6 +115,10 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="personalizar" options={{ ...pushedHeader, title: 'Personalizar o Baiu' }} />
               <Stack.Screen name="baiu" />
               <Stack.Screen name="assistente-dados" options={sheet} />
+              <Stack.Screen name="conectar" options={modal} />
+              <Stack.Screen name="bancos" options={{ ...pushedHeader, title: 'Bancos conectados' }} />
+              <Stack.Screen name="revisar" options={{ ...pushedHeader, title: 'Confira' }} />
+              <Stack.Screen name="open-finance" options={{ animation: 'none' }} />
               <Stack.Screen name="nova-conta" options={modal} />
               <Stack.Screen name="conta-editar" options={modal} />
               <Stack.Screen name="movimento/novo" options={modal} />

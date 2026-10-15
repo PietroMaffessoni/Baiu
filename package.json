@@ -27,11 +27,13 @@
     "react-dom": "19.2.3",
     "react-native": "0.86.3",
     "react-native-gesture-handler": "~2.32.0",
+    "react-native-pluggy-connect": "^1.6.0",
     "react-native-reanimated": "4.5.1",
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
     "react-native-web": "~0.21.0",
+    "react-native-webview": "13.16.1",
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
@@ -52,7 +54,7 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs"
+    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node scripts/test-bancos-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-bank.mjs"
   },
   "private": true,
   "jest": {

@@ -17,6 +17,8 @@ function flow(acc: Account, dir: 'in' | 'out', amount: number) {
 
 /** Aplica (sign = 1) ou desfaz (sign = -1) um movimento nos saldos. */
 export function applyTx(accounts: Account[], tx: Tx, sign: 1 | -1 = 1): Account[] {
+  // movimento que veio do banco já está no saldo que o banco informa
+  if (tx.ext) return accounts;
   return accounts.map((a) => {
     let d = 0;
     if (tx.kind === 'saida' && a.id === tx.accountId) d += flow(a, 'out', tx.amount);
@@ -52,6 +54,13 @@ export function signedAmount(tx: Tx, perspective?: string) {
 }
 
 type ById = Map<string, Account>;
+
+/**
+ * Entrada ou saída que só troca dinheiro de lugar entre contas da própria
+ * pessoa (pagamento de fatura, Pix para si mesma) quando a outra ponta não
+ * está no Baiu. Não conta como ganho nem como gasto.
+ */
+export const isNeutral = (tx: Tx) => tx.kind !== 'transferencia' && tx.category === 'transferencia';
 
 /** Dinheiro que foi para investimentos vindo de fora deles. */
 export function isAporte(tx: Tx, byId: ById) {

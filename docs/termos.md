@@ -8,7 +8,7 @@ Ao criar uma conta ou usar o Baiu, você concorda com estes termos. Eles são cu
 
 O Baiu é uma ferramenta para você organizar suas finanças pessoais: registrar contas, movimentos, vencimentos e investimentos, acompanhar um indicador de saúde financeira, o fôlego, e conversar com o Baiu, um assistente que avisa sobre gastos fora do normal e tira dúvidas sobre dinheiro.
 
-O Baiu não é banco, instituição de pagamento nem corretora. Ele não movimenta dinheiro, não faz pagamentos e não se conecta às suas contas.
+O Baiu não é banco, instituição de pagamento nem corretora. Ele não movimenta dinheiro e não faz pagamentos. Se você quiser, ele se conecta aos seus bancos pelo Open Finance, só para leitura.
 
 ## Sua conta
 
@@ -30,9 +30,17 @@ Antes de decisões financeiras importantes, procure um profissional habilitado.
 
 ## Seus registros
 
-Os valores mostrados são os que você informa. Você é responsável por mantê-los corretos.
+Os valores mostrados são os que você informa ou os que seus bancos enviam. Você é responsável por manter corretos os que digitar.
 
-Os registros financeiros ficam só no aparelho onde foram criados. Exporte seus registros com frequência se quiser ter uma cópia.
+Os registros digitados à mão ficam só no aparelho onde foram criados. Exporte seus registros com frequência se quiser ter uma cópia.
+
+## Bancos conectados
+
+A conexão com bancos é opcional e depende da sua autorização no Baiu e no seu banco. Os dados chegam com o atraso e na forma em que os bancos e a Pluggy os disponibilizam; podem faltar movimentos ou haver diferenças em relação ao extrato do banco.
+
+As categorias são escolhidas automaticamente e podem errar: confira e corrija quando precisar. Para valores oficiais, vale o extrato do seu banco.
+
+A conexão pode ficar indisponível por falhas, manutenção ou mudanças nos bancos, no Open Finance ou na Pluggy. Você pode desconectar quando quiser.
 
 ## Conversa com IA
 

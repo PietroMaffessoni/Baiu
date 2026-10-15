@@ -124,9 +124,31 @@ export default function NovaConta() {
         <Animated.View entering={FadeIn.duration(180)} style={{ flex: 1 }}>
           <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}>
             <View style={styles.pad}>
-              <T variant="title1">Qual é o banco?</T>
+              {!state.demo ? (
+                <Pressable
+                  onPress={() => router.replace('/conectar')}
+                  accessibilityRole="button"
+                  accessibilityLabel="Conectar pelo Open Finance"
+                  style={({ pressed }) => [styles.connect, pressed && { backgroundColor: color.plateHi }]}>
+                  <View style={styles.connectGlyph}>
+                    <Icon name="link" size={18} tint={color.night} weight="semibold" />
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <T variant="bodyStrong">Conectar pelo Open Finance</T>
+                    <T variant="caption" tone="ink2">
+                      Recomendado. Saldos, cartões, investimentos e movimentos entram sozinhos.
+                    </T>
+                  </View>
+                  <Icon name="chevron" size={13} tint={color.ink3} weight="semibold" />
+                </Pressable>
+              ) : null}
+              <T variant="title1" style={!state.demo ? { marginTop: 24 } : undefined}>
+                {state.demo ? 'Qual é o banco?' : 'Ou cadastre à mão'}
+              </T>
               <T variant="callout" tone="ink2" style={{ marginTop: 4 }}>
-                Cadastre as contas onde você recebe e paga. Uma de cada vez.
+                {state.demo
+                  ? 'Cadastre as contas onde você recebe e paga. Uma de cada vez.'
+                  : 'Para contas que não estão no Open Finance, ou se preferir digitar. Qual é o banco?'}
               </T>
               <View style={styles.search}>
                 <Icon name="search" size={17} tint={color.ink3} />
@@ -404,6 +426,26 @@ function Keypad({
 }
 
 const styles = StyleSheet.create({
+  connect: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    marginTop: 8,
+    padding: 14,
+    borderRadius: radius.plate,
+    borderCurve: 'continuous',
+    backgroundColor: color.plate,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 182, 72, 0.45)',
+  },
+  connectGlyph: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.lantern,
+  },
   screen: { flex: 1, backgroundColor: color.night },
   header: {
     flexDirection: 'row',

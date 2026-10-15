@@ -11,7 +11,9 @@ import { Plate, Rule } from '@/components/layout';
 import { BigMoney } from '@/components/money';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
+import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { dueLabel, nextCardDue } from '@/lib/bills';
+import { agoLabel } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl } from '@/lib/money';
 import { dailySpending, last30, sortedTxs } from '@/lib/summary';
@@ -28,6 +30,8 @@ export default function ContaDetalhe() {
   const account = state.accounts.find((a) => a.id === id);
   const txs = useMemo(() => sortedTxs(state, id), [state, id]);
   const bars = useMemo(() => dailySpending(state, last30(), new Date(), id), [state, id]);
+  const { refresh } = useBank();
+  const bankStatus = useBankStatus();
 
   if (!account) {
     return (
@@ -45,13 +49,16 @@ export default function ContaDetalhe() {
   const invest = account.kind === 'investimento';
   const used = card && account.limit ? Math.min(1, Math.max(0, account.balance) / account.limit) : 0;
   const hide = state.settings.hideValues;
+  const item = account.link ? state.bank.items.find((i) => i.id === account.link!.item) : undefined;
 
   const remove = () => {
     const doIt = () => {
       dispatch({ type: 'removeAccount', id: account.id });
       close();
     };
-    const msg = `Os ${txs.length} movimentos ligados a esta conta também saem do Baiu. Isso não pode ser desfeito.`;
+    const msg = item
+      ? `A conta e os ${txs.length} movimentos dela saem do Baiu e não voltam nas próximas atualizações de ${item.name}. As outras contas desse banco continuam conectadas.`
+      : `Os ${txs.length} movimentos ligados a esta conta também saem do Baiu. Isso não pode ser desfeito.`;
     if (Platform.OS === 'web') return doIt();
     Alert.alert('Remover esta conta?', msg, [
       { text: 'Cancelar', style: 'cancel' },
@@ -67,16 +74,17 @@ export default function ContaDetalhe() {
       <Stack.Screen
         options={{
           title: account.nickname ?? bank.name,
-          headerRight: () => (
-            <Pressable
-              hitSlop={10}
-              accessibilityRole="button"
-              onPress={() => router.push({ pathname: '/conta-editar', params: { id: account.id } })}>
-              <T variant="body" tone="lantern">
-                Editar
-              </T>
-            </Pressable>
-          ),
+          headerRight: () =>
+            item ? null : (
+              <Pressable
+                hitSlop={10}
+                accessibilityRole="button"
+                onPress={() => router.push({ pathname: '/conta-editar', params: { id: account.id } })}>
+                <T variant="body" tone="lantern">
+                  Editar
+                </T>
+              </Pressable>
+            ),
         }}
       />
 
@@ -116,38 +124,58 @@ export default function ContaDetalhe() {
         ) : null}
       </View>
 
-      <View style={styles.actions}>
-        {card && account.balance > 0 ? (
+      {item ? (
+        <View style={styles.actions}>
+          <View style={styles.linked}>
+            <T variant="caption" tone="ink2" align="center">
+              {`Conectada pelo Open Finance${account.link?.last4 ? ` · final ${account.link.last4}` : ''} · atualizada ${agoLabel(item.syncedAt)}`}
+            </T>
+            <T variant="caption" tone="ink3" align="center">
+              Saldo e movimentos vêm do banco. Para corrigir uma categoria, toque no movimento.
+            </T>
+          </View>
           <Button
-            label="Pagar fatura"
+            label={bankStatus.running ? 'Atualizando…' : 'Atualizar agora'}
+            kind="secondary"
+            icon="undo"
+            disabled={bankStatus.running}
+            onPress={() => refresh(item.id)}
+          />
+        </View>
+      ) : (
+        <View style={styles.actions}>
+          {card && account.balance > 0 ? (
+            <Button
+              label="Pagar fatura"
+              onPress={() =>
+                router.push({
+                  pathname: '/movimento/novo',
+                  params: {
+                    kind: 'transferencia',
+                    toAccountId: account.id,
+                    cents: String(Math.round(account.balance * 100)),
+                  },
+                })
+              }
+            />
+          ) : null}
+          {invest ? (
+            <Button
+              label="Adicionar investimento"
+              icon="plus"
+              onPress={() => router.push({ pathname: '/investimento/novo', params: { accountId: account.id } })}
+            />
+          ) : null}
+          <Button
+            label={card ? 'Registrar compra' : 'Registrar movimento'}
+            kind={(card && account.balance > 0) || invest ? 'secondary' : 'primary'}
+            icon="plus"
             onPress={() =>
-              router.push({
-                pathname: '/movimento/novo',
-                params: {
-                  kind: 'transferencia',
-                  toAccountId: account.id,
-                  cents: String(Math.round(account.balance * 100)),
-                },
-              })
+              router.push({ pathname: '/movimento/novo', params: { accountId: account.id, kind: card ? 'saida' : '' } })
             }
           />
-        ) : null}
-        {invest ? (
-          <Button
-            label="Adicionar investimento"
-            icon="plus"
-            onPress={() => router.push({ pathname: '/investimento/novo', params: { accountId: account.id } })}
-          />
-        ) : null}
-        <Button
-          label={card ? 'Registrar compra' : 'Registrar movimento'}
-          kind={(card && account.balance > 0) || invest ? 'secondary' : 'primary'}
-          icon="plus"
-          onPress={() =>
-            router.push({ pathname: '/movimento/novo', params: { accountId: account.id, kind: card ? 'saida' : '' } })
-          }
-        />
-      </View>
+        </View>
+      )}
 
       {txs.length > 0 && (
         <View style={styles.pad}>
@@ -191,6 +219,7 @@ export default function ContaDetalhe() {
 }
 
 const styles = StyleSheet.create({
+  linked: { gap: 2, marginBottom: 4 },
   screen: { flex: 1, backgroundColor: color.night },
   missing: { alignItems: 'center', justifyContent: 'center' },
   head: { paddingHorizontal: gutter, paddingTop: 12, alignItems: 'flex-start' },

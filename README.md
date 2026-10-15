@@ -2,14 +2,15 @@
 
 Gestão financeira pessoal com um mascote que reage ao seu dinheiro. O Baiu é um baiacu: quanto melhor você cuida das finanças, mais ele enche e mais forte é o brilho dele.
 
-Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites dos termos e um contador diário de perguntas à IA. Não há anúncios nem analytics.
+Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
 
 ## O que o app faz
 
 | Área | O que dá para fazer |
 | --- | --- |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
-| Contas | Conta corrente, reserva, cartão de crédito e corretora, com saldo informado pelo usuário |
+| Bancos conectados | Open Finance pela Pluggy: contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
+| Contas | Conta corrente, reserva, cartão de crédito e corretora, conectadas ou com saldo informado pelo usuário |
 | Movimentos | Entradas, saídas e transferências, com categoria, forma de pagamento e data; editar e apagar |
 | Cartão | Fatura como dívida; transferir para o cartão paga a fatura |
 | Vencimentos | Boletos e contas fixas, recorrência mensal, pagamento que vira saída no extrato |
@@ -42,6 +43,14 @@ O fôlego vai de 0 a 100 e soma quatro pilares de 25 pontos, calculados sobre os
 
 A regra está em `src/lib/folego.ts`.
 
+## Como a conexão com bancos funciona
+
+1. **Conectar:** a pessoa autoriza no Baiu e no app do banco, pelo widget da Pluggy (`src/app/conectar.tsx`). A conexão é criada com o id da pessoa no provedor.
+2. **Buscar:** a função `supabase/functions/bank` confere o login, confere no provedor que a conexão é da pessoa e devolve contas, movimentos e investimentos enxutos, sem CPF nem nomes. Nada fica guardado no servidor.
+3. **Organizar no aparelho** (`src/lib/bank/merge.ts` e `categorize.ts`): saldos vêm do banco; cada movimento ganha uma categoria (regras aprendidas, depois a categoria do provedor, depois um dicionário de lojas); pagamento de fatura, Pix para si e aplicações viram transferências; salário é reconhecido pela repetição; vencimentos cadastrados são marcados como pagos.
+4. **Atualizar:** ao abrir o app e ao voltar para ele (no máximo a cada 30 minutos), puxando a tela inicial para baixo, ou em Bancos conectados.
+5. **Conferir:** o que o Baiu não teve certeza vai para "Confira". Corrigir uma categoria corrige os parecidos e vale para os próximos.
+
 ## Como o assistente funciona
 
 Os avisos e as contas que se repetem são calculados no aparelho (`src/lib/assistant/insights.ts`): o Baiu agrupa gastos parecidos ("Açaí do Zé" e "Açaí Concept" viram açaí; Enel e Cemig viram conta de luz) e compara com o mês passado. Um aviso por vez vira notificação, entre 10h e 20h, sem valores.
@@ -62,7 +71,7 @@ cp .env.example .env.local   # preencha com a URL e a chave pública do Supabase
 npx expo start
 ```
 
-O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810.
+O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista.
 
 O Face ID, as notificações e o cofre no Keychain precisam de um build de desenvolvimento ou de teste. No Expo Go parte disso não funciona.
 
@@ -75,7 +84,7 @@ npx eas-cli build --platform ios --profile preview       # pede o login da Apple
 
 ```bash
 npm test            # testes de lógica (saldos, fôlego, vencimentos, investimentos, cripto, CSV, contas)
-npm run test:sql    # testa o SQL do servidor num Postgres embutido e a função da IA, sem internet
+npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA e dos bancos, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
@@ -92,10 +101,11 @@ src/
   lib/            fôlego, saldos, vencimentos, selos, cofre cifrado, lembretes, CSV
   lib/auth/       validação do cadastro, cliente do Supabase e servidor falso para testes
   lib/assistant/  avisos, respostas prontas, resumo enviado à IA e IA falsa para testes
+  lib/bank/       categorias automáticas, junção dos dados do banco e banco de teste
   store/          estado do app e redutor
   theme/          cores, fontes e tipografia
 docs/             privacidade, termos, suporte e exclusão de conta, publicados pelo GitHub
-supabase/         SQL do servidor, função da IA, modelos de e-mail e guia de configuração
+supabase/         SQL do servidor, funções da IA e dos bancos, modelos de e-mail e guia de configuração
 store/            fichas da App Store e do Google Play e imagens das lojas
 ```
 

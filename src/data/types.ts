@@ -17,7 +17,18 @@ export type Account = {
   dueDay?: number;
   /** Limite do cartão. */
   limit?: number;
+  /** Conta conectada pelo Open Finance: o saldo vem do banco. */
+  link?: AccountLink;
   createdAt: string;
+};
+
+export type AccountLink = {
+  /** Conexão (item) no provedor. */
+  item: string;
+  /** Conta no provedor. Para a carteira de investimentos: `inv:<item>`. */
+  remote: string;
+  /** Final do número da conta ou do cartão, para reconhecer. */
+  last4?: string;
 };
 
 export type TxKind = 'saida' | 'entrada' | 'transferencia';
@@ -58,6 +69,12 @@ export type Tx = {
   date: string;
   /** Pagamento de um vencimento. */
   billId?: string;
+  /** Veio do banco pelo Open Finance. Não mexe nos saldos: o saldo já vem do banco. */
+  ext?: { id: string; item: string };
+  /** Categoria incerta: aparece em "Confira" para a pessoa olhar. */
+  review?: boolean;
+  /** Quem escolheu a categoria: o banco, o Baiu, uma regra aprendida ou a pessoa. */
+  catBy?: 'banco' | 'baiu' | 'aprendida' | 'pessoa';
   createdAt: string;
 };
 
@@ -93,7 +110,36 @@ export type Holding = {
   invested: number;
   /** Variações registradas ao atualizar o valor. */
   yields: { date: string; amount: number }[];
+  /** Veio da corretora pelo Open Finance. */
+  ext?: { id: string; item: string };
   createdAt: string;
+};
+
+export type BankItemStatus = 'ok' | 'atualizando' | 'reconectar' | 'erro';
+
+/** Uma conexão com um banco ou corretora. */
+export type BankItem = {
+  id: string;
+  /** Nome da instituição, como o provedor informa. */
+  name: string;
+  bankId: string;
+  status: BankItemStatus;
+  /** Quando o banco coletou os dados pela última vez. */
+  updatedAt?: string;
+  /** Quando o Baiu buscou os dados pela última vez. */
+  syncedAt?: string;
+  /** Quando a pessoa autorizou (consentimento). */
+  connectedAt: string;
+};
+
+export type Bank = {
+  items: BankItem[];
+  /** Movimentos que a pessoa apagou: não voltam na próxima busca. */
+  ignored: Record<string, true>;
+  /** Contas do banco que a pessoa removeu do Baiu. */
+  hiddenAccounts: Record<string, true>;
+  /** Categorias aprendidas com as correções da pessoa: chave do gasto -> categoria. */
+  rules: Record<string, Category>;
 };
 
 export type Settings = {
@@ -154,6 +200,8 @@ export type State = {
   txs: Tx[];
   bills: Bill[];
   holdings: Holding[];
+  /** Bancos conectados pelo Open Finance e o que o Baiu aprendeu com eles. */
+  bank: Bank;
   /** O Baiu assistente: conversa, avisos e consentimento da IA. */
   assistant: Assistant;
   /** Selos conquistados: id -> data ISO. Selo carimbado não some. */

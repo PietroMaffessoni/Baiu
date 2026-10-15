@@ -1,6 +1,6 @@
 import { Link, router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BaiuSays } from '@/components/baiu-says';
@@ -20,6 +20,7 @@ import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account } from '@/data/types';
 import { useAlerts } from '@/lib/assistant/use-assistant';
+import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { dueItems, dueLabel } from '@/lib/bills';
 import { paletteFor } from '@/lib/look';
 import { greeting, longToday } from '@/lib/dates';
@@ -50,6 +51,11 @@ export default function Home() {
   const { profile } = useAuth();
   const alerts = useAlerts();
   const unseen = alerts.filter((a) => !state.assistant.seen[a.id]);
+  const { syncNow } = useBank();
+  const bankStatus = useBankStatus();
+  const linked = state.bank.items.length > 0;
+  const toReview = state.txs.filter((t) => t.review).length;
+  const broken = state.bank.items.filter((i) => i.status === 'reconectar');
 
   const look = useBaiuLook();
   const fishW = Math.min(230, Math.round(width * 0.58));
@@ -73,7 +79,17 @@ export default function Home() {
       style={styles.screen}
       contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
       showsVerticalScrollIndicator={false}
-      contentInsetAdjustmentBehavior="never">
+      contentInsetAdjustmentBehavior="never"
+      refreshControl={
+        linked ? (
+          <RefreshControl
+            refreshing={bankStatus.running}
+            onRefresh={syncNow}
+            tintColor={color.lantern}
+            progressViewOffset={insets.top}
+          />
+        ) : undefined
+      }>
       <GroundLight
         width={width}
         height={stage + 260}
@@ -156,6 +172,35 @@ export default function Home() {
           </T>
         ) : null}
       </View>
+
+      {/* bancos: reconectar, conferir ou conectar o primeiro */}
+      {broken.length > 0 ? (
+        <Notice
+          icon="warning"
+          tone="vermilion"
+          title={`${broken[0].name} precisa reconectar`}
+          text="A autorização venceu ou o banco pediu uma confirmação. Sem isso, os movimentos novos não chegam."
+          onPress={() => router.push('/bancos')}
+        />
+      ) : null}
+      {toReview > 0 ? (
+        <Notice
+          icon="check"
+          tone="lantern"
+          title={toReview === 1 ? 'Confira 1 movimento' : `Confira ${toReview} movimentos`}
+          text="O Baiu não teve certeza da categoria. Um toque resolve, e ele aprende."
+          onPress={() => router.push('/revisar')}
+        />
+      ) : null}
+      {!linked && !state.demo ? (
+        <Notice
+          icon="bank"
+          tone="lantern"
+          title="Conecte seu banco"
+          text="Pelo Open Finance, cada entrada e saída aparece aqui sozinha, já com categoria."
+          onPress={() => router.push('/conectar')}
+        />
+      ) : null}
 
       {/* próximo hábito */}
       <Pressable
@@ -293,6 +338,39 @@ export default function Home() {
 
       {state.demo && <DemoNote />}
     </ScrollView>
+  );
+}
+
+function Notice({
+  icon,
+  tone,
+  title,
+  text,
+  onPress,
+}: {
+  icon: 'warning' | 'check' | 'bank';
+  tone: 'lantern' | 'vermilion';
+  title: string;
+  text: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => [styles.habit, { marginTop: 14 }, pressed && { backgroundColor: color.plateHi }]}>
+      <View style={[styles.habitGlyph, { backgroundColor: tone === 'lantern' ? color.lanternWash : color.vermilionWash }]}>
+        <Icon name={icon} size={16} tint={color[tone]} weight="semibold" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T variant="calloutStrong">{title}</T>
+        <T variant="caption" tone="ink2">
+          {text}
+        </T>
+      </View>
+      <Icon name="chevron" size={13} tint={color.ink3} weight="semibold" />
+    </Pressable>
   );
 }
 

@@ -1,8 +1,12 @@
 import { addDays, startOfDay } from '@/lib/dates';
 import { DEFAULT_LOOK } from '@/lib/look';
-import type { Account, Assistant, Bill, Holding, State, Tx } from './types';
+import type { Account, Assistant, Bank, Bill, Holding, State, Tx } from './types';
 
 export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true, alerts: true };
+
+export function createBank(): Bank {
+  return { items: [], ignored: {}, hiddenAccounts: {}, rules: {} };
+}
 
 export function createAssistant(): Assistant {
   return {
@@ -26,6 +30,7 @@ export function createEmpty(now = new Date()): State {
     settings: { ...DEFAULT_SETTINGS },
     baiu: { ...DEFAULT_LOOK },
     assistant: createAssistant(),
+    bank: createBank(),
     accounts: [],
     txs: [],
     bills: [],
@@ -346,6 +351,7 @@ export function createDemo(now = new Date()): State {
     settings: { ...DEFAULT_SETTINGS },
     baiu: { ...DEFAULT_LOOK },
     assistant: createAssistant(),
+    bank: createBank(),
     accounts,
     txs,
     bills,

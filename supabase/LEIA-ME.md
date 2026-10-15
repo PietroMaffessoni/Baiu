@@ -1,6 +1,6 @@
 # Servidor de contas do Baiu (Supabase)
 
-O cadastro, o login e a conversa com IA do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida, os aceites e um contador diário de perguntas à IA.
+O cadastro, o login, a conversa com IA e a conexão com bancos do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho.
 
 Siga os passos na ordem. Cada um diz onde clicar no painel do Supabase.
 
@@ -20,7 +20,7 @@ O projeto está ligado ao GitHub. Confira em **Project Settings, Integrations, G
 | Production branch | `main` |
 | Deploy to production | Ligado |
 
-Com isso, cada envio para a `main` aplica sozinho os arquivos novos de `supabase/migrations/`. São dois: o das contas (aceites, validação do cadastro e exclusão da conta) e o do assistente (aceite da IA e limite diário).
+Com isso, cada envio para a `main` aplica sozinho os arquivos novos de `supabase/migrations/`. São três: o das contas (aceites, validação do cadastro e exclusão da conta), o do assistente (aceite da IA e limite diário) e o dos bancos (conexões e aceite do Open Finance).
 
 Regras daqui em diante:
 
@@ -112,6 +112,36 @@ No app, entre com uma conta, abra **Conversar com o Baiu**, toque em **Ativar a 
 - o segredo `ANTHROPIC_API_KEY` existe;
 - em **Edge Functions, baiu-chat, Logs**, a função registra só códigos de erro, nunca o conteúdo das conversas.
 
-## 8. Conta para a revisão das lojas
+## 8. Conexão com bancos (Open Finance)
+
+Sem este passo o app funciona com contas digitadas à mão, e a opção "Conectar banco" avisa que ainda não está disponível.
+
+### 8.1 Conta na Pluggy
+
+1. Crie a conta em dashboard.pluggy.ai e um aplicativo (Application) chamado Baiu.
+2. Copie o **Client ID** e o **Client Secret**. O segredo é como uma senha: nunca vai para o app, para o GitHub nem para mensagens.
+3. Para produção, fale com a Pluggy: o acesso ao Open Finance, a categorização automática e a atualização automática dependem de contrato. Peça os produtos ACCOUNTS, CREDIT_CARDS, TRANSACTIONS, INVESTMENTS e a categorização (enrichment).
+
+### 8.2 Segredos da função
+
+Em **Edge Functions, Secrets**, adicione:
+
+| Nome | Valor |
+| --- | --- |
+| `PLUGGY_CLIENT_ID` | o Client ID |
+| `PLUGGY_CLIENT_SECRET` | o Client Secret |
+| `PLUGGY_SANDBOX` | `1` enquanto estiver testando, para aparecer o "Pluggy Bank" de teste no widget. Tire antes de publicar |
+
+### 8.3 Publicar a função
+
+A função fica em `supabase/functions/bank/index.ts`, num arquivo só. Publique do mesmo jeito que a `baiu-chat` (passo 7.3), com o nome `bank`, e desligue **Enforce JWT verification**: a função confere o login sozinha.
+
+### 8.4 Conferir
+
+1. Instale um build de desenvolvimento ou de teste no celular. O widget usa `react-native-webview` e não roda no Expo Go antigo nem na web.
+2. Entre com uma conta, toque em **Conectar banco**, escolha **Pluggy Bank** e use usuário `user-ok` e senha `password-ok`.
+3. Confira se as contas, os movimentos e os investimentos aparecem, e se a tabela `bank_connections` ganhou uma linha.
+
+## 9. Conta para a revisão das lojas
 
 A Apple e o Google precisam entrar no app. Crie pelo próprio app uma conta só para isso, com um e-mail que vocês controlem, e informe e-mail e senha nas notas de revisão das duas lojas.

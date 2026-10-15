@@ -1,5 +1,5 @@
-import { createAssistant, DEFAULT_SETTINGS } from '@/data/demo';
-import type { Assistant, ChatMsg, State } from '@/data/types';
+import { createAssistant, createBank, DEFAULT_SETTINGS } from '@/data/demo';
+import type { Assistant, Bank, BankItem, ChatMsg, State } from '@/data/types';
 import { DEFAULT_LOOK, isBaiuColor } from './look';
 
 /**
@@ -21,6 +21,7 @@ export function migrate(raw: unknown): State | null {
       seasonal: typeof s.baiu?.seasonal === 'boolean' ? s.baiu.seasonal : DEFAULT_LOOK.seasonal,
     },
     assistant: migrateAssistant(s.assistant),
+    bank: migrateBank(s.bank),
     accounts: s.accounts,
     txs: s.txs,
     bills: Array.isArray(s.bills) ? s.bills : [],
@@ -54,5 +55,23 @@ function migrateAssistant(raw: Partial<Assistant> | undefined): Assistant {
     chat,
     seen: isRecord(raw.seen) ? raw.seen : {},
     notified: isRecord(raw.notified) ? raw.notified : {},
+  };
+}
+
+const isFlags = (v: unknown): v is Record<string, true> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+function migrateBank(raw: Partial<Bank> | undefined): Bank {
+  const base = createBank();
+  if (!raw || typeof raw !== 'object') return base;
+  const items = Array.isArray(raw.items)
+    ? raw.items.filter(
+        (i): i is BankItem => !!i && typeof i.id === 'string' && typeof i.name === 'string' && typeof i.connectedAt === 'string',
+      )
+    : [];
+  return {
+    items,
+    ignored: isFlags(raw.ignored) ? raw.ignored : {},
+    hiddenAccounts: isFlags(raw.hiddenAccounts) ? raw.hiddenAccounts : {},
+    rules: isRecord(raw.rules) ? (raw.rules as Bank['rules']) : {},
   };
 }

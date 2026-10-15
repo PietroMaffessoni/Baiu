@@ -1,7 +1,12 @@
-import { createAssistant, createDemo, createEmpty } from '@/data/demo';
-import type { Account, Assistant, Bill, ChatMsg, Holding, Settings, State, Tx } from '@/data/types';
+import { createAssistant, createBank, createDemo, createEmpty } from '@/data/demo';
+import { IN_CATEGORIES } from '@/data/categories';
+import type { Account, Assistant, Bill, Category, ChatMsg, Holding, Settings, State, Tx } from '@/data/types';
+import { ruleKey } from '@/lib/bank/categorize';
+import { mergeBankSync } from '@/lib/bank/merge';
+import type { SyncPayload } from '@/lib/bank/types';
 import { isBaiuColor, type BaiuLook } from '@/lib/look';
 import { computeFolego } from '@/lib/folego';
+import { addMonth } from '@/lib/dates';
 import { applyTx, newId, round2, validateTx } from '@/lib/ledger';
 import { newlyEarned } from '@/lib/seals';
 
@@ -21,6 +26,12 @@ export type Action =
   | { type: 'wipe' }
   | { type: 'setSetting'; key: keyof Settings; value: boolean }
   | { type: 'setBaiu'; patch: Partial<BaiuLook> }
+  | { type: 'bankSync'; payload: SyncPayload; at: string }
+  /** Desconecta um banco. `keep` mantém contas e movimentos como manuais. */
+  | { type: 'bankUnlink'; itemId: string; keep: boolean }
+  /** A pessoa corrigiu a categoria: vale para este e, aprendido, para os parecidos. */
+  | { type: 'recategorize'; id: string; category: Category }
+  | { type: 'confirmTxs'; ids: string[] }
   | { type: 'chatAdd'; msgs: ChatMsg[] }
   | { type: 'chatClear' }
   /** Marca avisos como vistos; `toChat` entra na conversa como fala do Baiu. */
@@ -66,15 +77,6 @@ const validMsg = (m: ChatMsg) =>
   !!m.id && (m.role === 'user' || m.role === 'baiu') && typeof m.text === 'string' && m.text.trim().length > 0;
 
 const byIdOf = (s: State) => new Map(s.accounts.map((a) => [a.id, a]));
-
-function addMonth(iso: string) {
-  const d = new Date(iso);
-  const day = d.getDate();
-  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1, d.getHours(), d.getMinutes());
-  const last = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
-  next.setDate(Math.min(day, last));
-  return next.toISOString();
-}
 
 function withTx(s: State, tx: Tx): State {
   if (validateTx(tx, byIdOf(s))) return s;
@@ -133,7 +135,14 @@ function core(s: State, action: Action): State {
     case 'onboard':
       return { ...s, onboarded: true };
     case 'loadDemo':
-      return { ...createDemo(), onboarded: true, settings: s.settings, baiu: s.baiu, assistant: createAssistant() };
+      return {
+        ...createDemo(),
+        onboarded: true,
+        settings: s.settings,
+        baiu: s.baiu,
+        assistant: createAssistant(),
+        bank: createBank(),
+      };
     case 'exitDemo':
       return {
         ...createEmpty(),
@@ -141,6 +150,7 @@ function core(s: State, action: Action): State {
         settings: { ...s.settings },
         baiu: { ...s.baiu },
         assistant: createAssistant(),
+        bank: createBank(),
       };
     case 'wipe':
       return createEmpty();
@@ -156,6 +166,56 @@ function core(s: State, action: Action): State {
           seasonal: typeof seasonal === 'boolean' ? seasonal : s.baiu.seasonal,
         },
       };
+    }
+
+    case 'bankSync':
+      return mergeBankSync(s, action.payload, new Date(action.at)).state;
+    case 'bankUnlink': {
+      const mine = (item?: string) => item === action.itemId;
+      const items = s.bank.items.filter((i) => i.id !== action.itemId);
+      if (action.keep) {
+        // vira tudo manual: o saldo de agora fica, e os movimentos passam a valer como digitados
+        return {
+          ...s,
+          accounts: s.accounts.map((a) => (mine(a.link?.item) ? { ...a, link: undefined } : a)),
+          txs: s.txs.map((t) => (mine(t.ext?.item) ? { ...t, ext: undefined, review: undefined } : t)),
+          holdings: s.holdings.map((h) => (mine(h.ext?.item) ? { ...h, ext: undefined } : h)),
+          bank: { ...s.bank, items },
+        };
+      }
+      const gone = new Set(s.accounts.filter((a) => mine(a.link?.item)).map((a) => a.id));
+      return {
+        ...s,
+        accounts: s.accounts.filter((a) => !gone.has(a.id)),
+        txs: s.txs.filter((t) => !mine(t.ext?.item) && !gone.has(t.accountId) && !gone.has(t.toAccountId ?? '')),
+        holdings: s.holdings.filter((h) => !gone.has(h.accountId)),
+        bills: s.bills.map((b) => (b.accountId && gone.has(b.accountId) ? { ...b, accountId: undefined } : b)),
+        bank: { ...s.bank, items },
+      };
+    }
+    case 'recategorize': {
+      const tx = s.txs.find((t) => t.id === action.id);
+      if (!tx || tx.kind === 'transferencia') return s;
+      const incoming = (IN_CATEGORIES as Category[]).includes(action.category);
+      if (action.category === 'transferencia' || incoming !== (tx.kind === 'entrada')) return s;
+      const key = tx.ext ? ruleKey(tx.description) : null;
+      const sameKind = (t: Tx) => t.kind === tx.kind;
+      return {
+        ...s,
+        txs: s.txs.map((t) => {
+          if (t.id === tx.id) return { ...t, category: action.category, review: undefined, catBy: 'pessoa' };
+          // os parecidos que o Baiu ainda não tinha certeza (ou chutou) aprendem junto
+          if (key && t.ext && t.catBy !== 'pessoa' && sameKind(t) && ruleKey(t.description) === key) {
+            return { ...t, category: action.category, review: undefined, catBy: 'aprendida' };
+          }
+          return t;
+        }),
+        bank: key ? { ...s.bank, rules: { ...s.bank.rules, [key]: action.category } } : s.bank,
+      };
+    }
+    case 'confirmTxs': {
+      const ids = new Set(action.ids);
+      return { ...s, txs: s.txs.map((t) => (ids.has(t.id) && t.review ? { ...t, review: undefined } : t)) };
     }
 
     case 'chatAdd': {
@@ -225,15 +285,20 @@ function core(s: State, action: Action): State {
             ? {
                 ...a,
                 ...action.patch,
-                balance: action.patch.balance !== undefined ? round2(action.patch.balance) : a.balance,
+                // conta conectada: saldo, limite e vencimento vêm do banco
+                ...(a.link ? { limit: a.limit, dueDay: a.dueDay } : null),
+                balance:
+                  action.patch.balance !== undefined && !a.link ? round2(action.patch.balance) : a.balance,
               }
             : a,
         ),
       };
     case 'removeAccount': {
       const id = action.id;
+      const remote = s.accounts.find((a) => a.id === id)?.link?.remote;
       return {
         ...s,
+        bank: remote ? { ...s.bank, hiddenAccounts: { ...s.bank.hiddenAccounts, [remote]: true } } : s.bank,
         accounts: s.accounts.filter((a) => a.id !== id),
         txs: s.txs.filter((t) => t.accountId !== id && t.toAccountId !== id),
         holdings: s.holdings.filter((h) => h.accountId !== id),
@@ -254,6 +319,11 @@ function core(s: State, action: Action): State {
     case 'updateTx': {
       const old = s.txs.find((t) => t.id === action.tx.id);
       if (!old) return s;
+      if (old.ext) {
+        // veio do banco: valor, data e conta são do banco; muda só o nome
+        const description = action.tx.description.trim().slice(0, 80);
+        return { ...s, txs: s.txs.map((t) => (t.id === old.id ? { ...t, description: description || t.description } : t)) };
+      }
       const without = withoutTx(s, old.id);
       const next = withTx(without, { ...action.tx, billId: old.billId, createdAt: old.createdAt });
       if (next === without) return s;
@@ -266,6 +336,15 @@ function core(s: State, action: Action): State {
     }
     case 'removeTx': {
       const tx = s.txs.find((t) => t.id === action.id);
+      if (tx?.ext) {
+        // apagado do Baiu, mas continua no banco: não volta na próxima busca
+        const next = withoutTx(s, action.id);
+        return {
+          ...next,
+          bills: next.bills.map((b) => (b.paidTxId === tx.id ? { ...b, paidTxId: undefined } : b)),
+          bank: { ...next.bank, ignored: { ...next.bank.ignored, [tx.ext.id]: true } },
+        };
+      }
       const next = withoutTx(s, action.id);
       if (!tx?.billId) return next;
       // vencimento original já apagado: o do mês seguinte agora é independente e fica

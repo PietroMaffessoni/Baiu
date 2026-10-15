@@ -7,13 +7,29 @@ import { Field, FormError, FormNote, PasswordChecklist, PasswordField } from '@/
 import { Button } from '@/components/button';
 import { ListRow } from '@/components/form';
 import { Plate, Rule } from '@/components/layout';
-import { authMessage } from '@/lib/auth';
+import { AuthFailure, authMessage } from '@/lib/auth';
+import { BankFailure, bankBackend } from '@/lib/bank/client';
 import { checkName, checkPassword, checkPhone, formatName, formatPhone, passwordProblem } from '@/lib/auth/validation';
 import { useAuth } from '@/store/auth';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 const SUPPORT = 'suporte.baiu@gmail.com';
+
+/** Antes de excluir a conta, encerra as conexões com bancos no provedor (LGPD: nada fica para trás). */
+async function disconnectBanks() {
+  if (!bankBackend.available) return;
+  try {
+    await bankBackend.unlinkAll();
+  } catch (e) {
+    // sem a função de bancos no servidor, não há conexão para encerrar
+    if (e instanceof BankFailure && e.code === 'not_configured') return;
+    throw new AuthFailure(
+      'network',
+      'Não deu para desconectar seus bancos antes de excluir a conta. Confira a internet e tente de novo.',
+    );
+  }
+}
 
 export default function MinhaConta() {
   const { profile, updateProfile, changePassword, deleteAccount, signOut } = useAuth();
@@ -64,7 +80,7 @@ export default function MinhaConta() {
           />
         </View>
 
-        <DeleteAccount onDelete={deleteAccount} />
+        <DeleteAccount onDelete={(password) => deleteAccount(password, disconnectBanks)} />
       </ScrollView>
     </KeyboardAvoidingView>
   );
