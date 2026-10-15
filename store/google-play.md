@@ -39,6 +39,9 @@ Cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma t
 REGISTRE O QUE ENTRA E O QUE SAI
 Entradas, gastos e transferências em poucos toques, com categorias, forma de pagamento e data. O extrato mostra cada dia do mês e quanto você guardou.
 
+CONVERSE COM O BAIU
+O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. A conversa com inteligência artificial é opcional e só começa com a sua permissão.
+
 ENTENDA SEU FÔLEGO
 O fôlego vai de 0 a 100 e soma quatro pilares: gastar menos do que entrou, ter reserva de emergência, manter os vencimentos em dia e investir com constância. O app mostra a conta de cada pilar e o próximo passo para o Baiu encher.
 
@@ -55,9 +58,9 @@ GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
 PRIVADO DE VERDADE
-Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Dá para bloquear o app com a biometria e esconder os valores com um toque.
+Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
 
-O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não faz recomendação de investimento.
+O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não indica ativos específicos: as dicas são educativas.
 ```
 
 ## Imagens
@@ -103,8 +106,10 @@ Abra o formulário e leia as opções. Se não houver uma opção específica pa
 | Informações pessoais: Nome | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Endereço de e-mail | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
 | Informações pessoais: Número de telefone | Coletado, não compartilhado, obrigatório, para gerenciamento da conta |
+| Informações financeiras: Outras informações financeiras | Coletado, não compartilhado, opcional, para funcionalidade do app |
+| Atividade no app: Outros conteúdos gerados pelo usuário | Coletado, não compartilhado, opcional, para funcionalidade do app |
 
-Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. O Supabase é prestador de serviço, então não conta como compartilhamento.
+Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As duas linhas opcionais vêm da conversa com IA: com ela ligada, a pergunta e um resumo dos números vão para a Anthropic. O Supabase e a Anthropic são prestadores de serviço, então não contam como compartilhamento.
 
 ### Exclusão de conta
 

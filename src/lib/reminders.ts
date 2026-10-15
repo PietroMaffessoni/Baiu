@@ -10,6 +10,9 @@ import type { Bill } from '@/data/types';
  * O texto nunca mostra valores: a notificação aparece na tela bloqueada.
  */
 const CHANNEL = 'vencimentos';
+/** Canal e identificador dos avisos de gastos do Baiu (src/lib/assistant/notify.ts). */
+export const ALERTS_CHANNEL = 'avisos';
+export const ALERTS_ID = 'baiu-avisos';
 const MAX_BILLS = 30; // iOS guarda até 64 agendamentos; dois por vencimento
 
 let configured = false;
@@ -31,6 +34,11 @@ export async function configureReminders() {
       description: 'Avisos de contas a pagar',
       importance: Notifications.AndroidImportance.HIGH,
     });
+    await Notifications.setNotificationChannelAsync(ALERTS_CHANNEL, {
+      name: 'Avisos do Baiu',
+      description: 'Quando um gasto foge do normal',
+      importance: Notifications.AndroidImportance.DEFAULT,
+    });
   }
 }
 
@@ -48,7 +56,11 @@ export async function remindersAllowed(ask: boolean): Promise<boolean> {
 
 export async function syncReminders(bills: Bill[], enabled: boolean) {
   await configureReminders();
-  await Notifications.cancelAllScheduledNotificationsAsync();
+  // refaz só os lembretes de vencimento; o aviso de gastos tem vida própria
+  const scheduled = await Notifications.getAllScheduledNotificationsAsync();
+  for (const n of scheduled) {
+    if (n.identifier !== ALERTS_ID) await Notifications.cancelScheduledNotificationAsync(n.identifier);
+  }
   if (!enabled || !(await remindersAllowed(false))) return;
 
   const now = Date.now();
@@ -89,7 +101,7 @@ export function useReminderRouting(enabled: boolean) {
     let alive = true;
     const go = (n: Notifications.Notification) => {
       const url = n.request.content.data?.url;
-      if (typeof url === 'string' && url.startsWith('/')) router.push(url as '/vencimentos');
+      if (typeof url === 'string' && url.startsWith('/')) router.push(url as '/vencimentos' | '/baiu');
     };
     Notifications.getLastNotificationResponseAsync().then((r) => {
       if (alive && r?.notification) go(r.notification);

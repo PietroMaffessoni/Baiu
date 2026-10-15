@@ -1,5 +1,5 @@
-import { DEFAULT_SETTINGS } from '@/data/demo';
-import type { State } from '@/data/types';
+import { createAssistant, DEFAULT_SETTINGS } from '@/data/demo';
+import type { Assistant, ChatMsg, State } from '@/data/types';
 import { DEFAULT_LOOK, isBaiuColor } from './look';
 
 /**
@@ -20,6 +20,7 @@ export function migrate(raw: unknown): State | null {
       color: isBaiuColor(s.baiu?.color) ? s.baiu.color : DEFAULT_LOOK.color,
       seasonal: typeof s.baiu?.seasonal === 'boolean' ? s.baiu.seasonal : DEFAULT_LOOK.seasonal,
     },
+    assistant: migrateAssistant(s.assistant),
     accounts: s.accounts,
     txs: s.txs,
     bills: Array.isArray(s.bills) ? s.bills : [],
@@ -28,5 +29,30 @@ export function migrate(raw: unknown): State | null {
       : [],
     seals: s.seals && typeof s.seals === 'object' ? s.seals : {},
     createdAt: s.createdAt ?? new Date().toISOString(),
+  };
+}
+
+const isRecord = (v: unknown): v is Record<string, string> => !!v && typeof v === 'object' && !Array.isArray(v);
+
+function migrateAssistant(raw: Partial<Assistant> | undefined): Assistant {
+  const base = createAssistant();
+  if (!raw || typeof raw !== 'object') return base;
+  const consent =
+    raw.consent && typeof raw.consent.version === 'string' && typeof raw.consent.at === 'string' ? raw.consent : null;
+  const chat = Array.isArray(raw.chat)
+    ? raw.chat.filter(
+        (m): m is ChatMsg =>
+          !!m && typeof m.id === 'string' && typeof m.text === 'string' && (m.role === 'user' || m.role === 'baiu'),
+      )
+    : [];
+  return {
+    consent,
+    declined: !!raw.declined,
+    pendingRevoke: !!raw.pendingRevoke,
+    shareNumbers: typeof raw.shareNumbers === 'boolean' ? raw.shareNumbers : base.shareNumbers,
+    greeted: !!raw.greeted,
+    chat,
+    seen: isRecord(raw.seen) ? raw.seen : {},
+    notified: isRecord(raw.notified) ? raw.notified : {},
   };
 }

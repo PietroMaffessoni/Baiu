@@ -20,20 +20,27 @@ import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 export default function NovoVencimento() {
-  const { id } = useLocalSearchParams<{ id?: string }>();
+  // o Baiu pode abrir já preenchido, a partir de uma conta que se repete
+  const params = useLocalSearchParams<{ id?: string; title?: string; amount?: string; category?: string; day?: string }>();
+  const { id } = params;
   const { state, dispatch } = useStore();
   const insets = useSafeAreaInsets();
   const existing = id ? state.bills.find((b) => b.id === id) : undefined;
   const editing = !!existing;
 
   const [step, setStep] = useState<'valor' | 'detalhes'>(editing ? 'detalhes' : 'valor');
-  const amount = useCents(existing ? Math.round(existing.amount * 100) : 0);
-  const [title, setTitle] = useState(existing?.title ?? '');
-  const [category, setCategory] = useState<OutCategory | null>(existing?.category ?? null);
+  const suggested = !existing && params.title ? suggestion(params) : null;
+  const amount = useCents(existing ? Math.round(existing.amount * 100) : (suggested?.cents ?? 0));
+  const [title, setTitle] = useState(existing?.title ?? suggested?.title ?? '');
+  const [category, setCategory] = useState<OutCategory | null>(existing?.category ?? suggested?.category ?? null);
   const [accountId, setAccountId] = useState<string>(existing?.accountId ?? 'depois');
   const [repeat, setRepeat] = useState(existing?.repeatMonthly ?? true);
   const [due, setDue] = useState(() => {
-    const d = existing ? new Date(existing.dueDate) : addDays(startOfDay(new Date()), 7);
+    const d = existing
+      ? new Date(existing.dueDate)
+      : suggested?.day
+        ? nextDay(suggested.day)
+        : addDays(startOfDay(new Date()), 7);
     d.setHours(12, 0, 0, 0);
     return d;
   });
@@ -189,3 +196,22 @@ const styles = StyleSheet.create({
   },
   switchRow: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 22 },
 });
+
+function suggestion(p: { title?: string; amount?: string; category?: string; day?: string }) {
+  const cents = Math.max(0, Math.min(9_999_999_999, Math.round(Number(p.amount) || 0)));
+  const day = Math.round(Number(p.day));
+  return {
+    title: (p.title ?? '').slice(0, 60),
+    cents,
+    category: OUT_CATEGORIES.includes(p.category as OutCategory) ? (p.category as OutCategory) : null,
+    day: day >= 1 && day <= 31 ? day : null,
+  };
+}
+
+/** Próxima data com esse dia do mês (hoje conta). */
+function nextDay(day: number) {
+  const today = startOfDay(new Date());
+  const at = (y: number, m: number) => new Date(y, m, Math.min(day, new Date(y, m + 1, 0).getDate()));
+  const d = at(today.getFullYear(), today.getMonth());
+  return d >= today ? d : at(today.getFullYear(), today.getMonth() + 1);
+}

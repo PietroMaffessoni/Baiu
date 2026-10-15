@@ -1,4 +1,10 @@
-import { createClient, isAuthError, isAuthRetryableFetchError, type User } from '@supabase/supabase-js';
+import {
+  createClient,
+  isAuthError,
+  isAuthRetryableFetchError,
+  type SupabaseClient,
+  type User,
+} from '@supabase/supabase-js';
 import { AppState, Platform } from 'react-native';
 
 import { sessionStorage } from './session-storage';
@@ -7,6 +13,13 @@ import { AuthFailure, type AuthBackend, type AuthErrorCode, type Profile } from 
 const URL = process.env.EXPO_PUBLIC_SUPABASE_URL ?? '';
 const KEY = process.env.EXPO_PUBLIC_SUPABASE_KEY ?? '';
 const STORAGE_KEY = 'session';
+
+let shared: SupabaseClient | null = null;
+
+/** O cliente criado pelo serviço de contas, com a sessão de quem entrou. Null sem configuração. */
+export function getSupabaseClient() {
+  return shared;
+}
 
 function toProfile(u: User): Profile {
   const m = (u.user_metadata ?? {}) as Record<string, unknown>;
@@ -65,6 +78,7 @@ export function createSupabaseBackend(): AuthBackend {
         },
       })
     : null;
+  shared = client;
 
   // a renovação do token só roda com o app em primeiro plano
   if (client && Platform.OS !== 'web') {

@@ -102,6 +102,44 @@ export type Settings = {
   lock: boolean;
   /** Lembra os vencimentos por notificação local. */
   reminders: boolean;
+  /** Avisa por notificação quando o Baiu nota um gasto fora do normal. */
+  alerts: boolean;
+};
+
+/** Sugestão de vencimento que o Baiu tira de uma conta que se repete. */
+export type BillSuggestion = { title: string; amount: number; category: OutCategory; day: number };
+
+export type ChatMsg = {
+  id: string;
+  role: 'user' | 'baiu';
+  text: string;
+  at: string;
+  /**
+   * De onde veio a fala do Baiu: 'ia' (inteligência artificial), 'pronta'
+   * (respondida no aparelho), 'aviso' (algo que o Baiu notou nos gastos).
+   */
+  source?: 'ia' | 'pronta' | 'aviso';
+  /** Pergunta sugerida para continuar a conversa. */
+  ask?: string;
+  bill?: BillSuggestion;
+};
+
+export type Assistant = {
+  /** Consentimento para a conversa com IA (LGPD): versão do texto aceito e data. */
+  consent: { version: string; at: string } | null;
+  /** A pessoa disse "agora não" para a IA; o convite fica discreto. */
+  declined: boolean;
+  /** Revogação feita sem internet, ainda não registrada no servidor. */
+  pendingRevoke: boolean;
+  /** Manda o resumo dos números junto com a pergunta. */
+  shareNumbers: boolean;
+  /** Já viu a apresentação do Baiu no início. */
+  greeted: boolean;
+  chat: ChatMsg[];
+  /** Avisos já vistos no app: id -> data. */
+  seen: Record<string, string>;
+  /** Avisos já mandados por notificação: id -> data. */
+  notified: Record<string, string>;
 };
 
 export type State = {
@@ -116,6 +154,8 @@ export type State = {
   txs: Tx[];
   bills: Bill[];
   holdings: Holding[];
+  /** O Baiu assistente: conversa, avisos e consentimento da IA. */
+  assistant: Assistant;
   /** Selos conquistados: id -> data ISO. Selo carimbado não some. */
   seals: Record<string, string>;
   createdAt: string;

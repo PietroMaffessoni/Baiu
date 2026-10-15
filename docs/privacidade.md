@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 14 de outubro de 2026.
+Atualizada em 15 de outubro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni, que é o controlador dos dados tratados pelo app. Esta política explica, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), quais dados usamos, por quê e como você controla cada um deles.
 
@@ -8,7 +8,11 @@ O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pie
 
 Seus registros financeiros ficam só no seu aparelho, criptografados. Nós não temos acesso a eles.
 
+O Baiu avisa quando um gasto foge do normal e reconhece contas que se repetem. Esses avisos são calculados no próprio aparelho, sem internet e sem inteligência artificial.
+
 Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos.
+
+A conversa com inteligência artificial é opcional. Se você ligar, cada pergunta vai para a Anthropic com um resumo dos seus números, sem nome, e-mail, celular ou bancos. Dá para desligar quando quiser.
 
 Não vendemos dados, não usamos publicidade e não rastreamos você.
 
@@ -20,13 +24,31 @@ Senha: guardada só em forma de hash, um código que não permite recuperar a se
 
 Registros de aceite: a versão dos Termos de uso e da Política de privacidade aceitos, a confirmação de maioridade e a data.
 
+Aceite da conversa com IA: a versão do texto aceito, a data do aceite e, se você desligar, a data em que desligou.
+
+Contador de uso da IA: quantas perguntas você fez em cada dia, para aplicar o limite diário. O conteúdo das conversas não é guardado no servidor.
+
 Dados técnicos de segurança: data, hora e endereço IP dos acessos à conta, registrados pelo serviço de autenticação para proteger sua conta e prevenir fraudes.
 
 ## Dados financeiros, só no aparelho
 
-As contas, saldos, movimentos, vencimentos, investimentos e preferências que você digitar ficam apenas no seu aparelho e nunca são enviados ao servidor.
+As contas, saldos, movimentos, vencimentos, investimentos e preferências que você digitar ficam apenas no seu aparelho e nunca são guardados no servidor. A única saída é opcional: com a conversa com IA ligada, um resumo acompanha cada pergunta, como explicado abaixo.
 
 Esses dados são cifrados com XChaCha20-Poly1305. A chave fica no Keychain do iPhone ou no Keystore do Android, presa a este aparelho e separada por conta: quem entra com outra conta no mesmo aparelho não consegue ler os seus registros.
+
+A conversa com o Baiu também fica só no aparelho, cifrada junto com os seus registros. Você pode apagá-la a qualquer momento na própria conversa.
+
+## Conversa com o Baiu (inteligência artificial)
+
+A conversa com inteligência artificial é opcional e só funciona depois que você a ativa, com um aceite próprio. Sem ela, o Baiu responde com respostas prontas, calculadas no aparelho.
+
+Com ela ligada, a cada pergunta enviamos à Anthropic, PBC, empresa dos Estados Unidos que fornece a inteligência artificial: a pergunta, as mensagens recentes da conversa e um resumo dos seus números. O resumo traz entradas, gastos e investimentos dos últimos três meses, gastos por categoria, gastos que se repetem, saldos somados por tipo de conta, investimentos por tipo, vencimentos dos próximos 30 dias e o fôlego.
+
+Não enviamos nome, e-mail, celular, nomes de bancos, apelidos de contas, nomes de quem recebeu ou enviou Pix, datas exatas nem os movimentos um a um. Em Ajustes, O que o Baiu envia, você vê o resumo exato. Também dá para desligar o envio dos números e mandar só a pergunta.
+
+As mensagens passam pelo nosso servidor só para conferir seu login, seu aceite e o limite diário, e não são guardadas nem registradas. A Anthropic atua como operadora: não usa as conversas para treinar a inteligência artificial e pode guardá-las por um período limitado para segurança e prevenção de abuso, conforme o contrato dela.
+
+Não escreva na conversa dados que você não quer compartilhar, como CPF, senhas ou números de cartão. O Baiu nunca pede esses dados.
 
 ## Para que usamos e com qual base legal
 
@@ -36,13 +58,19 @@ Guardar o registro dos aceites e responder a autoridades quando a lei exigir: cu
 
 Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas seguidas: legítimo interesse em manter sua conta segura (art. 7º, IX).
 
+Conversa com IA, incluindo o envio da pergunta e do resumo dos seus números à Anthropic, nos Estados Unidos: seu consentimento (art. 7º, I), específico e em destaque para a transferência internacional (art. 33, VIII). Você pode revogar quando quiser em Ajustes, sem perder o uso do resto do app.
+
+Contar as perguntas feitas à IA para aplicar o limite diário: execução do contrato e legítimo interesse em manter o serviço funcionando para todos (art. 7º, V e IX).
+
 O celular só é usado para falar com você sobre a sua conta. Não enviamos propaganda.
 
 ## Com quem os dados são compartilhados
 
-Supabase: provedor que hospeda o servidor de contas e faz a autenticação, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
+Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda a função que encaminha as perguntas à inteligência artificial, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
 
 Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha.
+
+Anthropic, PBC: fornece a inteligência artificial da conversa com o Baiu, como operadora, só se você ativar essa função. Fica nos Estados Unidos, o que configura transferência internacional, autorizada pelo seu consentimento específico (art. 33, VIII).
 
 Não compartilhamos dados com anunciantes, bancos ou parceiros comerciais. Autoridades só recebem dados mediante ordem judicial ou exigência legal.
 
@@ -50,13 +78,15 @@ Não compartilhamos dados com anunciantes, bancos ou parceiros comerciais. Autor
 
 Enquanto sua conta existir. Ao excluir a conta, os dados dela saem do nosso servidor na hora; cópias de segurança do provedor podem guardá-los por um curto período, até serem sobrescritas.
 
+O registro do aceite da conversa com IA fica guardado enquanto a conta existir, como prova do consentimento, mesmo depois de você desligar. O contador de uso da IA é apagado depois de 30 dias.
+
 Os registros financeiros do aparelho são apagados quando você exclui a conta, apaga os dados em Ajustes ou desinstala o app.
 
 ## Seus direitos
 
 Pela LGPD (art. 18), você pode confirmar se tratamos seus dados, acessá-los, corrigi-los, pedir anonimização, bloqueio ou eliminação, pedir a portabilidade, saber com quem foram compartilhados, revogar consentimentos e reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
-No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; e exclua a conta em Minha conta, Excluir conta.
+No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; ligue, desligue e veja o que a conversa com IA envia em Ajustes, Assistente; e exclua a conta em Minha conta, Excluir conta.
 
 Para qualquer outro pedido, escreva para suporte.baiu@gmail.com. Respondemos no prazo da LGPD, de até 15 dias.
 
@@ -70,7 +100,7 @@ Se acontecer um incidente de segurança que possa trazer risco a você, avisarem
 
 Face ID, Touch ID ou biometria: usados apenas para desbloquear o app, se você ligar essa opção. A verificação é feita pelo sistema do aparelho; o Baiu só recebe a resposta de sucesso ou falha.
 
-Notificações: usadas para lembrar vencimentos. Os lembretes são agendados no próprio aparelho e o texto não mostra valores.
+Notificações: usadas para lembrar vencimentos e para avisar quando o Baiu nota um gasto fora do normal. Tudo é agendado no próprio aparelho e o texto não mostra valores. Os avisos de gastos podem ser desligados em Ajustes.
 
 ## Backups e troca de aparelho
 

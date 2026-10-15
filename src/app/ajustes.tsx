@@ -9,6 +9,7 @@ import { ListRow } from '@/components/form';
 import { Plate, Rule } from '@/components/layout';
 import { withoutCurtain } from '@/components/lock-gate';
 import { Wordmark } from '@/components/wordmark';
+import { useAssistant } from '@/lib/assistant/use-assistant';
 import { accountsCsv, transactionsCsv } from '@/lib/csv';
 import { authenticate, lockInfo, type LockInfo } from '@/lib/lock';
 import { remindersAllowed } from '@/lib/reminders';
@@ -25,6 +26,7 @@ export default function Ajustes() {
   const { profile, exitDemo } = useAuth();
   const insets = useSafeAreaInsets();
   const [lock, setLock] = useState<LockInfo | null>(null);
+  const ai = useAssistant();
   const s = state.settings;
 
   useEffect(() => {
@@ -58,6 +60,29 @@ export default function Ajustes() {
       }
     }
     dispatch({ type: 'setSetting', key: 'reminders', value: on });
+  };
+
+  const toggleAlerts = async (on: boolean) => {
+    // o aviso chega por notificação: pede a permissão na hora de ligar
+    if (on && Platform.OS !== 'web') await withoutCurtain(() => remindersAllowed(true)).catch(() => false);
+    dispatch({ type: 'setSetting', key: 'alerts', value: on });
+  };
+
+  const toggleAi = (on: boolean) => {
+    if (on) {
+      // o aceite acontece na conversa, com o texto completo à vista
+      dispatch({ type: 'setAssistant', patch: { declined: false } });
+      router.push('/baiu');
+      return;
+    }
+    confirm(
+      'Desligar a conversa com IA?',
+      'O Baiu para de enviar perguntas e números para a inteligência artificial e passa a usar só as respostas prontas. Dá para ligar de novo quando quiser.',
+      'Desligar',
+      () => {
+        ai.disableAi();
+      },
+    );
   };
 
   const exportTx = () =>
@@ -171,8 +196,53 @@ export default function Ajustes() {
         <ListRow
           icon="lock"
           label="Onde ficam"
-          hint="Seus registros financeiros ficam só neste aparelho, criptografados. No servidor ficam apenas nome, e-mail e celular da conta."
+          hint={
+            ai.mode === 'ligada'
+              ? 'Seus registros ficam só neste aparelho, criptografados. Com a conversa com IA ligada, cada pergunta leva um resumo dos números, sem dados pessoais.'
+              : 'Seus registros financeiros ficam só neste aparelho, criptografados. No servidor ficam apenas nome, e-mail e celular da conta.'
+          }
         />
+      </Group>
+
+      <Group title="Assistente">
+        <ListRow icon="chat" label="Conversar com o Baiu" onPress={() => router.push('/baiu')} chevron />
+        <Rule inset={33} />
+        <ListRow icon="bell" label="Avisos de gastos" hint="Quando um gasto foge do normal. Sem valores na notificação.">
+          <Toggle value={s.alerts} onChange={toggleAlerts} label="Avisos de gastos" />
+        </ListRow>
+        {ai.mode === 'ligada' || ai.mode === 'desligada' ? (
+          <>
+            <Rule inset={33} />
+            <ListRow
+              icon="sparkle"
+              label="Conversa com IA"
+              hint="Respostas da inteligência artificial da Anthropic. Desligado, o Baiu usa respostas prontas.">
+              <Toggle value={ai.mode === 'ligada'} onChange={toggleAi} label="Conversa com IA" />
+            </ListRow>
+            {ai.mode === 'ligada' ? (
+              <>
+                <Rule inset={33} />
+                <ListRow
+                  icon="wallet"
+                  label="Usar meus números"
+                  hint="Envia o resumo dos números com a pergunta. Desligado, vai só a pergunta e as respostas ficam genéricas.">
+                  <Toggle
+                    value={state.assistant.shareNumbers}
+                    onChange={(v) => dispatch({ type: 'setAssistant', patch: { shareNumbers: v } })}
+                    label="Usar meus números"
+                  />
+                </ListRow>
+              </>
+            ) : null}
+            <Rule inset={33} />
+            <ListRow
+              icon="privacy"
+              label="O que o Baiu envia"
+              onPress={() => router.push('/assistente-dados')}
+              chevron
+            />
+          </>
+        ) : null}
       </Group>
 
       <Group title="Baiu">

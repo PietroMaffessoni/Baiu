@@ -1,6 +1,6 @@
 # Servidor de contas do Baiu (Supabase)
 
-O cadastro e o login do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida e os aceites dos termos.
+O cadastro, o login e a conversa com IA do Baiu usam o Supabase. Os registros financeiros continuam só no aparelho; o servidor guarda apenas nome, e-mail, celular, senha protegida, os aceites e um contador diário de perguntas à IA.
 
 Siga os passos na ordem. Cada um diz onde clicar no painel do Supabase.
 
@@ -20,7 +20,7 @@ O projeto está ligado ao GitHub. Confira em **Project Settings, Integrations, G
 | Production branch | `main` |
 | Deploy to production | Ligado |
 
-Com isso, cada envio para a `main` aplica sozinho os arquivos novos de `supabase/migrations/`. O primeiro envio cria a tabela de aceites, a validação do cadastro no servidor e a função de excluir conta.
+Com isso, cada envio para a `main` aplica sozinho os arquivos novos de `supabase/migrations/`. São dois: o das contas (aceites, validação do cadastro e exclusão da conta) e o do assistente (aceite da IA e limite diário).
 
 Regras daqui em diante:
 
@@ -76,6 +76,42 @@ npx eas-cli env:create --name EXPO_PUBLIC_SUPABASE_URL --value "https://SEU-PROJ
 npx eas-cli env:create --name EXPO_PUBLIC_SUPABASE_KEY --value "sb_publishable_..." --environment production --environment preview --environment development --visibility plaintext
 ```
 
-## 7. Conta para a revisão das lojas
+## 7. Conversa com IA (assistente)
+
+Sem este passo o app funciona normalmente: o Baiu avisa gastos fora do normal e responde com respostas prontas. A conversa com inteligência artificial só aparece depois dele.
+
+### 7.1 Conta na Anthropic
+
+1. Crie uma conta em console.anthropic.com, de preferência com o e-mail do suporte.
+2. Em **Billing**, cadastre o cartão e coloque créditos. Defina um **limite de gasto mensal** para não ter surpresa.
+3. Em **API Keys**, crie uma chave chamada `baiu-supabase`. Ela aparece uma vez só; copie direto para o passo 7.2. Essa chave é secreta: nunca vai para o app, para o GitHub nem para mensagens.
+
+### 7.2 Segredos da função
+
+No Supabase, em **Edge Functions, Secrets**, adicione:
+
+| Nome | Valor |
+| --- | --- |
+| `ANTHROPIC_API_KEY` | a chave criada no passo anterior |
+| `BAIU_AI_MODEL` | opcional; padrão `claude-opus-5-5`. Para gastar menos: `claude-sonnet-5-5` ou `claude-haiku-5-5` |
+| `BAIU_AI_DAILY_LIMIT` | opcional; perguntas por pessoa por dia, padrão 30 |
+
+### 7.3 Publicar a função
+
+A função fica em `supabase/functions/baiu-chat/index.ts` e tem um arquivo só.
+
+Se a integração com o GitHub não publicar sozinha, publique pelo painel: **Edge Functions, Deploy a new function, Via Editor**, nome `baiu-chat`, cole o conteúdo do arquivo e clique em **Deploy function**. A cada mudança no arquivo, repita.
+
+Depois, nos detalhes da função, desligue **Enforce JWT verification** (ou **Verify JWT**). A própria função confere o login pelo banco, e a verificação automática não funciona com as chaves novas do Supabase.
+
+### 7.4 Conferir
+
+No app, entre com uma conta, abra **Conversar com o Baiu**, toque em **Ativar a conversa com IA** e pergunte algo. Se aparecer "A conversa com IA ainda não está disponível", confira:
+
+- a migração do assistente rodou: a tabela `assistant_usage` aparece em **Table Editor**;
+- o segredo `ANTHROPIC_API_KEY` existe;
+- em **Edge Functions, baiu-chat, Logs**, a função registra só códigos de erro, nunca o conteúdo das conversas.
+
+## 8. Conta para a revisão das lojas
 
 A Apple e o Google precisam entrar no app. Crie pelo próprio app uma conta só para isso, com um e-mail que vocês controlem, e informe e-mail e senha nas notas de revisão das duas lojas.

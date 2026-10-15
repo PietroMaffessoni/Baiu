@@ -2,7 +2,7 @@
 
 Gestão financeira pessoal com um mascote que reage ao seu dinheiro. O Baiu é um baiacu: quanto melhor você cuida das finanças, mais ele enche e mais forte é o brilho dele.
 
-Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida e os aceites dos termos. Não há anúncios nem analytics.
+Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites dos termos e um contador diário de perguntas à IA. Não há anúncios nem analytics.
 
 ## O que o app faz
 
@@ -16,9 +16,10 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta; sem conta, s�
 | Investimentos | Aplicações, aportes de outra conta, atualização de valor, resgates e constância mensal |
 | Fôlego | Nota de 0 a 100 em quatro pilares, com o próximo passo em reais |
 | Selos | Carimbos por hábitos saudáveis |
+| Assistente | Conversa com o Baiu: avisos de gastos fora do normal, contas que se repetem, respostas prontas no aparelho e, com consentimento, respostas de IA (Anthropic) com um resumo sem dados pessoais |
 | Personalização | Oito cores para o Baiu e enfeites automáticos em oito datas comemorativas, que dá para desligar |
 | Segurança | Dados cifrados, bloqueio por Face ID ou biometria, ocultar valores, cortina no seletor de apps |
-| Lembretes | Notificação local um dia antes e no dia do vencimento, sem valores no texto |
+| Lembretes | Notificação local um dia antes e no dia do vencimento, e aviso quando um gasto foge do normal, sem valores no texto |
 | Seus dados | Exportação em CSV e exclusão total |
 
 Na primeira tela, "Explorar com dados de exemplo" carrega um mês fictício, sem conta. Para sair dele: Ajustes, "Sair do modo exemplo".
@@ -40,6 +41,16 @@ O fôlego vai de 0 a 100 e soma quatro pilares de 25 pontos, calculados sobre os
 | 75 a 100 | Estufado |
 
 A regra está em `src/lib/folego.ts`.
+
+## Como o assistente funciona
+
+Os avisos e as contas que se repetem são calculados no aparelho (`src/lib/assistant/insights.ts`): o Baiu agrupa gastos parecidos ("Açaí do Zé" e "Açaí Concept" viram açaí; Enel e Cemig viram conta de luz) e compara com o mês passado. Um aviso por vez vira notificação, entre 10h e 20h, sem valores.
+
+A conversa responde de três jeitos:
+
+1. **Modo exemplo, IA desligada ou sem internet:** respostas prontas com os números da pessoa (`src/lib/assistant/local.ts`).
+2. **Conta com IA ligada:** a função `supabase/functions/baiu-chat` confere login, consentimento e limite diário e pergunta à IA. Vão só a pergunta, a conversa recente e o resumo de `src/lib/assistant/context.ts`.
+3. **Se a IA falhar:** volta para a resposta pronta, avisando o motivo.
 
 ## Rodar no computador
 
@@ -64,7 +75,7 @@ npx eas-cli build --platform ios --profile preview       # pede o login da Apple
 
 ```bash
 npm test            # testes de lógica (saldos, fôlego, vencimentos, investimentos, cripto, CSV, contas)
-npm run test:sql    # testa o SQL do servidor num Postgres embutido
+npm run test:sql    # testa o SQL do servidor num Postgres embutido e a função da IA, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
@@ -80,10 +91,11 @@ src/
   data/           tipos, bancos, categorias e dados de exemplo
   lib/            fôlego, saldos, vencimentos, selos, cofre cifrado, lembretes, CSV
   lib/auth/       validação do cadastro, cliente do Supabase e servidor falso para testes
+  lib/assistant/  avisos, respostas prontas, resumo enviado à IA e IA falsa para testes
   store/          estado do app e redutor
   theme/          cores, fontes e tipografia
 docs/             privacidade, termos, suporte e exclusão de conta, publicados pelo GitHub
-supabase/         SQL do servidor de contas, modelos de e-mail e guia de configuração
+supabase/         SQL do servidor, função da IA, modelos de e-mail e guia de configuração
 store/            fichas da App Store e do Google Play e imagens das lojas
 ```
 

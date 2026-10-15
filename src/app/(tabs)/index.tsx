@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BaiuSays } from '@/components/baiu-says';
 import { Baiu, baiuHeight } from '@/components/baiu/baiu';
 import { useBaiuLook } from '@/components/baiu/use-look';
 import { BankMark } from '@/components/bank-mark';
@@ -18,6 +19,7 @@ import { Seal } from '@/components/seal';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account } from '@/data/types';
+import { useAlerts } from '@/lib/assistant/use-assistant';
 import { dueItems, dueLabel } from '@/lib/bills';
 import { paletteFor } from '@/lib/look';
 import { greeting, longToday } from '@/lib/dates';
@@ -25,6 +27,7 @@ import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
 import { sealsFor } from '@/lib/seals';
 import { dailySpending, last30, sortedTxs } from '@/lib/summary';
+import { useAuth } from '@/store/auth';
 import { useAccountsById, useFolego, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter, radius } from '@/theme/tokens';
@@ -43,6 +46,10 @@ export default function Home() {
   const allSeals = useMemo(() => sealsFor(state), [state]);
   const earned = allSeals.filter((x) => x.earned);
   const seals = earned.length > 0 ? earned.slice(-3).reverse() : allSeals.slice(0, 3);
+
+  const { profile } = useAuth();
+  const alerts = useAlerts();
+  const unseen = alerts.filter((a) => !state.assistant.seen[a.id]);
 
   const look = useBaiuLook();
   const fishW = Math.min(230, Math.round(width * 0.58));
@@ -126,6 +133,16 @@ export default function Home() {
           </Pressable>
         </Link>
       </View>
+
+      {/* o Baiu fala: o que notou nos gastos ou o convite para conversar */}
+      <BaiuSays
+        alerts={unseen}
+        greeted={state.assistant.greeted}
+        firstName={profile?.fullName.split(' ')[0]}
+        hide={hide}
+        onOpen={() => router.push('/baiu')}
+        onDismiss={(ids) => dispatch({ type: 'alertsSeen', ids })}
+      />
 
       {/* saldo */}
       <View style={[styles.center, { marginTop: 26 }]}>

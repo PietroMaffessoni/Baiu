@@ -37,6 +37,9 @@ Cadastre conta corrente, reserva, cartão de crédito e corretora. O Baiu soma t
 REGISTRE O QUE ENTRA E O QUE SAI
 Entradas, gastos e transferências em poucos toques, com categorias, forma de pagamento e data. O extrato mostra cada dia do mês e quanto você guardou.
 
+CONVERSE COM O BAIU
+O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. A conversa com inteligência artificial é opcional e só começa com a sua permissão.
+
 ENTENDA SEU FÔLEGO
 O fôlego vai de 0 a 100 e soma quatro pilares: gastar menos do que entrou, ter reserva de emergência, manter os vencimentos em dia e investir com constância. O app mostra a conta de cada pilar e o próximo passo para o Baiu encher.
 
@@ -53,9 +56,9 @@ GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
 PRIVADO DE VERDADE
-Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Dá para bloquear o app com Face ID e esconder os valores com um toque.
+Sem anúncios e sem rastreamento. Seus registros financeiros ficam só no seu celular, criptografados com uma chave guardada no próprio aparelho; a conta guarda apenas nome, e-mail e celular. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com Face ID e esconder os valores com um toque.
 
-O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não faz recomendação de investimento.
+O Baiu é uma ferramenta de organização. Ele não se conecta ao seu banco, não movimenta dinheiro e não indica ativos específicos: as dicas são educativas.
 
 ## Privacidade do app
 
@@ -66,8 +69,12 @@ Em App Store Connect, Privacidade do app, declare que o app **coleta dados**, co
 | Informações de contato: Nome | Sim | Não | Funcionalidade do app |
 | Informações de contato: Endereço de e-mail | Sim | Não | Funcionalidade do app |
 | Informações de contato: Número de telefone | Sim | Não | Funcionalidade do app |
+| Informações financeiras: Outras informações financeiras | Não | Não | Funcionalidade do app |
+| Conteúdo do usuário: Outro conteúdo do usuário | Não | Não | Funcionalidade do app |
 
-Todos os outros tipos: não coletados. Os registros financeiros não saem do aparelho, então não entram na declaração. O manifesto de privacidade do app já declara esses três tipos.
+Todos os outros tipos: não coletados. Os registros financeiros ficam no aparelho. As duas últimas linhas existem por causa da conversa com IA, que é opcional: com ela ligada, a pergunta e um resumo dos números (sem nome, e-mail, celular ou bancos) vão para a Anthropic a cada mensagem. Não ficam vinculados à pessoa porque nada que a identifique é enviado à IA, e o servidor do Baiu não guarda o conteúdo. O manifesto de privacidade do app já declara esses cinco tipos.
+
+A diretriz 5.1.2(i) da Apple pede que o app diga claramente quando dados pessoais vão para uma IA de terceiros e peça permissão antes. O Baiu mostra esse aviso, com o resumo exato do que é enviado, e só envia depois do toque em "Ativar a conversa com IA".
 
 ## Criptografia (conformidade de exportação)
 
@@ -78,7 +85,7 @@ O app já declara `ITSAppUsesNonExemptEncryption = false`, então o App Store Co
 - Login: necessário. Crie pelo app uma conta só para a revisão e informe e-mail e senha nos campos de login de demonstração.
 - Notas para o revisor:
 
-> Para ver o app com dados prontos, toque em "Explorar com dados de exemplo" na primeira tela; essa é a única parte sem conta. Para o uso real, entre com a conta de demonstração informada acima, cadastre uma conta bancária e registre um movimento pelo botão + na tela inicial. Os registros financeiros ficam só no aparelho, criptografados; o servidor guarda apenas nome, e-mail e celular. A conta pode ser excluída em Ajustes, Minha conta, Excluir conta. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados.
+> Para ver o app com dados prontos, toque em "Explorar com dados de exemplo" na primeira tela; essa é a única parte sem conta. Para o uso real, entre com a conta de demonstração informada acima, cadastre uma conta bancária e registre um movimento pelo botão + na tela inicial. Os registros financeiros ficam só no aparelho, criptografados; o servidor guarda apenas nome, e-mail e celular. A conta pode ser excluída em Ajustes, Minha conta, Excluir conta. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados e avisam gastos fora do normal. O assistente abre pelo balão "Conversar com o Baiu" na tela inicial; no exemplo ele usa respostas prontas, e com a conta a conversa com inteligência artificial (Anthropic) é opcional e pede consentimento explícito antes do primeiro envio, mostrando o que será enviado.
 
 - Contato da revisão: seu nome, telefone e e-mail.
 

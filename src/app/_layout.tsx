@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Baiu } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { LockGate } from '@/components/lock-gate';
+import { useAssistantUpkeep } from '@/lib/assistant/use-assistant';
 import { useReminderRouting } from '@/lib/reminders';
 import { AuthProvider, useAuth } from '@/store/auth';
 import { StoreProvider, useStore, type Owner } from '@/store/store';
@@ -80,6 +81,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
   const inApp = owner !== null;
   const signedIn = inApp && owner !== 'demo';
   useReminderRouting(ready && signedIn);
+  useAssistantUpkeep(ready && signedIn && !unreadable);
 
   useEffect(() => {
     if (ready) SplashScreen.hideAsync().catch(() => {});
@@ -109,6 +111,8 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="selos" options={{ ...pushedHeader, title: 'Selos' }} />
               <Stack.Screen name="ajustes" options={{ ...pushedHeader, title: 'Ajustes' }} />
               <Stack.Screen name="personalizar" options={{ ...pushedHeader, title: 'Personalizar o Baiu' }} />
+              <Stack.Screen name="baiu" />
+              <Stack.Screen name="assistente-dados" options={sheet} />
               <Stack.Screen name="nova-conta" options={modal} />
               <Stack.Screen name="conta-editar" options={modal} />
               <Stack.Screen name="movimento/novo" options={modal} />

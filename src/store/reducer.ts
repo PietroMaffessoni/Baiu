@@ -1,5 +1,5 @@
-import { createDemo, createEmpty } from '@/data/demo';
-import type { Account, Bill, Holding, Settings, State, Tx } from '@/data/types';
+import { createAssistant, createDemo, createEmpty } from '@/data/demo';
+import type { Account, Assistant, Bill, ChatMsg, Holding, Settings, State, Tx } from '@/data/types';
 import { isBaiuColor, type BaiuLook } from '@/lib/look';
 import { computeFolego } from '@/lib/folego';
 import { applyTx, newId, round2, validateTx } from '@/lib/ledger';
@@ -21,6 +21,15 @@ export type Action =
   | { type: 'wipe' }
   | { type: 'setSetting'; key: keyof Settings; value: boolean }
   | { type: 'setBaiu'; patch: Partial<BaiuLook> }
+  | { type: 'chatAdd'; msgs: ChatMsg[] }
+  | { type: 'chatClear' }
+  /** Marca avisos como vistos; `toChat` entra na conversa como fala do Baiu. */
+  | { type: 'alertsSeen'; ids: string[]; toChat?: ChatMsg[] }
+  | { type: 'alertsNotified'; ids: string[] }
+  | {
+      type: 'setAssistant';
+      patch: Partial<Pick<Assistant, 'consent' | 'declined' | 'pendingRevoke' | 'shareNumbers' | 'greeted'>>;
+    }
   | { type: 'addAccount'; account: Account }
   | { type: 'updateAccount'; id: string; patch: Partial<Pick<Account, 'nickname' | 'balance' | 'dueDay' | 'limit'>> }
   | { type: 'removeAccount'; id: string }
@@ -37,6 +46,24 @@ export type Action =
   | { type: 'holdingRedeem'; id: string; amount: number; toAccountId?: string; date: string }
   | { type: 'renameHolding'; id: string; name: string; kind: Holding['kind'] }
   | { type: 'removeHolding'; id: string };
+
+/** Conversa guardada: as últimas falas bastam para o contexto e para rolar a tela. */
+export const CHAT_LIMIT = 80;
+const MARKS_LIMIT = 200;
+
+function mark(marks: Record<string, string>, ids: string[], at: string) {
+  const next = { ...marks };
+  for (const id of ids) next[id] ??= at;
+  const keys = Object.keys(next);
+  if (keys.length <= MARKS_LIMIT) return next;
+  // os mais antigos saem primeiro
+  keys.sort((a, b) => next[a].localeCompare(next[b]));
+  for (const k of keys.slice(0, keys.length - MARKS_LIMIT)) delete next[k];
+  return next;
+}
+
+const validMsg = (m: ChatMsg) =>
+  !!m.id && (m.role === 'user' || m.role === 'baiu') && typeof m.text === 'string' && m.text.trim().length > 0;
 
 const byIdOf = (s: State) => new Map(s.accounts.map((a) => [a.id, a]));
 
@@ -106,9 +133,15 @@ function core(s: State, action: Action): State {
     case 'onboard':
       return { ...s, onboarded: true };
     case 'loadDemo':
-      return { ...createDemo(), onboarded: true, settings: s.settings, baiu: s.baiu };
+      return { ...createDemo(), onboarded: true, settings: s.settings, baiu: s.baiu, assistant: createAssistant() };
     case 'exitDemo':
-      return { ...createEmpty(), onboarded: true, settings: { ...s.settings }, baiu: { ...s.baiu } };
+      return {
+        ...createEmpty(),
+        onboarded: true,
+        settings: { ...s.settings },
+        baiu: { ...s.baiu },
+        assistant: createAssistant(),
+      };
     case 'wipe':
       return createEmpty();
     case 'setSetting':
@@ -121,6 +154,60 @@ function core(s: State, action: Action): State {
         baiu: {
           color: color ?? s.baiu.color,
           seasonal: typeof seasonal === 'boolean' ? seasonal : s.baiu.seasonal,
+        },
+      };
+    }
+
+    case 'chatAdd': {
+      const msgs = action.msgs.filter(validMsg);
+      if (msgs.length === 0) return s;
+      return {
+        ...s,
+        assistant: { ...s.assistant, greeted: true, chat: [...s.assistant.chat, ...msgs].slice(-CHAT_LIMIT) },
+      };
+    }
+    case 'chatClear':
+      return { ...s, assistant: { ...s.assistant, chat: [] } };
+    case 'alertsSeen': {
+      const at = new Date().toISOString();
+      const fresh = action.ids.filter((id) => !s.assistant.seen[id]);
+      if (fresh.length === 0) return s;
+      const toChat = (action.toChat ?? []).filter(validMsg);
+      return {
+        ...s,
+        assistant: {
+          ...s.assistant,
+          seen: mark(s.assistant.seen, fresh, at),
+          chat: toChat.length ? [...s.assistant.chat, ...toChat].slice(-CHAT_LIMIT) : s.assistant.chat,
+        },
+      };
+    }
+    case 'alertsNotified': {
+      const fresh = action.ids.filter((id) => !s.assistant.notified[id]);
+      if (fresh.length === 0) return s;
+      return {
+        ...s,
+        assistant: { ...s.assistant, notified: mark(s.assistant.notified, fresh, new Date().toISOString()) },
+      };
+    }
+    case 'setAssistant': {
+      const p = action.patch;
+      const consent =
+        p.consent === undefined
+          ? s.assistant.consent
+          : p.consent && typeof p.consent.version === 'string' && typeof p.consent.at === 'string'
+            ? { version: p.consent.version, at: p.consent.at }
+            : null;
+      const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
+      return {
+        ...s,
+        assistant: {
+          ...s.assistant,
+          consent,
+          declined: bool(p.declined, s.assistant.declined),
+          pendingRevoke: bool(p.pendingRevoke, s.assistant.pendingRevoke),
+          shareNumbers: bool(p.shareNumbers, s.assistant.shareNumbers),
+          greeted: bool(p.greeted, s.assistant.greeted),
         },
       };
     }

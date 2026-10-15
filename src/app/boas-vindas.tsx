@@ -82,7 +82,7 @@ export default function BoasVindas() {
           </T>
           {avail >= 680 ? (
             <T variant="body" tone="ink2" style={{ marginTop: 12, maxWidth: 360 }}>
-              Reúna suas contas, acompanhe gastos e investimentos e veja o Baiu ganhar fôlego a cada bom hábito.
+              Reúna suas contas, converse com o Baiu sobre seu dinheiro e veja ele ganhar fôlego a cada bom hábito.
             </T>
           ) : null}
         </Animated.View>
@@ -90,7 +90,7 @@ export default function BoasVindas() {
           <Animated.View entering={FadeInDown.delay(200).duration(500)} style={styles.points}>
             {[
               'Todas as suas contas num lugar só',
-              'Para onde o dinheiro foi, dia a dia',
+              'O Baiu avisa quando um gasto foge do normal',
               'Um selo para cada bom hábito',
             ].map((t) => (
               <View key={t} style={styles.point}>
