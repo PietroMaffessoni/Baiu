@@ -45,6 +45,7 @@
     "eslint-config-expo": "~57.0.2",
     "jest": "~29.7.0",
     "jest-expo": "^57.0.6",
+    "playwright-core": "^1.64.1",
     "typescript": "~6.0.3"
   },
   "scripts": {
@@ -55,7 +56,9 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node scripts/test-bancos-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-bank.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-subscription.mjs"
+    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node scripts/test-bancos-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-bank.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-subscription.mjs",
+    "test:e2e": "node e2e/run.js",
+    "store:images": "node e2e/capturas-lojas.js"
   },
   "private": true,
   "jest": {

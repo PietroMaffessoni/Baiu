@@ -12,7 +12,12 @@ export type FakeSub = {
   /** A loja não conseguiu cobrar. */
   billingIssue?: boolean;
 };
-type FakeDb = { subs: Record<string, FakeSub>; trialUsed: Record<string, true> };
+type FakeDb = {
+  subs: Record<string, FakeSub>;
+  trialUsed: Record<string, true>;
+  /** Planos à venda; sem isto, mensal e anual. Serve para testar a loja só com o mensal. */
+  offered?: FakeSub['plan'][];
+};
 
 export const FAKE_STORE_KEY = 'baiu:fake-store';
 
@@ -135,8 +140,9 @@ export function createFakeStore(opts: { latencyMs?: number; now?: () => Date; of
     },
     async plans() {
       await wait();
-      const used = !!(user && load().trialUsed[user]);
-      return (['mensal', 'anual'] as const).map((k): Plan => ({
+      const d = load();
+      const used = !!(user && d.trialUsed[user]);
+      return (d.offered ?? (['mensal', 'anual'] as const)).map((k): Plan => ({
         ...PLANS[k],
         trial: used ? null : { unit: 'mes', count: 1 },
       }));

@@ -116,7 +116,7 @@ A Apple só libera assinaturas depois do contrato de apps pagos. Faça na ordem:
 | Descrição (pt-BR) | Bancos conectados, avisos de gastos e o Baiu assistente |
 
 3. Em **Ofertas introdutórias**, crie um **Teste gratuito de 1 mês**, para todos os países e para novos assinantes.
-4. Em **Informações de revisão**, envie uma captura da tela de assinatura do app e cole as notas para o revisor. A primeira assinatura vai para revisão junto com uma versão do app.
+4. Em **Informações de revisão**, envie a captura `store/imagens/revisao-assinatura.png` e cole as notas para o revisor. A primeira assinatura vai para revisão junto com uma versão do app.
 5. Em **Usuários e acesso, Integrações, Compra dentro do app**, gere uma chave (arquivo `.p8`) para o RevenueCat. Não envie esse arquivo por mensagem: ele vai direto para o painel do RevenueCat. Lá também está o endereço para **App Store Server Notifications**, que você cola na página do app, em Informações do app.
 6. Em **Usuários e acesso, Sandbox**, crie uma conta de teste para comprar sem pagar. No sandbox, um mês dura poucos minutos.
 
@@ -129,15 +129,17 @@ As capturas já estão prontas em `store/imagens/app-store/`, no tamanho de iPho
 | Ordem | Arquivo | Legenda |
 | --- | --- | --- |
 | 1 | `01-inicio.jpg` | Seu dinheiro com fôlego |
-| 2 | `02-folego.jpg` | Entenda sua nota |
-| 3 | `03-registrar.jpg` | Registre em segundos |
-| 4 | `04-extrato.jpg` | Veja para onde foi |
-| 5 | `05-investir.jpg` | Investimentos em dia |
+| 2 | `02-bancos.jpg` | Conecte seus bancos |
+| 3 | `03-assistente.jpg` | O Baiu do seu lado |
+| 4 | `04-folego.jpg` | Entenda sua nota |
+| 5 | `05-extrato.jpg` | Veja para onde foi |
 | 6 | `06-vencimentos.jpg` | Nenhum vencimento esquecido |
-| 7 | `07-contas.jpg` | Tudo num lugar só |
+| 7 | `07-investir.jpg` | Investimentos em dia |
 | 8 | `08-personalizar.jpg` | Do seu jeito |
 
-Elas usam os dados de exemplo do próprio app.
+Elas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer todas, por exemplo depois de mudar uma tela: `npm run store:images`.
+
+A captura da tela de assinatura para a revisão da compra (seção Assinatura, passo 4) é `store/imagens/revisao-assinatura.png`. Ela mostra o preço de exemplo, R$ 14,90. Se o preço for outro, refaça as imagens depois de trocar o valor de exemplo em `src/lib/subscription/fake.ts`.
 
 ## Passo a passo para publicar
 

@@ -53,3 +53,7 @@ public/__shot.html
 
 # chave da conta de serviço do Google Play (envio pelo EAS)
 google-service-account.json
+
+# testes de navegador: versão web gerada e capturas das falhas
+e2e/.web/
+e2e/capturas/

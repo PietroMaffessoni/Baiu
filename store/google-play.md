@@ -79,7 +79,7 @@ O Baiu é uma ferramenta de organização. Ele não movimenta dinheiro e não in
 | Gráfico de destaque | `banner-1024x500.jpg` | 1024 × 500, JPEG ou PNG sem transparência |
 | Capturas de celular | `01-inicio.jpg` a `08-personalizar.jpg` | de 2 a 8, proporção 9:16 |
 
-As capturas usam os dados de exemplo do próprio app.
+Ordem e legendas: início ("Seu dinheiro com fôlego"), bancos conectados, o Baiu assistente, fôlego, extrato, vencimentos, investimentos e personalização. As capturas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer: `npm run store:images`.
 
 ## Conteúdo do app
 
@@ -100,7 +100,7 @@ Respostas para a seção Política, Conteúdo do app.
 
 ### Recursos financeiros
 
-O Baiu não oferece conta, empréstimo, pagamento, transferência real, negociação de ativos nem consultoria. Ele só organiza informações que o próprio usuário digita.
+O Baiu não oferece conta, empréstimo, pagamento, transferência real, negociação de ativos nem consultoria. Ele organiza o que o usuário digita e, se a pessoa quiser, o que vem dos bancos dela pelo Open Finance, só para leitura.
 
 Abra o formulário e leia as opções. Com a conexão de bancos, o Baiu agrega contas pelo Open Finance (só leitura), sem fazer pagamentos nem empréstimos. Marque a opção de gestão de finanças pessoais ou agregação de contas, se houver; não marque pagamentos, empréstimos nem investimentos.
 

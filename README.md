@@ -98,8 +98,12 @@ npm test            # testes de lógica (saldos, fôlego, vencimentos, investime
 npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA, dos bancos e da assinatura, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
+npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura, personalização e telas pequenas
+npm run store:images   # refaz as capturas das lojas e a captura da assinatura para a revisão da Apple
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
 ```
+
+Os roteiros de navegador geram a versão web com o servidor, o banco, a IA e a loja falsos (`EXPO_PUBLIC_AUTH_FAKE=1`) e usam o Edge ou o Chrome instalados (outro navegador: `BAIU_BROWSER`). `npm run test:e2e -- bancos assinatura` roda só alguns; `--sem-build` reaproveita a última versão web. As falhas ficam com uma captura em `e2e/capturas/`.
 
 ## Estrutura
 
@@ -117,6 +121,7 @@ src/
   store/          estado do app e redutor
   theme/          cores, fontes e tipografia
 docs/             privacidade, termos, suporte e exclusão de conta, publicados pelo GitHub
+e2e/              roteiros de navegador (e2e/roteiros) e o gerador das imagens das lojas
 supabase/         SQL do servidor, funções da IA, dos bancos e da assinatura, modelos de e-mail e guia de configuração
 store/            fichas da App Store e do Google Play e imagens das lojas
 ```
