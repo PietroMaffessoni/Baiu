@@ -142,7 +142,7 @@ Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A pág
 5. Em **Configuração, Teste de licença**, adicione os e-mails de quem vai testar: as compras deles não são cobradas.
 6. O RevenueCat precisa ler as compras: siga o guia dele para dar acesso a uma conta de serviço (pode ser a mesma do envio automático, com a permissão de dados financeiros) e para ligar as notificações em tempo real (Pub/Sub). O arquivo da conta de serviço vai direto para o painel do RevenueCat, nunca por mensagem.
 
-O resto da configuração está em `supabase/LEIA-ME.md`, passo 9.
+O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
 
 ## Passo a passo para publicar
 

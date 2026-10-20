@@ -120,7 +120,7 @@ A Apple só libera assinaturas depois do contrato de apps pagos. Faça na ordem:
 5. Em **Usuários e acesso, Integrações, Compra dentro do app**, gere uma chave (arquivo `.p8`) para o RevenueCat. Não envie esse arquivo por mensagem: ele vai direto para o painel do RevenueCat. Lá também está o endereço para **App Store Server Notifications**, que você cola na página do app, em Informações do app.
 6. Em **Usuários e acesso, Sandbox**, crie uma conta de teste para comprar sem pagar. No sandbox, um mês dura poucos minutos.
 
-Plano anual é opcional: crie `baiu_anual` no mesmo grupo e ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, passo 9.
+Plano anual é opcional: crie `baiu_anual` no mesmo grupo e ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
 
 ## Capturas de tela
 
@@ -160,7 +160,7 @@ npx eas-cli submit --platform ios --latest
 ```
 
 5. Teste pelo TestFlight, principalmente o Face ID e as notificações, que não funcionam no Expo Go.
-6. Configure a assinatura (seção Assinatura acima) e o RevenueCat (`supabase/LEIA-ME.md`, passo 9).
+6. Configure a assinatura (seção Assinatura acima) e o RevenueCat (`supabase/LEIA-ME.md`, apêndice B).
 7. Preencha a ficha com este documento, envie as capturas e mande para revisão junto com a assinatura.
 
 ## Google Play
