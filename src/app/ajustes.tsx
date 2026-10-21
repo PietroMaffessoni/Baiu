@@ -9,10 +9,14 @@ import { ListRow } from '@/components/form';
 import { Plate, Rule } from '@/components/layout';
 import { withoutCurtain } from '@/components/lock-gate';
 import { Wordmark } from '@/components/wordmark';
+import { useAssistant } from '@/lib/assistant/use-assistant';
 import { accountsCsv, transactionsCsv } from '@/lib/csv';
 import { authenticate, lockInfo, type LockInfo } from '@/lib/lock';
 import { remindersAllowed } from '@/lib/reminders';
 import { shareCsv } from '@/lib/share';
+import { describe } from '@/lib/subscription/status';
+import { useSubscription } from '@/lib/subscription/use-subscription';
+import { useAuth } from '@/store/auth';
 import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
@@ -21,8 +25,11 @@ const today = () => new Date().toISOString().slice(0, 10);
 
 export default function Ajustes() {
   const { state, dispatch, eraseAll } = useStore();
+  const { profile, exitDemo } = useAuth();
   const insets = useSafeAreaInsets();
   const [lock, setLock] = useState<LockInfo | null>(null);
+  const ai = useAssistant();
+  const sub = useSubscription();
   const s = state.settings;
 
   useEffect(() => {
@@ -58,6 +65,29 @@ export default function Ajustes() {
     dispatch({ type: 'setSetting', key: 'reminders', value: on });
   };
 
+  const toggleAlerts = async (on: boolean) => {
+    // o aviso chega por notificação: pede a permissão na hora de ligar
+    if (on && Platform.OS !== 'web') await withoutCurtain(() => remindersAllowed(true)).catch(() => false);
+    dispatch({ type: 'setSetting', key: 'alerts', value: on });
+  };
+
+  const toggleAi = (on: boolean) => {
+    if (on) {
+      // o aceite acontece na conversa, com o texto completo à vista
+      dispatch({ type: 'setAssistant', patch: { declined: false } });
+      router.push('/baiu');
+      return;
+    }
+    confirm(
+      'Desligar a conversa com IA?',
+      'O Baiu para de enviar perguntas e números para a inteligência artificial e passa a usar só as respostas prontas. Dá para ligar de novo quando quiser.',
+      'Desligar',
+      () => {
+        ai.disableAi();
+      },
+    );
+  };
+
   const exportTx = () =>
     shareCsv(`baiu-movimentos-${today()}.csv`, transactionsCsv(state)).catch((e) =>
       Alert.alert('Não deu para exportar', String(e?.message ?? e)),
@@ -77,9 +107,9 @@ export default function Ajustes() {
 
   const eraseEverything = () =>
     confirm(
-      'Apagar todos os dados?',
-      'Contas, movimentos, vencimentos, investimentos e selos saem deste aparelho, junto com a chave de criptografia. Isso não pode ser desfeito.',
-      'Apagar tudo',
+      'Apagar os dados deste aparelho?',
+      'Contas, movimentos, vencimentos, investimentos e selos saem deste aparelho, junto com a chave de criptografia. Sua conta continua existindo. Isso não pode ser desfeito.',
+      'Apagar',
       () => {
         eraseAll();
       },
@@ -96,20 +126,55 @@ export default function Ajustes() {
         <View style={styles.group}>
           <Plate style={{ padding: 16, gap: 12 }}>
             <T variant="callout" tone="ink2">
-              Você está vendo dados de exemplo. Ao sair, o Baiu fica vazio para você cadastrar suas contas de verdade.
+              Você está vendo dados de exemplo. Para usar o Baiu com o seu dinheiro, saia do exemplo e crie sua conta.
             </T>
             <Button
               label="Sair do modo exemplo"
-              onPress={() =>
-                confirm('Sair do modo exemplo?', 'Os dados de exemplo serão apagados.', 'Sair', () => {
-                  dispatch({ type: 'exitDemo' });
-                  router.back();
-                })
-              }
+              onPress={() => confirm('Sair do modo exemplo?', 'Os dados de exemplo serão descartados.', 'Sair', exitDemo)}
             />
           </Plate>
         </View>
       )}
+
+      {profile ? (
+        <Group title="Conta">
+          <ListRow
+            icon="lock"
+            label={profile.fullName || 'Minha conta'}
+            hint={profile.email}
+            onPress={() => router.push('/minha-conta')}
+            chevron
+          />
+          {sub.enabled ? (
+            <>
+              <Rule inset={33} />
+              <ListRow
+                icon="receipt"
+                label="Assinatura"
+                hint={sub.ent ? describe(sub.ent).title : 'Planos, cobrança e cancelamento.'}
+                onPress={() => router.push('/assinatura')}
+                chevron
+              />
+            </>
+          ) : null}
+        </Group>
+      ) : null}
+
+      {!state.demo ? (
+        <Group title="Bancos">
+          <ListRow
+            icon="bank"
+            label="Bancos conectados"
+            hint={
+              state.bank.items.length
+                ? `${state.bank.items.length} ${state.bank.items.length === 1 ? 'banco conectado' : 'bancos conectados'} pelo Open Finance.`
+                : 'Conecte seus bancos e o Baiu registra tudo sozinho.'
+            }
+            onPress={() => router.push('/bancos')}
+            chevron
+          />
+        </Group>
+      ) : null}
 
       <Group title="Privacidade e segurança">
         <ListRow
@@ -162,11 +227,64 @@ export default function Ajustes() {
         <ListRow
           icon="lock"
           label="Onde ficam"
-          hint="Só neste aparelho, criptografados. Nada é enviado para servidores."
+          hint={
+            ai.mode === 'ligada'
+              ? 'Seus registros ficam só neste aparelho, criptografados. Bancos conectados mandam os dados direto para cá. Com a conversa com IA ligada, cada pergunta leva um resumo dos números, sem dados pessoais.'
+              : 'Seus registros financeiros ficam só neste aparelho, criptografados. Bancos conectados mandam os dados direto para cá; no servidor ficam só seus dados de cadastro.'
+          }
         />
       </Group>
 
+      <Group title="Assistente">
+        <ListRow icon="chat" label="Conversar com o Baiu" onPress={() => router.push('/baiu')} chevron />
+        <Rule inset={33} />
+        <ListRow icon="bell" label="Avisos de gastos" hint="Quando um gasto foge do normal. Sem valores na notificação.">
+          <Toggle value={s.alerts} onChange={toggleAlerts} label="Avisos de gastos" />
+        </ListRow>
+        {ai.mode === 'ligada' || ai.mode === 'desligada' ? (
+          <>
+            <Rule inset={33} />
+            <ListRow
+              icon="sparkle"
+              label="Conversa com IA"
+              hint="Respostas da inteligência artificial da Anthropic. Desligado, o Baiu usa respostas prontas.">
+              <Toggle value={ai.mode === 'ligada'} onChange={toggleAi} label="Conversa com IA" />
+            </ListRow>
+            {ai.mode === 'ligada' ? (
+              <>
+                <Rule inset={33} />
+                <ListRow
+                  icon="wallet"
+                  label="Usar meus números"
+                  hint="Envia o resumo dos números com a pergunta. Desligado, vai só a pergunta e as respostas ficam genéricas.">
+                  <Toggle
+                    value={state.assistant.shareNumbers}
+                    onChange={(v) => dispatch({ type: 'setAssistant', patch: { shareNumbers: v } })}
+                    label="Usar meus números"
+                  />
+                </ListRow>
+              </>
+            ) : null}
+            <Rule inset={33} />
+            <ListRow
+              icon="privacy"
+              label="O que o Baiu envia"
+              onPress={() => router.push('/assistente-dados')}
+              chevron
+            />
+          </>
+        ) : null}
+      </Group>
+
       <Group title="Baiu">
+        <ListRow
+          icon="sparkle"
+          label="Personalizar o Baiu"
+          hint="Cor e enfeites de datas comemorativas."
+          onPress={() => router.push('/personalizar')}
+          chevron
+        />
+        <Rule inset={33} />
         <ListRow icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
         <Rule inset={33} />
         <ListRow icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />
@@ -193,9 +311,11 @@ export default function Ajustes() {
       </View>
 
       {/* ação destrutiva sozinha, no fim */}
-      <View style={[styles.group, { marginTop: 56 }]}>
-        <Button label="Apagar todos os dados" kind="danger" icon="trash" onPress={eraseEverything} />
-      </View>
+      {!state.demo ? (
+        <View style={[styles.group, { marginTop: 56 }]}>
+          <Button label="Apagar dados deste aparelho" kind="danger" icon="trash" onPress={eraseEverything} />
+        </View>
+      ) : null}
     </ScrollView>
   );
 }

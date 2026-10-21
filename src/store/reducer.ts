@@ -1,6 +1,12 @@
-import { createDemo, createEmpty } from '@/data/demo';
-import type { Account, Bill, Holding, Settings, State, Tx } from '@/data/types';
+import { createAssistant, createBank, createDemo, createEmpty } from '@/data/demo';
+import { IN_CATEGORIES } from '@/data/categories';
+import type { Account, Assistant, Bill, Category, ChatMsg, Holding, Settings, State, Tx } from '@/data/types';
+import { ruleKey } from '@/lib/bank/categorize';
+import { mergeBankSync } from '@/lib/bank/merge';
+import type { SyncPayload } from '@/lib/bank/types';
+import { isBaiuColor, type BaiuLook } from '@/lib/look';
 import { computeFolego } from '@/lib/folego';
+import { addMonth } from '@/lib/dates';
 import { applyTx, newId, round2, validateTx } from '@/lib/ledger';
 import { newlyEarned } from '@/lib/seals';
 
@@ -19,6 +25,22 @@ export type Action =
   | { type: 'exitDemo' }
   | { type: 'wipe' }
   | { type: 'setSetting'; key: keyof Settings; value: boolean }
+  | { type: 'setBaiu'; patch: Partial<BaiuLook> }
+  | { type: 'bankSync'; payload: SyncPayload; at: string }
+  /** Desconecta um banco. `keep` mantém contas e movimentos como manuais. */
+  | { type: 'bankUnlink'; itemId: string; keep: boolean }
+  /** A pessoa corrigiu a categoria: vale para este e, aprendido, para os parecidos. */
+  | { type: 'recategorize'; id: string; category: Category }
+  | { type: 'confirmTxs'; ids: string[] }
+  | { type: 'chatAdd'; msgs: ChatMsg[] }
+  | { type: 'chatClear' }
+  /** Marca avisos como vistos; `toChat` entra na conversa como fala do Baiu. */
+  | { type: 'alertsSeen'; ids: string[]; toChat?: ChatMsg[] }
+  | { type: 'alertsNotified'; ids: string[] }
+  | {
+      type: 'setAssistant';
+      patch: Partial<Pick<Assistant, 'consent' | 'declined' | 'pendingRevoke' | 'shareNumbers' | 'greeted'>>;
+    }
   | { type: 'addAccount'; account: Account }
   | { type: 'updateAccount'; id: string; patch: Partial<Pick<Account, 'nickname' | 'balance' | 'dueDay' | 'limit'>> }
   | { type: 'removeAccount'; id: string }
@@ -36,16 +58,25 @@ export type Action =
   | { type: 'renameHolding'; id: string; name: string; kind: Holding['kind'] }
   | { type: 'removeHolding'; id: string };
 
-const byIdOf = (s: State) => new Map(s.accounts.map((a) => [a.id, a]));
+/** Conversa guardada: as últimas falas bastam para o contexto e para rolar a tela. */
+export const CHAT_LIMIT = 80;
+const MARKS_LIMIT = 200;
 
-function addMonth(iso: string) {
-  const d = new Date(iso);
-  const day = d.getDate();
-  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1, d.getHours(), d.getMinutes());
-  const last = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
-  next.setDate(Math.min(day, last));
-  return next.toISOString();
+function mark(marks: Record<string, string>, ids: string[], at: string) {
+  const next = { ...marks };
+  for (const id of ids) next[id] ??= at;
+  const keys = Object.keys(next);
+  if (keys.length <= MARKS_LIMIT) return next;
+  // os mais antigos saem primeiro
+  keys.sort((a, b) => next[a].localeCompare(next[b]));
+  for (const k of keys.slice(0, keys.length - MARKS_LIMIT)) delete next[k];
+  return next;
 }
+
+const validMsg = (m: ChatMsg) =>
+  !!m.id && (m.role === 'user' || m.role === 'baiu') && typeof m.text === 'string' && m.text.trim().length > 0;
+
+const byIdOf = (s: State) => new Map(s.accounts.map((a) => [a.id, a]));
 
 function withTx(s: State, tx: Tx): State {
   if (validateTx(tx, byIdOf(s))) return s;
@@ -104,13 +135,142 @@ function core(s: State, action: Action): State {
     case 'onboard':
       return { ...s, onboarded: true };
     case 'loadDemo':
-      return { ...createDemo(), onboarded: true, settings: s.settings };
+      return {
+        ...createDemo(),
+        onboarded: true,
+        settings: s.settings,
+        baiu: s.baiu,
+        assistant: createAssistant(),
+        bank: createBank(),
+      };
     case 'exitDemo':
-      return { ...createEmpty(), onboarded: true, settings: { ...s.settings } };
+      return {
+        ...createEmpty(),
+        onboarded: true,
+        settings: { ...s.settings },
+        baiu: { ...s.baiu },
+        assistant: createAssistant(),
+        bank: createBank(),
+      };
     case 'wipe':
       return createEmpty();
     case 'setSetting':
       return { ...s, settings: { ...s.settings, [action.key]: action.value } };
+    case 'setBaiu': {
+      const { color, seasonal } = action.patch;
+      if (color !== undefined && !isBaiuColor(color)) return s;
+      return {
+        ...s,
+        baiu: {
+          color: color ?? s.baiu.color,
+          seasonal: typeof seasonal === 'boolean' ? seasonal : s.baiu.seasonal,
+        },
+      };
+    }
+
+    case 'bankSync':
+      return mergeBankSync(s, action.payload, new Date(action.at)).state;
+    case 'bankUnlink': {
+      const mine = (item?: string) => item === action.itemId;
+      const items = s.bank.items.filter((i) => i.id !== action.itemId);
+      if (action.keep) {
+        // vira tudo manual: o saldo de agora fica, e os movimentos passam a valer como digitados
+        return {
+          ...s,
+          accounts: s.accounts.map((a) => (mine(a.link?.item) ? { ...a, link: undefined } : a)),
+          txs: s.txs.map((t) => (mine(t.ext?.item) ? { ...t, ext: undefined, review: undefined } : t)),
+          holdings: s.holdings.map((h) => (mine(h.ext?.item) ? { ...h, ext: undefined } : h)),
+          bank: { ...s.bank, items },
+        };
+      }
+      const gone = new Set(s.accounts.filter((a) => mine(a.link?.item)).map((a) => a.id));
+      return {
+        ...s,
+        accounts: s.accounts.filter((a) => !gone.has(a.id)),
+        txs: s.txs.filter((t) => !mine(t.ext?.item) && !gone.has(t.accountId) && !gone.has(t.toAccountId ?? '')),
+        holdings: s.holdings.filter((h) => !gone.has(h.accountId)),
+        bills: s.bills.map((b) => (b.accountId && gone.has(b.accountId) ? { ...b, accountId: undefined } : b)),
+        bank: { ...s.bank, items },
+      };
+    }
+    case 'recategorize': {
+      const tx = s.txs.find((t) => t.id === action.id);
+      if (!tx || tx.kind === 'transferencia') return s;
+      const incoming = (IN_CATEGORIES as Category[]).includes(action.category);
+      if (action.category === 'transferencia' || incoming !== (tx.kind === 'entrada')) return s;
+      const key = tx.ext ? ruleKey(tx.description) : null;
+      const sameKind = (t: Tx) => t.kind === tx.kind;
+      return {
+        ...s,
+        txs: s.txs.map((t) => {
+          if (t.id === tx.id) return { ...t, category: action.category, review: undefined, catBy: 'pessoa' };
+          // os parecidos que o Baiu ainda não tinha certeza (ou chutou) aprendem junto
+          if (key && t.ext && t.catBy !== 'pessoa' && sameKind(t) && ruleKey(t.description) === key) {
+            return { ...t, category: action.category, review: undefined, catBy: 'aprendida' };
+          }
+          return t;
+        }),
+        bank: key ? { ...s.bank, rules: { ...s.bank.rules, [key]: action.category } } : s.bank,
+      };
+    }
+    case 'confirmTxs': {
+      const ids = new Set(action.ids);
+      return { ...s, txs: s.txs.map((t) => (ids.has(t.id) && t.review ? { ...t, review: undefined } : t)) };
+    }
+
+    case 'chatAdd': {
+      const msgs = action.msgs.filter(validMsg);
+      if (msgs.length === 0) return s;
+      return {
+        ...s,
+        assistant: { ...s.assistant, greeted: true, chat: [...s.assistant.chat, ...msgs].slice(-CHAT_LIMIT) },
+      };
+    }
+    case 'chatClear':
+      return { ...s, assistant: { ...s.assistant, chat: [] } };
+    case 'alertsSeen': {
+      const at = new Date().toISOString();
+      const fresh = action.ids.filter((id) => !s.assistant.seen[id]);
+      if (fresh.length === 0) return s;
+      const toChat = (action.toChat ?? []).filter(validMsg);
+      return {
+        ...s,
+        assistant: {
+          ...s.assistant,
+          seen: mark(s.assistant.seen, fresh, at),
+          chat: toChat.length ? [...s.assistant.chat, ...toChat].slice(-CHAT_LIMIT) : s.assistant.chat,
+        },
+      };
+    }
+    case 'alertsNotified': {
+      const fresh = action.ids.filter((id) => !s.assistant.notified[id]);
+      if (fresh.length === 0) return s;
+      return {
+        ...s,
+        assistant: { ...s.assistant, notified: mark(s.assistant.notified, fresh, new Date().toISOString()) },
+      };
+    }
+    case 'setAssistant': {
+      const p = action.patch;
+      const consent =
+        p.consent === undefined
+          ? s.assistant.consent
+          : p.consent && typeof p.consent.version === 'string' && typeof p.consent.at === 'string'
+            ? { version: p.consent.version, at: p.consent.at }
+            : null;
+      const bool = (v: unknown, fallback: boolean) => (typeof v === 'boolean' ? v : fallback);
+      return {
+        ...s,
+        assistant: {
+          ...s.assistant,
+          consent,
+          declined: bool(p.declined, s.assistant.declined),
+          pendingRevoke: bool(p.pendingRevoke, s.assistant.pendingRevoke),
+          shareNumbers: bool(p.shareNumbers, s.assistant.shareNumbers),
+          greeted: bool(p.greeted, s.assistant.greeted),
+        },
+      };
+    }
 
     case 'addAccount': {
       const a = action.account;
@@ -125,15 +285,20 @@ function core(s: State, action: Action): State {
             ? {
                 ...a,
                 ...action.patch,
-                balance: action.patch.balance !== undefined ? round2(action.patch.balance) : a.balance,
+                // conta conectada: saldo, limite e vencimento vêm do banco
+                ...(a.link ? { limit: a.limit, dueDay: a.dueDay } : null),
+                balance:
+                  action.patch.balance !== undefined && !a.link ? round2(action.patch.balance) : a.balance,
               }
             : a,
         ),
       };
     case 'removeAccount': {
       const id = action.id;
+      const remote = s.accounts.find((a) => a.id === id)?.link?.remote;
       return {
         ...s,
+        bank: remote ? { ...s.bank, hiddenAccounts: { ...s.bank.hiddenAccounts, [remote]: true } } : s.bank,
         accounts: s.accounts.filter((a) => a.id !== id),
         txs: s.txs.filter((t) => t.accountId !== id && t.toAccountId !== id),
         holdings: s.holdings.filter((h) => h.accountId !== id),
@@ -154,6 +319,11 @@ function core(s: State, action: Action): State {
     case 'updateTx': {
       const old = s.txs.find((t) => t.id === action.tx.id);
       if (!old) return s;
+      if (old.ext) {
+        // veio do banco: valor, data e conta são do banco; muda só o nome
+        const description = action.tx.description.trim().slice(0, 80);
+        return { ...s, txs: s.txs.map((t) => (t.id === old.id ? { ...t, description: description || t.description } : t)) };
+      }
       const without = withoutTx(s, old.id);
       const next = withTx(without, { ...action.tx, billId: old.billId, createdAt: old.createdAt });
       if (next === without) return s;
@@ -166,6 +336,15 @@ function core(s: State, action: Action): State {
     }
     case 'removeTx': {
       const tx = s.txs.find((t) => t.id === action.id);
+      if (tx?.ext) {
+        // apagado do Baiu, mas continua no banco: não volta na próxima busca
+        const next = withoutTx(s, action.id);
+        return {
+          ...next,
+          bills: next.bills.map((b) => (b.paidTxId === tx.id ? { ...b, paidTxId: undefined } : b)),
+          bank: { ...next.bank, ignored: { ...next.bank.ignored, [tx.ext.id]: true } },
+        };
+      }
       const next = withoutTx(s, action.id);
       if (!tx?.billId) return next;
       // vencimento original já apagado: o do mês seguinte agora é independente e fica

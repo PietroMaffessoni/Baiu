@@ -1,10 +1,11 @@
 import { Link, router } from 'expo-router';
 import { useMemo } from 'react';
-import { Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Baiu, levelScale } from '@/components/baiu/baiu';
-import { PALETTE, VB_W } from '@/components/baiu/geometry';
+import { BaiuSays } from '@/components/baiu-says';
+import { Baiu, baiuHeight } from '@/components/baiu/baiu';
+import { useBaiuLook } from '@/components/baiu/use-look';
 import { BankMark } from '@/components/bank-mark';
 import { Button, IconButton } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
@@ -18,12 +19,18 @@ import { Seal } from '@/components/seal';
 import { TxRow } from '@/components/tx-row';
 import { bankById, KIND_LABEL } from '@/data/banks';
 import type { Account } from '@/data/types';
+import { useAlerts } from '@/lib/assistant/use-assistant';
+import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { dueItems, dueLabel } from '@/lib/bills';
+import { paletteFor } from '@/lib/look';
 import { greeting, longToday } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
 import { sealsFor } from '@/lib/seals';
+import { trialDaysLeft } from '@/lib/subscription/status';
+import { useSubscriptionState } from '@/lib/subscription/use-subscription';
 import { dailySpending, last30, sortedTxs } from '@/lib/summary';
+import { useAuth } from '@/store/auth';
 import { useAccountsById, useFolego, useStore } from '@/store/store';
 import { T } from '@/theme/text';
 import { color, gutter, radius } from '@/theme/tokens';
@@ -43,11 +50,23 @@ export default function Home() {
   const earned = allSeals.filter((x) => x.earned);
   const seals = earned.length > 0 ? earned.slice(-3).reverse() : allSeals.slice(0, 3);
 
-  const lanternW = Math.min(200, Math.round(width * 0.5));
-  const cord = insets.top + 26;
-  const lanternH = (lanternW * 240) / VB_W;
-  const stage = cord + lanternH * 0.94;
-  const glow = PALETTE[folego.mood.mood].glow;
+  const { profile } = useAuth();
+  const alerts = useAlerts();
+  const unseen = alerts.filter((a) => !state.assistant.seen[a.id]);
+  const { syncNow } = useBank();
+  const bankStatus = useBankStatus();
+  const linked = state.bank.items.length > 0;
+  const toReview = state.txs.filter((t) => t.review).length;
+  const sub = useSubscriptionState();
+  const trialLeft = sub.ent ? trialDaysLeft(sub.ent) : null;
+  const broken = state.bank.items.filter((i) => i.status === 'reconectar');
+
+  const look = useBaiuLook();
+  const fishW = Math.min(230, Math.round(width * 0.58));
+  const fishTop = insets.top + 26;
+  const fishH = baiuHeight(fishW);
+  const stage = fishTop + fishH * 0.96;
+  const pal = paletteFor(look.color, folego.mood.mood);
   const hide = state.settings.hideValues;
   const hasAccounts = state.accounts.length > 0;
 
@@ -64,19 +83,30 @@ export default function Home() {
       style={styles.screen}
       contentContainerStyle={{ paddingBottom: insets.bottom + 110 }}
       showsVerticalScrollIndicator={false}
-      contentInsetAdjustmentBehavior="never">
+      contentInsetAdjustmentBehavior="never"
+      refreshControl={
+        linked ? (
+          <RefreshControl
+            refreshing={bankStatus.running}
+            onRefresh={syncNow}
+            tintColor={color.lantern}
+            progressViewOffset={insets.top}
+          />
+        ) : undefined
+      }>
       <GroundLight
         width={width}
         height={stage + 260}
         cx={width / 2}
-        cy={cord + lanternH * 0.42 * levelScale(folego.score)}
-        intensity={0.35 + glow * 0.65}
+        cy={fishTop + fishH * 0.56}
+        intensity={0.35 + pal.glow * 0.65}
+        tint={pal.glowColor}
       />
 
-      {/* palco: a lanterna pendurada no topo da tela */}
+      {/* palco: o Baiu boiando no topo da tela */}
       <View style={{ height: stage }}>
-        <View style={[styles.lantern, { left: (width - lanternW) / 2 }]}>
-          <Baiu score={folego.score} width={lanternW} cord={cord} interactive />
+        <View style={[styles.fish, { left: (width - fishW) / 2, top: fishTop }]}>
+          <Baiu score={folego.score} width={fishW} interactive />
         </View>
         <View pointerEvents="box-none" style={[styles.topbar, { top: insets.top + 6 }]}>
           <View style={{ flexShrink: 1 }}>
@@ -124,6 +154,16 @@ export default function Home() {
         </Link>
       </View>
 
+      {/* o Baiu fala: o que notou nos gastos ou o convite para conversar */}
+      <BaiuSays
+        alerts={unseen}
+        greeted={state.assistant.greeted}
+        firstName={profile?.fullName.split(' ')[0]}
+        hide={hide}
+        onOpen={() => router.push('/baiu')}
+        onDismiss={(ids) => dispatch({ type: 'alertsSeen', ids })}
+      />
+
       {/* saldo */}
       <View style={[styles.center, { marginTop: 26 }]}>
         <T variant="caption" tone="ink2">
@@ -136,6 +176,52 @@ export default function Home() {
           </T>
         ) : null}
       </View>
+
+      {/* bancos: reconectar, conferir ou conectar o primeiro */}
+      {broken.length > 0 ? (
+        <Notice
+          icon="warning"
+          tone="vermilion"
+          title={`${broken[0].name} precisa reconectar`}
+          text="A autorização venceu ou o banco pediu uma confirmação. Sem isso, os movimentos novos não chegam."
+          onPress={() => router.push('/bancos')}
+        />
+      ) : null}
+      {sub.ent?.status === 'pagamento' ? (
+        <Notice
+          icon="warning"
+          tone="vermilion"
+          title="Problema no pagamento da assinatura"
+          text="A loja não conseguiu cobrar. Atualize a forma de pagamento para não perder o acesso."
+          onPress={() => router.push('/assinatura')}
+        />
+      ) : trialLeft !== null && trialLeft <= 3 ? (
+        <Notice
+          icon="warning"
+          tone="lantern"
+          title={trialLeft <= 1 ? 'Seu mês grátis acaba amanhã' : `Seu mês grátis acaba em ${trialLeft} dias`}
+          text="Depois, a assinatura começa a ser cobrada. Toque para ver os detalhes ou cancelar."
+          onPress={() => router.push('/assinatura')}
+        />
+      ) : null}
+      {toReview > 0 ? (
+        <Notice
+          icon="check"
+          tone="lantern"
+          title={toReview === 1 ? 'Confira 1 movimento' : `Confira ${toReview} movimentos`}
+          text="O Baiu não teve certeza da categoria. Um toque resolve, e ele aprende."
+          onPress={() => router.push('/revisar')}
+        />
+      ) : null}
+      {!linked && !state.demo ? (
+        <Notice
+          icon="bank"
+          tone="lantern"
+          title="Conecte seu banco"
+          text="Pelo Open Finance, cada entrada e saída aparece aqui sozinha, já com categoria."
+          onPress={() => router.push('/conectar')}
+        />
+      ) : null}
 
       {/* próximo hábito */}
       <Pressable
@@ -276,6 +362,39 @@ export default function Home() {
   );
 }
 
+function Notice({
+  icon,
+  tone,
+  title,
+  text,
+  onPress,
+}: {
+  icon: 'warning' | 'check' | 'bank';
+  tone: 'lantern' | 'vermilion';
+  title: string;
+  text: string;
+  onPress: () => void;
+}) {
+  return (
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={title}
+      style={({ pressed }) => [styles.habit, { marginTop: 14 }, pressed && { backgroundColor: color.plateHi }]}>
+      <View style={[styles.habitGlyph, { backgroundColor: tone === 'lantern' ? color.lanternWash : color.vermilionWash }]}>
+        <Icon name={icon} size={16} tint={color[tone]} weight="semibold" />
+      </View>
+      <View style={{ flex: 1 }}>
+        <T variant="calloutStrong">{title}</T>
+        <T variant="caption" tone="ink2">
+          {text}
+        </T>
+      </View>
+      <Icon name="chevron" size={13} tint={color.ink3} weight="semibold" />
+    </Pressable>
+  );
+}
+
 function AccountPlate({ account, total }: { account: Account; total: number }) {
   const bank = bankById(account.bankId);
   const card = account.kind === 'cartao';
@@ -317,7 +436,7 @@ function Flow({ label, value, tone }: { label: string; value: number; tone: 'jad
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: color.night },
-  lantern: { position: 'absolute', top: 0 },
+  fish: { position: 'absolute', top: 0 },
   topbar: {
     position: 'absolute',
     zIndex: 2,

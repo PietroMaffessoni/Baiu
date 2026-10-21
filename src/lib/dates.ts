@@ -57,3 +57,25 @@ export function greeting(now = new Date()) {
 export function longToday(now = new Date()) {
   return `${DIAS[now.getDay()]}, ${now.getDate()} de ${MESES[now.getMonth()]}`;
 }
+
+/** Mesma data no mês seguinte; dia 31 vira o último dia do mês quando ele for menor. */
+export function addMonth(iso: string) {
+  const d = new Date(iso);
+  const day = d.getDate();
+  const next = new Date(d.getFullYear(), d.getMonth() + 1, 1, d.getHours(), d.getMinutes());
+  const last = new Date(next.getFullYear(), next.getMonth() + 1, 0).getDate();
+  next.setDate(Math.min(day, last));
+  return next.toISOString();
+}
+
+/** "há 5 min", "há 2 h", "ontem"... */
+export function agoLabel(iso?: string, now = Date.now()) {
+  if (!iso) return 'nunca';
+  const min = Math.round((now - Date.parse(iso)) / 60_000);
+  if (min < 1) return 'agora';
+  if (min < 60) return `há ${min} min`;
+  const h = Math.round(min / 60);
+  if (h < 24) return `há ${h} h`;
+  const d = Math.round(h / 24);
+  return d === 1 ? 'ontem' : `há ${d} dias`;
+}

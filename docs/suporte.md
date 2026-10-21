@@ -4,26 +4,100 @@ O Baiu organiza suas finanças pessoais e mostra, pelo tamanho e pela luz do bai
 
 ## Perguntas frequentes
 
+### Conta e dados
+
 **Onde ficam meus dados?**
-Só no seu aparelho, criptografados. O Baiu não tem servidor, não pede login e não envia nada para fora do celular.
+Seus registros financeiros ficam só no seu aparelho, criptografados. No servidor do Baiu ficam apenas os dados da conta (nome, e-mail, celular e a senha protegida), os registros dos seus aceites, a lista dos bancos que você conectou e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do seu aparelho e não ficam guardados lá.
+
+**Esqueci minha senha.**
+Na tela Entrar, toque em "Esqueci minha senha". Enviamos um código para o seu e-mail; com ele você cria uma senha nova.
+
+**O código de confirmação não chegou.**
+Confira a caixa de spam e a aba de promoções. Espere um minuto e toque em "Reenviar código". Se o e-mail já tiver conta, nenhum código é enviado: entre com sua senha ou recupere a senha.
+
+**Troquei de celular e meus registros sumiram.**
+Sua conta funciona em qualquer aparelho. Os bancos conectados voltam sozinhos no aparelho novo, com os movimentos dos últimos 12 meses. Já o que você digitou à mão fica só no aparelho onde foi criado, e a chave que protege esses registros não sai dele. Antes de trocar de aparelho, use Ajustes, Exportar movimentos, para guardar uma cópia em planilha.
+
+**Como corrijo meus dados?**
+Em Ajustes, toque no seu nome para abrir Minha conta. Lá você corrige nome e celular e troca a senha. Para trocar o e-mail, escreva para o suporte.
+
+**Como excluo minha conta?**
+Em Minha conta, toque em "Excluir conta". A exclusão também desconecta seus bancos. Ela não cancela a assinatura na loja: cancele antes. Veja o passo a passo em [Excluir sua conta](excluir-conta.md).
+
+### Bancos conectados
 
 **O Baiu se conecta ao meu banco?**
-Não. Você cadastra suas contas e informa os saldos. O app nunca pede senha de banco.
+Sim, se você quiser. Em Contas, toque em "Conectar banco". A conexão usa o Open Finance, o sistema regulado pelo Banco Central, por meio da Pluggy, empresa brasileira que faz a ponte com os bancos. Você autoriza no app do seu banco; o Baiu nunca vê sua senha e o acesso é só para leitura, então ele não consegue movimentar dinheiro. Se preferir, cadastre as contas à mão e informe os saldos.
+
+**O que o Baiu recebe do banco?**
+Contas, saldos, cartões e faturas, investimentos e os movimentos dos últimos 12 meses (valor, data e descrição). Seu CPF, o nome do titular, o número completo das contas e o nome de quem enviou ou recebeu um Pix não chegam ao app.
+
+**Meus movimentos não atualizaram.**
+O Baiu busca os movimentos novos quando você abre o app, quando volta para ele (no máximo a cada 30 minutos) e quando você puxa a tela inicial para baixo. Em Ajustes, Bancos conectados, toque em "Atualizar agora". Se ali aparecer "Precisa reconectar", toque em "Reconectar" e autorize de novo no app do banco. Alguns bancos levam algumas horas para mostrar um movimento pelo Open Finance.
+
+**Um movimento veio com a categoria errada.**
+Toque no movimento e troque a categoria. O Baiu aprende: os movimentos parecidos mudam junto e os próximos já chegam certos. O que ele não teve certeza aparece em "Confira", na tela inicial.
+
+**Como desconecto um banco?**
+Em Ajustes, Bancos conectados, toque em "Desconectar". Você escolhe entre manter no aparelho o que já veio, como contas manuais, ou apagar tudo daquele banco. A autorização também pode ser cancelada no app do seu banco, na área de Open Finance.
+
+### Conversa com o Baiu e inteligência artificial
+
+**O que é a conversa com o Baiu?**
+Na tela inicial, toque em "Conversar com o Baiu". Ele avisa quando um gasto foge do normal, reconhece as contas que se repetem e responde dúvidas sobre os seus números, como onde economizar e como montar a reserva. Os avisos são calculados no próprio aparelho.
+
+**A conversa usa inteligência artificial?**
+Só se você ligar. Sem ela, o Baiu responde com respostas prontas, calculadas no aparelho. Com a IA ligada, cada pergunta vai para a Anthropic, a empresa que faz a IA, junto com um resumo dos seus números. Esse resumo não leva nome, e-mail, celular nem nomes de bancos. Antes de ligar, o app mostra exatamente o que seria enviado. O servidor do Baiu não guarda o conteúdo das conversas.
+
+**Como desligo a IA ou paro de enviar meus números?**
+Em Ajustes, Assistente: "Conversa com IA" liga e desliga a IA, e "Usar meus números" decide se o resumo vai junto com a pergunta. "O que o Baiu envia" mostra o resumo atual. Na conversa, "Apagar conversa" apaga as mensagens do aparelho.
+
+**Apareceu "Você chegou ao limite de perguntas com IA de hoje".**
+Cada conta pode fazer até 30 perguntas por dia à IA. No dia seguinte o limite volta. Enquanto isso, o Baiu continua com as respostas prontas.
+
+**Os avisos de gastos não chegam.**
+Confira se as notificações do Baiu estão permitidas nos ajustes do aparelho e se "Avisos de gastos" está ligado em Ajustes, Assistente. O Baiu manda no máximo um aviso por vez, entre 10h e 20h, sem valores no texto.
+
+### Assinatura
+
+**Quanto custa?**
+O primeiro mês é grátis. Depois, a assinatura é cobrada todo mês pela App Store ou pelo Google Play e renova sozinha até você cancelar. O preço aparece na tela de assinatura do app antes de você assinar. Sem conta, dá para conhecer o app com os dados de exemplo, de graça.
+
+**Como cancelo a assinatura?**
+No app, em Ajustes, Assinatura, toque em "Cancelar assinatura". O app explica e abre a página da loja. Também dá para cancelar direto na loja:
+
+- iPhone: Ajustes, seu nome, Assinaturas, Baiu.
+- Android: Play Store, seu perfil, Pagamentos e assinaturas, Assinaturas, Baiu.
+
+Cancele até 24 horas antes do fim do mês grátis ou da renovação. Você continua usando tudo até o fim do período já pago e não há nova cobrança. Dois dias antes de o mês grátis acabar, o Baiu avisa por notificação, se você permitir.
+
+**Como peço reembolso?**
+Você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). Quem cobra e devolve o dinheiro é a loja. No app, em Ajustes, Assinatura, toque em "Pedir reembolso" para abrir a página certa:
+
+- iPhone: reportaproblem.apple.com, com o seu Apple ID.
+- Android: support.google.com/googleplay/answer/2479637.
+
+Se a loja recusar ou você tiver dificuldade, escreva para o suporte.
+
+**Troquei de celular ou reinstalei o app e ele pede para assinar de novo.**
+Entre com a mesma conta e com a mesma conta da loja (Apple ID ou conta Google) usada na compra. Na tela de assinatura, toque em "Restaurar compras".
+
+**O que acontece se eu parar de pagar?**
+Seus registros continuam guardados no aparelho. Sem assinatura, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os movimentos. Você pode sair ou excluir a conta a qualquer momento.
+
+**Excluir a conta cancela a assinatura?**
+Não. Quem cobra é a loja. Cancele a assinatura antes de excluir a conta.
+
+### Uso do app
 
 **Como funciona o fôlego?**
 São quatro pilares de 25 pontos, medidos nos últimos 30 dias: gastar menos do que entrou, ter reserva de emergência, manter os vencimentos em dia e investir parte do que entrou. No app, toque em "Fôlego" na tela inicial para ver a conta de cada pilar.
 
-**Troquei de celular e meus dados sumiram.**
-A chave que protege os dados fica presa ao aparelho. Por isso, um backup restaurado em outro celular não consegue abrir os dados antigos. Antes de trocar de aparelho, use Ajustes, Exportar movimentos, para guardar uma cópia em planilha.
-
-**Como apago tudo?**
-Em Ajustes, toque em "Apagar todos os dados". Desinstalar o app também apaga tudo.
-
-**Os lembretes não chegam.**
-Confira se as notificações do Baiu estão permitidas nos ajustes do aparelho e se "Avisar vencimentos" está ligado em Ajustes, no app.
+**Os lembretes de vencimento não chegam.**
+Confira se as notificações do Baiu estão permitidas nos ajustes do aparelho e se "Avisar vencimentos" está ligado em Ajustes, Lembretes.
 
 **O Baiu recomenda investimentos?**
-Não. As sugestões são educativas e gerais. Elas não são recomendação de investimento nem consultoria financeira.
+Não. As sugestões e as respostas da conversa são educativas e gerais. Elas não são recomendação de investimento nem consultoria financeira.
 
 ## Contato
 

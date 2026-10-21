@@ -1,6 +1,6 @@
 import type { Account, State, Tx } from '@/data/types';
 import { addDays, daysBetween, MESES, startOfDay } from './dates';
-import { accountTotal, isAporte, isGuardado, round2 } from './ledger';
+import { accountTotal, isAporte, isGuardado, isNeutral, round2 } from './ledger';
 
 export type Period = { key: string; label: string; start: Date; end: Date };
 
@@ -36,7 +36,7 @@ export function flowsIn(state: State, period: { start: Date; end: Date }) {
   let aportes = 0;
   let guardado = 0;
   for (const t of state.txs) {
-    if (!inPeriod(t, period)) continue;
+    if (!inPeriod(t, period) || isNeutral(t)) continue;
     if (t.kind === 'entrada') entradas += t.amount;
     else if (t.kind === 'saida') gastos += t.amount;
     else if (isAporte(t, byId)) aportes += t.amount;
@@ -81,7 +81,7 @@ export function dailySpending(state: State, period: { start: Date; end: Date }, 
   });
   for (const t of state.txs) {
     if (accountId && t.accountId !== accountId && t.toAccountId !== accountId) continue;
-    if (!inPeriod(t, period)) continue;
+    if (!inPeriod(t, period) || isNeutral(t)) continue;
     const i = daysBetween(period.start, new Date(t.date));
     const bar = bars[i];
     if (!bar) continue;

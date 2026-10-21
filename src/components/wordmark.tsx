@@ -4,7 +4,7 @@ import { color } from '@/theme/tokens';
 
 /**
  * Logotipo "baiu": traço único, cheio e arredondado, como o próprio baiacu.
- * O pingo do i é a lanterna acesa.
+ * O pingo do i é a luz âmbar da marca.
  */
 export function Wordmark({ width = 120, tint = color.paper }: { width?: number; tint?: string }) {
   const h = (width * 164) / 382;

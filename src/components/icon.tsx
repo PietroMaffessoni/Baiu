@@ -58,6 +58,7 @@ const ICONS = {
   wallet: { ios: 'wallet.pass', android: 'account_balance_wallet' },
   down: { ios: 'arrow.down', android: 'arrow_downward' },
   up: { ios: 'arrow.up', android: 'arrow_upward' },
+  chat: { ios: 'bubble.left.and.bubble.right', android: 'forum' },
 } as const satisfies Record<string, { ios: SFSymbol; android: AndroidSymbol }>;
 
 export type IconName = keyof typeof ICONS;

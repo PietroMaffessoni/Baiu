@@ -56,8 +56,9 @@ export default function NovoMovimento() {
 
   const initialKind: TxKind =
     existing?.kind ?? (KINDS.some((k) => k.value === params.kind) ? (params.kind as TxKind) : 'saida');
-  const firstNonCard =
-    state.accounts.find((a) => a.kind === 'corrente') ?? state.accounts.find((a) => a.kind !== 'cartao');
+  // contas conectadas se atualizam sozinhas: registrar nelas à mão duplicaria o movimento
+  const manual = useMemo(() => state.accounts.filter((a) => !a.link), [state.accounts]);
+  const firstNonCard = manual.find((a) => a.kind === 'corrente') ?? manual.find((a) => a.kind !== 'cartao');
 
   const [step, setStep] = useState<'valor' | 'detalhes'>(editing ? 'detalhes' : 'valor');
   const [kind, setKind] = useState<TxKind>(initialKind);
@@ -68,8 +69,8 @@ export default function NovoMovimento() {
   );
   const [accountId, setAccountId] = useState<string | null>(
     existing?.accountId ??
-      (params.accountId && byId.has(params.accountId) ? params.accountId : null) ??
-      (initialKind === 'transferencia' ? firstNonCard?.id : state.accounts[0]?.id) ??
+      (params.accountId && manual.some((a) => a.id === params.accountId) ? params.accountId : null) ??
+      (initialKind === 'transferencia' ? firstNonCard?.id : manual[0]?.id) ??
       null,
   );
   const [toAccountId, setToAccountId] = useState<string | null>(existing?.toAccountId ?? params.toAccountId ?? null);
@@ -83,10 +84,10 @@ export default function NovoMovimento() {
 
   const source = accountId ? byId.get(accountId) : undefined;
   const sources = useMemo(
-    () => (kind === 'transferencia' ? state.accounts.filter((a) => a.kind !== 'cartao') : state.accounts),
-    [kind, state.accounts],
+    () => (kind === 'transferencia' ? manual.filter((a) => a.kind !== 'cartao') : manual),
+    [kind, manual],
   );
-  const targets = useMemo(() => state.accounts.filter((a) => a.id !== accountId), [state.accounts, accountId]);
+  const targets = useMemo(() => manual.filter((a) => a.id !== accountId), [manual, accountId]);
 
   const changeKind = (k: TxKind) => {
     setKind(k);
@@ -121,14 +122,20 @@ export default function NovoMovimento() {
     close();
   };
 
-  if (state.accounts.length === 0) {
+  if (manual.length === 0 && !existing) {
+    const linked = state.accounts.length > 0;
     return (
       <View style={styles.screen}>
         <ModalHeader left={{ label: 'Fechar', onPress: () => close() }} />
         <View style={styles.pad}>
-          <T variant="title1">Primeiro, uma conta</T>
+          <T variant="title1">{linked ? 'Suas contas se atualizam sozinhas' : 'Primeiro, uma conta'}</T>
           <View style={{ marginTop: 16 }}>
-            <EmptyPlate text="Para registrar entradas e gastos, cadastre a conta de onde o dinheiro sai ou onde ele entra.">
+            <EmptyPlate
+              text={
+                linked
+                  ? 'Tudo o que entra e sai das contas conectadas aparece no Baiu sem você digitar. Para registrar à mão, como dinheiro vivo, cadastre uma conta manual.'
+                  : 'Para registrar entradas e gastos, conecte seu banco ou cadastre a conta de onde o dinheiro sai ou onde ele entra.'
+              }>
               <Button label="Adicionar conta" icon="plus" onPress={() => router.replace('/nova-conta')} />
             </EmptyPlate>
           </View>

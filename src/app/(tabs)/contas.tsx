@@ -124,11 +124,23 @@ export default function Contas() {
       })}
 
       <View style={[styles.pad, { marginTop: 32, gap: 12 }]}>
-        <Button label="Adicionar conta" icon="plus" onPress={() => router.push('/nova-conta')} />
+        {!state.demo ? (
+          <Button label="Conectar banco" icon="link" onPress={() => router.push('/conectar')} />
+        ) : null}
+        <Button
+          label="Adicionar conta à mão"
+          kind={state.demo ? 'primary' : 'secondary'}
+          icon="plus"
+          onPress={() => router.push('/nova-conta')}
+        />
+        {state.bank.items.length ? (
+          <Button label="Bancos conectados" kind="quiet" onPress={() => router.push('/bancos')} />
+        ) : null}
         <View style={styles.soon}>
           <Icon name="lock" size={15} tint={color.ink3} />
           <T variant="caption" tone="ink3" style={{ flex: 1 }}>
-            Você informa os saldos e o Baiu acompanha a partir daí. Tudo fica só neste aparelho, criptografado.
+            Contas conectadas pelo Open Finance se atualizam sozinhas; nas manuais, você informa os saldos. Tudo fica só
+            neste aparelho, criptografado.
           </T>
         </View>
       </View>
@@ -168,11 +180,11 @@ function AccountRow({
             {account.nickname ?? bank.name}
           </T>
           <T variant="caption" tone="ink3" numberOfLines={1}>
-            {card
+            {(card
               ? `Vence dia ${account.dueDay}`
               : account.nickname
                 ? `${bank.name} · ${KIND_LABEL[account.kind]}`
-                : KIND_LABEL[account.kind]}
+                : KIND_LABEL[account.kind]) + (account.link ? ' · conectada' : '')}
           </T>
         </View>
         <View style={{ alignItems: 'flex-end' }}>

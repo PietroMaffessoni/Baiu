@@ -1,7 +1,25 @@
 import { addDays, startOfDay } from '@/lib/dates';
-import type { Account, Bill, Holding, State, Tx } from './types';
+import { DEFAULT_LOOK } from '@/lib/look';
+import type { Account, Assistant, Bank, Bill, Holding, State, Tx } from './types';
 
-export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true };
+export const DEFAULT_SETTINGS = { hideValues: false, lock: false, reminders: true, alerts: true, trialReminder: true };
+
+export function createBank(): Bank {
+  return { items: [], ignored: {}, hiddenAccounts: {}, rules: {} };
+}
+
+export function createAssistant(): Assistant {
+  return {
+    consent: null,
+    declined: false,
+    pendingRevoke: false,
+    shareNumbers: true,
+    greeted: false,
+    chat: [],
+    seen: {},
+    notified: {},
+  };
+}
 
 /** Estado de quem acabou de instalar: nada cadastrado. */
 export function createEmpty(now = new Date()): State {
@@ -10,6 +28,9 @@ export function createEmpty(now = new Date()): State {
     onboarded: false,
     demo: false,
     settings: { ...DEFAULT_SETTINGS },
+    baiu: { ...DEFAULT_LOOK },
+    assistant: createAssistant(),
+    bank: createBank(),
     accounts: [],
     txs: [],
     bills: [],
@@ -138,6 +159,56 @@ export function createDemo(now = new Date()): State {
       createdAt: d.toISOString(),
     });
   }
+
+  // meses anteriores, presos ao calendário: o Baiu precisa de histórico para
+  // reconhecer contas que se repetem e comparar com o mês passado.
+  // No mês passado, só até o dia de hoje, para não mexer no fôlego (últimos 30 dias).
+  const onMonth = (monthsAgo: number, day: number, hour = 12) => {
+    const y = today.getFullYear();
+    const m = today.getMonth() - monthsAgo;
+    const last = new Date(y, m + 1, 0).getDate();
+    const cap = monthsAgo <= 1 ? Math.min(last, today.getDate()) : last;
+    const d = new Date(y, m, Math.min(day, cap), hour, (day * 13) % 60);
+    return d.toISOString();
+  };
+  const at$ = (
+    when: string,
+    accountId: string,
+    description: string,
+    amount: number,
+    category: Tx['category'],
+    method?: Tx['method'],
+    kind: Tx['kind'] = 'saida',
+  ): Tx => ({ id: `t${++n}`, kind, accountId, amount, description, category, method, date: when, createdAt: when });
+
+  for (const [ago, luz, gas, netflix] of [
+    [1, 118.4, 89.9, 39.9],
+    [2, 121.7, 84.5, 39.9],
+    [3, 115.2, 92.3, 39.9],
+  ] as const) {
+    txs.push(
+      at$(onMonth(ago, 4, 9), 'a-itau', 'Salário', 6200, 'salario', 'ted', 'entrada'),
+      at$(onMonth(ago, 5, 10), 'a-itau', 'Aluguel', 1850, 'casa', 'pix'),
+      at$(onMonth(ago, 6, 9), 'a-itau', 'Conta de luz Enel', luz, 'contas', 'boleto'),
+      at$(onMonth(ago, 9, 9), 'a-itau', 'Conta de gás Comgás', gas, 'contas', 'boleto'),
+      at$(onMonth(ago, 10, 9), 'a-itau', 'Internet Vivo', 119.99, 'contas', 'boleto'),
+      at$(onMonth(ago, 3, 21), 'a-nucard', 'Netflix', netflix, 'assinaturas', 'cartao'),
+      at$(onMonth(ago, 2, 8), 'a-nucard', 'Spotify', 21.9, 'assinaturas', 'cartao'),
+      at$(onMonth(ago, 7, 6), 'a-nu', 'Academia Smart Fit', 99.9, 'saude', 'debito'),
+      at$(onMonth(ago, 8, 18), 'a-nu', 'Mercado Extra', 395 + ago * 12.4, 'mercado', 'debito'),
+      at$(onMonth(ago, 9, 19), 'a-nucard', 'iFood', 52.4, 'alimentacao', 'cartao'),
+      at$(onMonth(ago, 11, 19), 'a-nucard', 'Uber', 31.2, 'transporte', 'cartao'),
+    );
+  }
+  // açaí: este mês já passou do mês passado inteiro
+  txs.push(
+    at$(onMonth(1, 3, 16), 'a-nu', 'Açaí do Zé', 28, 'alimentacao', 'pix'),
+    at$(onMonth(1, 6, 16), 'a-nu', 'Açaí Concept', 26.9, 'alimentacao', 'debito'),
+    at$(onMonth(0, 1, 15), 'a-nu', 'Açaí do Zé', 24.9, 'alimentacao', 'pix'),
+    at$(onMonth(0, 4, 16), 'a-nu', 'Açaí Concept', 27.5, 'alimentacao', 'debito'),
+    at$(onMonth(0, 8, 16), 'a-nu', 'Açaí do Zé', 31, 'alimentacao', 'pix'),
+    at$(onMonth(0, 12, 17), 'a-nu', 'Açaí do Zé', 22.9, 'alimentacao', 'pix'),
+  );
 
   const due = (days: number) => {
     const d = addDays(today, days);
@@ -278,6 +349,9 @@ export function createDemo(now = new Date()): State {
     onboarded: false,
     demo: true,
     settings: { ...DEFAULT_SETTINGS },
+    baiu: { ...DEFAULT_LOOK },
+    assistant: createAssistant(),
+    bank: createBank(),
     accounts,
     txs,
     bills,
