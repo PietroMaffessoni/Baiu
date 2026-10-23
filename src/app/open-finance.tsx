@@ -5,9 +5,9 @@ import { View } from 'react-native';
 import { color } from '@/theme/tokens';
 
 /**
- * Volta do app do banco depois de autorizar no Open Finance
- * (baiu://open-finance). O widget de conexão continua aberto por baixo e
- * percebe sozinho que a autorização terminou; esta tela só sai do caminho.
+ * Volta do banco depois de autorizar no Open Finance (baiu://open-finance,
+ * aberto pela página docs/open-finance). A tela de conexão continua aberta
+ * por baixo e confere sozinha a autorização; esta tela só sai do caminho.
  */
 export default function OpenFinanceVolta() {
   useEffect(() => {

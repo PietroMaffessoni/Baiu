@@ -37,7 +37,7 @@ export type RemoteTx = {
   amount: number;
   /** CREDIT = entrou, DEBIT = saiu. */
   type: 'CREDIT' | 'DEBIT';
-  /** Categoria do provedor, em inglês ("Groceries", "Salary"...), quando houver. */
+  /** Categoria do provedor (Polp: "FOOD_AND_DRINK_GROCERIES", "INCOME_SALARY"...), quando houver. */
   category?: string | null;
   operationType?: string | null;
   /** Do outro lado: pessoa (cpf) ou empresa (cnpj). Sem o número. */
@@ -60,4 +60,38 @@ export type SyncPayload = {
   accounts: RemoteAccount[];
   transactions: RemoteTx[];
   investments: RemoteInvestment[];
+};
+
+/** Banco que a pessoa pode escolher para conectar. */
+export type Institution = {
+  id: string;
+  name: string;
+  /** OPERATIONAL, DEGRADED_PERFORMANCE (instável) ou MAJOR_OUTAGE (fora do ar). */
+  status: string;
+};
+
+/** Resposta de quem começa (ou refaz) uma autorização. */
+export type ConnectStart = {
+  /** Identificador da autorização: vira o id da conexão no app. */
+  id: string;
+  name: string;
+  /** AWAITING_AUTHORIZATION, AUTHORISED, REJECTED ou EXPIRED. */
+  status: string;
+  /** Endereço onde a pessoa autoriza no banco. Sem ele, a autorização já está pronta. */
+  url: string | null;
+  /** Ambiente de teste da Polp: dados fictícios, sem banco de verdade. */
+  sandbox: boolean;
+};
+
+export type ConsentState = 'autorizada' | 'pendente' | 'recusada' | 'vencida' | 'cancelada';
+
+/** Uma autorização do histórico, inclusive as canceladas (exigência do Open Finance). */
+export type ConsentRecord = {
+  id: string;
+  name: string;
+  createdAt: string;
+  revokedAt: string | null;
+  /** Categorias de dados autorizadas (ACCOUNT, CREDIT_CARD_ACCOUNT, INVESTMENTS...). */
+  products: string[];
+  status: ConsentState;
 };

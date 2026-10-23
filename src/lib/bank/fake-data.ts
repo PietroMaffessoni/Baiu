@@ -34,35 +34,35 @@ export function fakeBankData(itemId: string, name: string, now: Date): SyncPaylo
     const m = now.getMonth() - back;
     const k = back + 1;
     push(iso(y, m, 5, 9), cc, 'PAGTO SALARIO ACME TECNOLOGIA LTDA', 5800, 'CREDIT', {
-      category: 'Salary',
+      category: 'INCOME_SALARY',
       operationType: 'TED',
       party: 'cnpj',
     });
     push(iso(y, m, 6), cc, 'ALUGUEL IMOBILIARIA CENTRO', -1650, 'DEBIT', {
-      category: 'Rent',
+      category: 'RENT_AND_UTILITIES_RENT',
       operationType: 'PIX',
       party: 'cnpj',
     });
     push(iso(y, m, 8), cc, 'ENEL DISTRIBUICAO SP', -(128 + k * 7.35), 'DEBIT', {
-      category: 'Electricity',
+      category: 'RENT_AND_UTILITIES_GAS_AND_ELECTRICITY',
       operationType: 'BOLETO',
     });
-    push(iso(y, m, 3, 21), card, 'NETFLIX.COM', 44.9, 'DEBIT', { category: 'Video streaming' });
+    push(iso(y, m, 3, 21), card, 'NETFLIX.COM', 44.9, 'DEBIT', { category: 'ENTERTAINMENT_TV_AND_MOVIES' });
     push(iso(y, m, 7), cc, 'APLICACAO CDB LIQUIDEZ', -500, 'DEBIT');
     push(iso(y, m, 10, 8), cc, 'PAGAMENTO DE FATURA', -1200, 'DEBIT', {
-      category: 'Credit card payment',
+      category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
       operationType: 'BOLETO',
     });
     push(iso(y, m, 10, 9), card, 'PAGAMENTO RECEBIDO', -1200, 'CREDIT', {
-      category: 'Credit card payment',
+      category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT',
       operationType: 'PAGAMENTO_FATURA',
     });
     push(iso(y, m, 14, 18), cc, 'PIX ENVIADO MARIA OLIVEIRA', -150, 'DEBIT', {
-      category: 'Transfer - PIX',
+      category: 'TRANSFER_OUT_TRANSFER_OUT_FROM_APPS',
       operationType: 'PIX',
       party: 'cpf',
     });
-    push(iso(y, m, 15), card, 'DROGASIL 1234', 64.3, 'DEBIT', { category: 'Pharmacy' });
+    push(iso(y, m, 15), card, 'DROGASIL 1234', 64.3, 'DEBIT', { category: 'MEDICAL_PHARMACIES_AND_SUPPLEMENTS' });
     push(iso(y, m, 19), card, 'COMERCIAL XYZ LTDA', 89.9, 'DEBIT');
     push(iso(y, m, 22, 8), card, 'PADARIA REAL', 23.5, 'DEBIT');
     push(iso(y, m, 25), cc, 'TARIFA PACOTE SERVICOS', -29.9, 'DEBIT', { operationType: 'PACOTE_TARIFA_SERVICOS' });
@@ -76,7 +76,7 @@ export function fakeBankData(itemId: string, name: string, now: Date): SyncPaylo
       });
     }
     for (const d of [2, 9, 16, 23]) {
-      push(iso(y, m, d, 20), card, 'IFOOD *RESTAURANTE', 38 + ((d * k) % 25), 'DEBIT', { category: 'Food delivery' });
+      push(iso(y, m, d, 20), card, 'IFOOD *RESTAURANTE', 38 + ((d * k) % 25), 'DEBIT', { category: 'FOOD_AND_DRINK_RESTAURANT' });
       push(iso(y, m, d + 1, 17), cc, 'SUPERMERCADO DIA', -(160 + ((d * 3 + k) % 40)), 'DEBIT', {
         operationType: 'CARTAO',
       });

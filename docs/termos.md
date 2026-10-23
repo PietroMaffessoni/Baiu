@@ -1,6 +1,6 @@
 # Termos de Uso do Baiu
 
-Atualizada em 15 de outubro de 2026.
+Atualizada em 23 de outubro de 2026.
 
 Ao criar uma conta ou usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
 
@@ -50,11 +50,11 @@ Os registros digitados à mão ficam só no aparelho onde foram criados. Exporte
 
 ## Bancos conectados
 
-A conexão com bancos é opcional e depende da sua autorização no Baiu e no seu banco. Os dados chegam com o atraso e na forma em que os bancos e a Pluggy os disponibilizam; podem faltar movimentos ou haver diferenças em relação ao extrato do banco.
+A conexão com bancos é opcional e depende da sua autorização no Baiu e no seu banco. Os dados chegam com o atraso e na forma em que os bancos, a Celcoin e a Polp os disponibilizam; podem faltar movimentos ou haver diferenças em relação ao extrato do banco.
 
 As categorias são escolhidas automaticamente e podem errar: confira e corrija quando precisar. Para valores oficiais, vale o extrato do seu banco.
 
-A conexão pode ficar indisponível por falhas, manutenção ou mudanças nos bancos, no Open Finance ou na Pluggy. Você pode desconectar quando quiser.
+A conexão pode ficar indisponível por falhas, manutenção ou mudanças nos bancos, no Open Finance, na Celcoin ou na Polp. Você pode desconectar quando quiser.
 
 ## Conversa com IA
 

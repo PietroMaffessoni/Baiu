@@ -2,16 +2,25 @@ import { FunctionsFetchError, FunctionsHttpError } from '@supabase/supabase-js';
 import { Platform } from 'react-native';
 
 import { getSupabaseClient } from '../auth/supabase';
+import { PRODUCTS } from './consent-text';
+import { validCpf } from './cpf';
 import { fakeBankData, FAKE_BANKS } from './fake-data';
-import type { RemoteItem, SyncPayload } from './types';
+import type { ConnectStart, ConsentRecord, Institution, RemoteItem, SyncPayload } from './types';
 
 /** Versão do texto de autorização da conexão de contas. Mudou o texto, muda a versão. */
-export const BANK_CONSENT_VERSION = '2026-10-15';
+export const BANK_CONSENT_VERSION = '2026-10-23';
 
-/** Para onde o banco devolve a pessoa depois de autorizar no app dele. */
-export const OAUTH_REDIRECT = 'baiu://open-finance';
-
-export type BankErrorCode = 'not_configured' | 'network' | 'session' | 'not_found' | 'busy' | 'subscription' | 'unknown';
+export type BankErrorCode =
+  | 'not_configured'
+  | 'network'
+  | 'session'
+  | 'not_found'
+  | 'busy'
+  | 'subscription'
+  | 'cpf'
+  | 'bank_down'
+  | 'refused'
+  | 'unknown';
 
 export class BankFailure extends Error {
   constructor(public code: BankErrorCode) {
@@ -27,22 +36,29 @@ export const BANK_MESSAGES: Record<BankErrorCode, string> = {
   not_found: 'Essa conexão não existe mais. Conecte o banco de novo.',
   busy: 'O serviço de conexão está ocupado agora. Tente daqui a pouco.',
   subscription: 'Bancos conectados fazem parte da assinatura, que não está ativa. Veja em Ajustes, Assinatura.',
+  cpf: 'Confira o CPF. Ele precisa ser o do titular da conta no banco.',
+  bank_down: 'Esse banco está fora do ar no Open Finance agora. Tente mais tarde.',
+  refused: 'O banco não aceitou o pedido agora. Tente de novo em instantes ou escolha outro banco.',
   unknown: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
 };
 
 export interface BankBackend {
   readonly available: boolean;
-  /** Banco de teste, sem o widget de verdade (testes e web de desenvolvimento). */
+  /** Banco de teste, sem banco de verdade (testes e web de desenvolvimento). */
   readonly fake: boolean;
-  /** Token de uso único para abrir o widget de conexão. Com `itemId`, reconecta esse banco. */
-  connectToken(itemId?: string): Promise<{ token: string; sandbox: boolean }>;
-  /** Liga ao usuário a conexão recém-criada no widget. */
-  link(itemId: string): Promise<RemoteItem>;
+  /** Bancos de pessoa física disponíveis no Open Finance. */
+  institutions(): Promise<Institution[]>;
+  /** Cria a autorização e devolve o endereço onde a pessoa autoriza no banco. */
+  start(institutionId: string, cpf: string): Promise<ConnectStart>;
+  /** Refaz a autorização de um banco (vencida, recusada ou para renovar). */
+  reconnect(itemId: string): Promise<ConnectStart>;
+  /** Situação da autorização: a pessoa já voltou do banco? */
+  status(itemId: string): Promise<{ consent: string; item: RemoteItem }>;
   /** Busca contas, movimentos e investimentos de todas as conexões. `since`: última busca de cada uma. */
   sync(since: Record<string, string>): Promise<SyncPayload>;
-  /** Pede ao banco dados novos agora. */
-  refresh(itemId: string): Promise<void>;
-  /** Desconecta: apaga a conexão no provedor e encerra a autorização. */
+  /** Todas as autorizações já dadas, inclusive as canceladas. */
+  history(): Promise<ConsentRecord[]>;
+  /** Desconecta: cancela a autorização no Open Finance. */
   unlink(itemId: string): Promise<void>;
   unlinkAll(): Promise<void>;
 }
@@ -52,6 +68,8 @@ const STATUS: Record<number, BankErrorCode> = {
   402: 'subscription',
   403: 'not_found',
   404: 'not_found',
+  409: 'bank_down',
+  422: 'refused',
   429: 'busy',
   503: 'not_configured',
 };
@@ -89,12 +107,12 @@ export function createSupabaseBank(): BankBackend {
       return getSupabaseClient() !== null;
     },
     fake: false,
-    connectToken: (itemId) => call('token', { itemId, redirect: OAUTH_REDIRECT, consentVersion: BANK_CONSENT_VERSION }),
-    link: (itemId) => call('link', { itemId, consentVersion: BANK_CONSENT_VERSION }),
+    institutions: async () => (await call<{ institutions: Institution[] }>('institutions')).institutions,
+    start: (institutionId, cpf) => call('start', { institutionId, cpf, consentVersion: BANK_CONSENT_VERSION }),
+    reconnect: (itemId) => call('reconnect', { itemId, consentVersion: BANK_CONSENT_VERSION }),
+    status: (itemId) => call('status', { itemId }),
     sync: (since) => call('sync', { since }),
-    refresh: async (itemId) => {
-      await call('refresh', { itemId });
-    },
+    history: async () => (await call<{ consents: ConsentRecord[] }>('history')).consents,
     unlink: async (itemId) => {
       await call('unlink', { itemId });
     },
@@ -104,23 +122,25 @@ export function createSupabaseBank(): BankBackend {
   };
 }
 
-type FakeDb = { items: { id: string; name: string; at: string }[]; n: number };
+type FakeDb = { items: { id: string; name: string; at: string }[]; history: ConsentRecord[]; n: number };
 const FAKE_KEY = 'baiu:fake-bank';
 
 /**
  * Banco de mentira para testes automatizados e para a web de desenvolvimento
- * (EXPO_PUBLIC_AUTH_FAKE=1). Gera um histórico realista e determinístico,
- * que cresce com o tempo, como um banco de verdade.
+ * (EXPO_PUBLIC_AUTH_FAKE=1). Funciona como o ambiente de teste da Polp: a
+ * autorização já nasce aprovada, sem ir ao banco, e gera um histórico
+ * realista e determinístico, que cresce com o tempo, como um banco de verdade.
  */
 export function createFakeBank(opts: { latencyMs?: number; now?: () => Date; offline?: () => boolean } = {}) {
-  let memory: FakeDb = { items: [], n: 0 };
+  let memory: FakeDb = { items: [], history: [], n: 0 };
   const browser = typeof localStorage !== 'undefined';
+  const empty = (): FakeDb => ({ items: [], history: [], n: 0 });
   const load = (): FakeDb => {
     if (!browser) return memory;
     try {
-      return { items: [], n: 0, ...JSON.parse(localStorage.getItem(FAKE_KEY) ?? '{}') };
+      return { ...empty(), ...JSON.parse(localStorage.getItem(FAKE_KEY) ?? '{}') };
     } catch {
-      return { items: [], n: 0 };
+      return empty();
     }
   };
   const save = (d: FakeDb) => (browser ? localStorage.setItem(FAKE_KEY, JSON.stringify(d)) : void (memory = d));
@@ -129,32 +149,61 @@ export function createFakeBank(opts: { latencyMs?: number; now?: () => Date; off
     if (opts.latencyMs) await new Promise((r) => setTimeout(r, opts.latencyMs));
   };
   const now = () => opts.now?.() ?? new Date();
+  const remote = (it: FakeDb['items'][number]): RemoteItem => ({
+    id: it.id,
+    name: it.name,
+    status: 'UPDATED',
+    updatedAt: now().toISOString(),
+  });
+  const revoke = (d: FakeDb, id: string): FakeDb => ({
+    ...d,
+    items: d.items.filter((i) => i.id !== id),
+    history: d.history.map((h) =>
+      h.id === id && !h.revokedAt ? { ...h, status: 'cancelada', revokedAt: now().toISOString() } : h,
+    ),
+  });
 
-  const backend: BankBackend & { _db: () => FakeDb; _create: (bank: string) => string } = {
+  const backend: BankBackend & { _db: () => FakeDb } = {
     available: true,
     fake: true,
     _db: load,
-    /** O "widget" de teste cria a conexão. */
-    _create: (bank) => {
+    async institutions() {
+      await wait();
+      return [
+        ...FAKE_BANKS.map((b) => ({ id: b.id, name: b.name, status: 'OPERATIONAL' })),
+        { id: 'parado', name: 'Banco Parado de Teste', status: 'MAJOR_OUTAGE' },
+      ];
+    },
+    async start(institutionId, cpf) {
+      await wait();
+      if (!validCpf(cpf)) throw new BankFailure('cpf');
+      const bank = FAKE_BANKS.find((b) => b.id === institutionId);
+      if (!bank) throw new BankFailure(institutionId === 'parado' ? 'bank_down' : 'not_found');
       const d = load();
-      const id = `fake-${bank}-${++d.n}`;
-      d.items.push({
+      const id = `fake-${bank.id}-${++d.n}`;
+      d.items.push({ id, name: bank.name, at: now().toISOString() });
+      d.history.unshift({
         id,
-        name: FAKE_BANKS.find((b) => b.id === bank)?.name ?? 'Banco Exemplo',
-        at: now().toISOString(),
+        name: bank.name,
+        createdAt: now().toISOString(),
+        revokedAt: null,
+        products: [...PRODUCTS],
+        status: 'autorizada',
       });
       save(d);
-      return id;
+      return { id, name: bank.name, status: 'AUTHORISED', url: null, sandbox: true };
     },
-    async connectToken() {
-      await wait();
-      return { token: 'fake-token', sandbox: true };
-    },
-    async link(itemId) {
+    async reconnect(itemId) {
       await wait();
       const it = load().items.find((i) => i.id === itemId);
       if (!it) throw new BankFailure('not_found');
-      return { id: it.id, name: it.name, status: 'UPDATED', updatedAt: now().toISOString() };
+      return { id: it.id, name: it.name, status: 'AUTHORISED', url: null, sandbox: true };
+    },
+    async status(itemId) {
+      await wait();
+      const it = load().items.find((i) => i.id === itemId);
+      if (!it) throw new BankFailure('not_found');
+      return { consent: 'AUTHORISED', item: remote(it) };
     },
     async sync() {
       await wait();
@@ -166,18 +215,18 @@ export function createFakeBank(opts: { latencyMs?: number; now?: () => Date; off
         investments: parts.flatMap((p) => p.investments),
       };
     },
-    async refresh(itemId) {
+    async history() {
       await wait();
-      if (!load().items.some((i) => i.id === itemId)) throw new BankFailure('not_found');
+      return load().history;
     },
     async unlink(itemId) {
       await wait();
-      const d = load();
-      save({ ...d, items: d.items.filter((i) => i.id !== itemId) });
+      save(revoke(load(), itemId));
     },
     async unlinkAll() {
       await wait();
-      save({ ...load(), items: [] });
+      const d = load();
+      save(d.items.reduce((acc, i) => revoke(acc, i.id), d));
     },
   };
   return backend;

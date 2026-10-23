@@ -1,15 +1,18 @@
-import { router } from 'expo-router';
-import { useState } from 'react';
-import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
+import { router, useFocusEffect } from 'expo-router';
+import { useCallback, useState } from 'react';
+import { ActivityIndicator, Pressable, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BankMark } from '@/components/bank-mark';
 import { Button } from '@/components/button';
 import { EmptyPlate } from '@/components/form';
+import { Icon } from '@/components/icon';
 import { Plate } from '@/components/layout';
 import type { BankItem } from '@/data/types';
-import { BANK_MESSAGES, BankFailure } from '@/lib/bank/client';
-import { agoLabel } from '@/lib/dates';
+import { BANK_MESSAGES, BankFailure, bankBackend } from '@/lib/bank/client';
+import { CONSENT_STATUS } from '@/lib/bank/consent-text';
+import type { ConsentRecord } from '@/lib/bank/types';
+import { agoLabel, shortDate } from '@/lib/dates';
 import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { useStore } from '@/store/store';
 import { T } from '@/theme/text';
@@ -22,12 +25,29 @@ const STATUS_LINE: Record<BankItem['status'], string> = {
   erro: 'Com problema no banco',
 };
 
+/**
+ * Bancos conectados: é o "Portal" do Open Finance. Aqui a pessoa vê as
+ * conexões, o histórico de todas as autorizações (inclusive canceladas) e
+ * cancela quando quiser, sem depender do suporte.
+ */
 export default function Bancos() {
   const { state } = useStore();
   const insets = useSafeAreaInsets();
   const { syncNow } = useBank();
   const status = useBankStatus();
   const items = state.bank.items;
+  const [history, setHistory] = useState<ConsentRecord[] | null>(null);
+  const [historyError, setHistoryError] = useState<string | null>(null);
+
+  const loadHistory = useCallback(() => {
+    if (state.demo || !bankBackend.available) return;
+    setHistoryError(null);
+    bankBackend
+      .history()
+      .then(setHistory)
+      .catch((e) => setHistoryError(BANK_MESSAGES[e instanceof BankFailure ? e.code : 'unknown']));
+  }, [state.demo]);
+  useFocusEffect(loadHistory);
 
   return (
     <ScrollView
@@ -52,7 +72,7 @@ export default function Bancos() {
       {items.length === 0 ? (
         <EmptyPlate text="Nenhum banco conectado ainda. Conecte o banco onde seu dinheiro entra e o Baiu faz o resto." />
       ) : (
-        items.map((i) => <ItemCard key={i.id} item={i} />)
+        items.map((i) => <ItemCard key={i.id} item={i} onUnlinked={loadHistory} />)
       )}
 
       <Button
@@ -60,13 +80,45 @@ export default function Bancos() {
         icon="plus"
         onPress={() => router.push('/conectar')}
       />
+
+      {history && history.length ? (
+        <View style={{ gap: 8, marginTop: 12 }}>
+          <T variant="title3">Suas autorizações</T>
+          <T variant="caption" tone="ink3">
+            Todas as autorizações do Open Finance que você já deu, inclusive as canceladas. Toque para ver os detalhes ou
+            cancelar.
+          </T>
+          <Plate style={{ paddingVertical: 4 }}>
+            {history.map((c) => (
+              <Pressable
+                key={c.id}
+                onPress={() => router.push({ pathname: '/autorizacao/[id]', params: { id: c.id } })}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.consent, pressed && { opacity: 0.6 }]}>
+                <View style={{ flex: 1 }}>
+                  <T variant="body">{c.name}</T>
+                  <T variant="caption" tone={CONSENT_STATUS[c.status]?.tone ?? 'ink3'}>
+                    {`${CONSENT_STATUS[c.status]?.label ?? c.status} · desde ${shortDate(c.createdAt)}${c.revokedAt ? ` · cancelada em ${shortDate(c.revokedAt)}` : ''}`}
+                  </T>
+                </View>
+                <Icon name="chevron" size={13} tint={color.ink3} />
+              </Pressable>
+            ))}
+          </Plate>
+        </View>
+      ) : null}
+      {historyError ? (
+        <T variant="caption" tone="vermilion">
+          {`Não deu para carregar suas autorizações. ${historyError}`}
+        </T>
+      ) : null}
     </ScrollView>
   );
 }
 
-function ItemCard({ item }: { item: BankItem }) {
+function ItemCard({ item, onUnlinked }: { item: BankItem; onUnlinked: () => void }) {
   const { state } = useStore();
-  const { refresh, unlink } = useBank();
+  const { syncNow, unlink } = useBank();
   const [busy, setBusy] = useState<'refresh' | 'unlink' | null>(null);
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -75,7 +127,7 @@ function ItemCard({ item }: { item: BankItem }) {
   const doRefresh = async () => {
     setBusy('refresh');
     setError(null);
-    await refresh(item.id);
+    await syncNow();
     setBusy(null);
   };
 
@@ -84,6 +136,7 @@ function ItemCard({ item }: { item: BankItem }) {
     setError(null);
     try {
       await unlink(item.id, keep);
+      onUnlinked();
     } catch (e) {
       setError(BANK_MESSAGES[e instanceof BankFailure ? e.code : 'unknown']);
       setBusy(null);
@@ -117,8 +170,8 @@ function ItemCard({ item }: { item: BankItem }) {
       {confirm ? (
         <View style={{ gap: 8 }}>
           <T variant="callout">
-            O Baiu encerra a autorização no Open Finance e para de buscar dados de {item.name}. O que fazer com o que já
-            está aqui?
+            Cancelar a autorização interrompe o compartilhamento de dados de {item.name} pelo Open Finance. O que fazer
+            com o que já está aqui?
           </T>
           <Button
             label="Desconectar e manter os dados"
@@ -156,4 +209,5 @@ const styles = StyleSheet.create({
   card: { padding: 14, gap: 12 },
   head: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   actions: { gap: 4 },
+  consent: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingHorizontal: 14, paddingVertical: 10 },
 });

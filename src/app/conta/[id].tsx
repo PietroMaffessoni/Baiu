@@ -30,7 +30,7 @@ export default function ContaDetalhe() {
   const account = state.accounts.find((a) => a.id === id);
   const txs = useMemo(() => sortedTxs(state, id), [state, id]);
   const bars = useMemo(() => dailySpending(state, last30(), new Date(), id), [state, id]);
-  const { refresh } = useBank();
+  const { syncNow } = useBank();
   const bankStatus = useBankStatus();
 
   if (!account) {
@@ -139,7 +139,7 @@ export default function ContaDetalhe() {
             kind="secondary"
             icon="undo"
             disabled={bankStatus.running}
-            onPress={() => refresh(item.id)}
+            onPress={syncNow}
           />
         </View>
       ) : (

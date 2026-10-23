@@ -1,17 +1,21 @@
 // Baiu: conexão de contas pelo Open Finance. Função do Supabase (Deno).
 //
-// Faz a ponte entre o app e o provedor (Pluggy), que é quem conversa com os
-// bancos. As chaves do provedor ficam só aqui. Nada de saldo ou movimento é
-// guardado: os dados passam direto para o aparelho, onde ficam cifrados, e
-// nenhum conteúdo vai para os logs (só códigos de status).
+// Faz a ponte entre o app e a Polp, que recebe os dados dos bancos pela
+// Celcoin, a instituição regulada pelo Banco Central. As chaves da Polp ficam
+// só aqui. Nada de saldo ou movimento é guardado: os dados passam direto para
+// o aparelho, onde ficam cifrados, e nenhum conteúdo vai para os logs (só
+// códigos de status). O CPF que a pessoa digita vai para a Polp e não fica
+// guardado aqui.
 //
-// Toda conexão é criada com o id da pessoa (clientUserId) e, antes de
-// qualquer leitura, a função confere no provedor que a conexão é dela.
+// Toda autorização é criada com o id da pessoa (cliente_user_id) e, antes de
+// qualquer leitura, a função confere na Polp que a autorização é dela.
 //
 // Segredos (Edge Functions, Secrets):
-//   PLUGGY_CLIENT_ID, PLUGGY_CLIENT_SECRET   obrigatórios
-//   PLUGGY_SANDBOX=1                         opcional: mostra os bancos de teste no widget
-//   REVENUECAT_SECRET_KEY                    com ela, só quem assina conecta e atualiza bancos
+//   POLP_CLIENT_ID, POLP_CLIENT_SECRET   obrigatórios
+//   POLP_SANDBOX=1                       opcional: usa o ambiente de teste da Polp (dados fictícios, sem cobrança)
+//   POLP_REDIRECT_URL                    opcional: página https que devolve a pessoa ao app depois do banco
+//                                        (só vale nos planos Pro e Ultra; no Starter a Polp usa a da conta)
+//   REVENUECAT_SECRET_KEY                com ela, só quem assina conecta e atualiza bancos
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
 //
 // Sem dependências externas: roda no Deno do Supabase e nos testes em Node
@@ -20,13 +24,17 @@
 type Env = (name: string) => string | undefined;
 type Json = Record<string, unknown>;
 
-const PLUGGY = 'https://api.pluggy.ai';
+const POLP = 'https://api.polp.com.br/api/v2';
+/** Categorias de dados pedidas aos bancos. O texto da tela de conexão descreve exatamente estas. */
+const PRODUCTS = ['ACCOUNT', 'CREDIT_CARD_ACCOUNT', 'INVESTMENTS'];
 const DAY = 86_400_000;
-/** Na primeira busca, um ano de histórico; depois, uma semana antes da última busca. */
-const FIRST_DAYS = 365;
+/** Depois da primeira busca, só o que entrou na Polp desde uma semana antes da última. */
 const OVERLAP_DAYS = 7;
+/** A Polp atualiza investimentos no máximo a cada 6 horas: não adianta pedir antes. */
+const INVESTMENTS_EVERY = 6 * 3_600_000;
 const MAX_PAGES = 20;
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
+const ID_RE = /^[\w-]{1,100}$/;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -103,10 +111,23 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
   return 'ok';
 }
 
-/** Chave de API do provedor, guardada por uma hora e meia (ela vale duas). */
-let cached: { key: string; until: number } | null = null;
+/** Lista de bancos da Polp (é pública e muda pouco), guardada por uma hora. */
+let cached: { list: Json[]; until: number } | null = null;
 export function _resetCache() {
   cached = null;
+}
+
+/** CPF com os dígitos verificadores certos. */
+export function validCpf(raw: string) {
+  const d = raw.replace(/\D/g, '');
+  if (d.length !== 11 || /^(\d)\1{10}$/.test(d)) return false;
+  const digit = (n: number) => {
+    let sum = 0;
+    for (let i = 0; i < n; i++) sum += Number(d[i]) * (n + 1 - i);
+    const r = (sum * 10) % 11;
+    return r === 10 ? 0 : r;
+  };
+  return digit(9) === Number(d[9]) && digit(10) === Number(d[10]);
 }
 
 export async function handle(req: Request, env: Env, http: typeof fetch = fetch): Promise<Response> {
@@ -115,9 +136,12 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
 
   const base = env('SUPABASE_URL');
   const anon = req.headers.get('apikey') ?? env('SUPABASE_ANON_KEY');
-  const clientId = env('PLUGGY_CLIENT_ID');
-  const clientSecret = env('PLUGGY_CLIENT_SECRET');
+  const clientId = env('POLP_CLIENT_ID');
+  const clientSecret = env('POLP_CLIENT_SECRET');
   if (!base || !anon || !clientId || !clientSecret) return fail(503, 'not_configured');
+  const sandbox = env('POLP_SANDBOX') === '1';
+  const api = sandbox ? `${POLP}/sandbox` : POLP;
+  const redirect = /^https:\/\/\S+$/.test(env('POLP_REDIRECT_URL') ?? '') ? env('POLP_REDIRECT_URL') : undefined;
 
   const auth = req.headers.get('Authorization') ?? '';
   if (!/^Bearer\s+\S+$/i.test(auth)) return fail(401, 'session');
@@ -138,7 +162,7 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     });
     if (r.status === 401) throw new Stop(401, 'session');
     if (r.status === 404) {
-      console.error('bank: tabela ou função ausente; aplique a migração dos bancos');
+      console.error('bank: tabela ou função ausente; aplique as migrações dos bancos');
       throw new Stop(503, 'not_configured');
     }
     if (!r.ok) {
@@ -148,43 +172,68 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     return r;
   };
 
-  const apiKey = async () => {
-    if (cached && cached.until > Date.now()) return cached.key;
-    const r = await http(`${PLUGGY}/auth`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ clientId, clientSecret }),
-    });
-    if (!r.ok) {
-      console.error('bank: autenticação no provedor falhou', r.status);
-      throw new Stop(503, r.status === 401 || r.status === 403 ? 'not_configured' : 'busy');
-    }
-    const { apiKey: key } = (await r.json()) as { apiKey?: string };
-    if (!key) throw new Stop(503, 'busy');
-    cached = { key, until: Date.now() + 90 * 60_000 };
-    return key;
-  };
-
-  const pluggy = async (path: string, init: RequestInit = {}): Promise<Json | null> => {
-    const r = await http(`${PLUGGY}${path}`, {
+  /** Chamada à Polp. 404 vira null (autorização ou recurso que não existe mais). */
+  const polp = async (path: string, init: RequestInit = {}, root = api): Promise<Json | null> => {
+    const r = await http(`${root}${path}`, {
       ...init,
-      headers: { 'X-API-KEY': await apiKey(), 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+      headers: {
+        'x-api-client': clientId,
+        'x-api-secret': clientSecret,
+        Accept: 'application/json',
+        'Content-Type': 'application/json',
+        ...(init.headers ?? {}),
+      },
     });
     if (r.status === 404) return null;
-    if (r.status === 401 || r.status === 403) {
-      cached = null;
-      console.error('bank: provedor recusou a chave', r.status);
-      throw new Stop(503, 'busy');
+    if (r.status === 401 || r.status === 402 || r.status === 403) {
+      // 401: chaves erradas; 402: plano inativo ou fatura em atraso; 403: conta da Polp em aprovação
+      console.error('bank: a Polp recusou o acesso', r.status);
+      throw new Stop(503, 'not_configured');
+    }
+    if (r.status === 422) {
+      console.error('bank: a Polp recusou o pedido', r.status);
+      throw new Stop(422, 'refused');
     }
     if (r.status === 429 || r.status >= 500) {
-      console.error('bank: provedor respondeu', r.status);
+      console.error('bank: a Polp respondeu', r.status);
       throw new Stop(503, 'busy');
     }
     if (!r.ok) {
-      console.error('bank: provedor respondeu', r.status);
+      console.error('bank: a Polp respondeu', r.status);
       throw new Stop(502, 'unknown');
     }
-    return r.status === 204 ? {} : ((await r.json()) as Json);
+    if (r.status === 204) return {};
+    const out = (await r.json()) as Json;
+    return out && typeof out === 'object' ? out : {};
+  };
+  // respostas de um item vêm em { data: {...} }; listas em { data: [...], meta: { next_cursor } }
+  const one = (r: Json | null) => (r && typeof r.data === 'object' && !Array.isArray(r.data) ? (r.data as Json) : r);
+
+  /** Todas as páginas de uma lista, até MAX_PAGES. */
+  const all = async (path: string) => {
+    const out: Json[] = [];
+    let cursor: string | null = null;
+    for (let page = 0; page < MAX_PAGES; page++) {
+      const sep = path.includes('?') ? '&' : '?';
+      const r = await polp(cursor ? `${path}${sep}cursor=${encodeURIComponent(cursor)}` : path, { method: 'GET' });
+      if (!r) break;
+      if (Array.isArray(r.data)) out.push(...(r.data as Json[]));
+      const next = (r.meta as Json | undefined)?.next_cursor;
+      cursor = typeof next === 'string' && next ? next : null;
+      if (!cursor) break;
+    }
+    return out;
+  };
+
+  const institutions = async () => {
+    if (cached && cached.until > Date.now()) return cached.list;
+    // a lista é pública e a mesma nos dois ambientes
+    const r = await polp('/institutions', { method: 'GET' }, POLP);
+    const list = (Array.isArray(r?.data) ? (r!.data as Json[]) : [])
+      .filter((i) => typeof i.id === 'string' && typeof i.name === 'string' && i.type !== 'BUSINESS')
+      .map((i) => ({ id: i.id, name: str(i.name).slice(0, 120), status: str(i.status) }));
+    if (list.length) cached = { list, until: Date.now() + 3_600_000 };
+    return list as Json[];
   };
 
   try {
@@ -193,58 +242,116 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     const uid = ((await who.json()) as { id?: string }).id;
     if (!uid) throw new Stop(401, 'session');
 
-    // conectar e atualizar fazem parte da assinatura; desconectar fica sempre liberado
-    if (body.action === 'token' || body.action === 'link' || body.action === 'sync' || body.action === 'refresh') {
+    // conectar e atualizar fazem parte da assinatura; ver e cancelar autorizações fica sempre liberado
+    if (['start', 'reconnect', 'status', 'sync'].includes(String(body.action))) {
       const paying = await subscription(uid, env, http);
       if (paying === 'misconfigured') throw new Stop(503, 'not_configured');
       if (paying === 'none') throw new Stop(402, 'subscription');
     }
 
-    const owned = async (itemId: unknown) => {
-      if (typeof itemId !== 'string' || !/^[\w-]{1,100}$/.test(itemId)) throw new Stop(400, 'invalid');
-      const item = await pluggy(`/items/${itemId}`, { method: 'GET' });
-      if (!item || item.clientUserId !== uid) throw new Stop(404, 'not_found');
-      return item;
+    /** A autorização na Polp, só se for desta pessoa. */
+    const consent = async (id: unknown) => {
+      if (typeof id !== 'string' || !ID_RE.test(id)) throw new Stop(400, 'invalid');
+      const c = one(await polp(`/consents/${id}`, { method: 'GET' }));
+      return c && c.cliente_user_id === uid ? c : null;
     };
-    const myItems = async () => {
-      const r = await supa('/rest/v1/bank_connections?select=item_id', { method: 'GET' });
-      return ((await r.json()) as { item_id: string }[]).map((x) => x.item_id);
+    const owned = async (id: unknown) => {
+      const c = await consent(id);
+      if (!c) throw new Stop(404, 'not_found');
+      return c;
+    };
+    type Row = { item_id: string; institution: string; created_at: string; revoked_at: string | null; products: string[] };
+    const rows = async (active: boolean): Promise<Row[]> => {
+      const filter = active ? '&revoked_at=is.null' : '';
+      const r = await supa(
+        `/rest/v1/bank_connections?select=item_id,institution,created_at,revoked_at,products&order=created_at.desc${filter}`,
+        { method: 'GET' },
+      );
+      return (await r.json()) as Row[];
     };
     const rpc = (fn: string, args: Json) => supa(`/rest/v1/rpc/${fn}`, { method: 'POST', body: JSON.stringify(args) });
+    const redirectBody = redirect ? { redirectUrl: redirect } : {};
 
-    // apaga no provedor (encerra o acesso ao banco) e depois aqui
-    const removeItem = async (id: string) => {
-      const item = await pluggy(`/items/${id}`, { method: 'GET' });
-      if (item && item.clientUserId === uid) await pluggy(`/items/${id}`, { method: 'DELETE' });
+    /** O que o app precisa para mandar a pessoa ao banco (ou seguir direto, se já autorizou). */
+    const started = (c: Json, name: string) => ({
+      id: str(c.id),
+      name,
+      status: str(c.status),
+      url: c.status === 'AWAITING_AUTHORIZATION' ? str(c.url_to_authenticate) || null : null,
+      sandbox,
+    });
+    const expiresSoon = (at: unknown) => {
+      const t = Date.parse(str(at));
+      return Number.isNaN(t) || t - Date.now() < 5 * 60_000;
+    };
+
+    // cancela na Polp (encerra o acesso ao banco) e marca aqui
+    const revoke = async (id: string) => {
+      const c = await consent(id);
+      if (c) await polp(`/consents/${id}`, { method: 'DELETE' });
       await rpc('bank_unlink', { item_id: id });
     };
 
     switch (body.action) {
-      case 'token': {
-        const redirect =
-          typeof body.redirect === 'string' && /^(baiu:\/\/|https:\/\/)/.test(body.redirect)
-            ? body.redirect
-            : undefined;
-        if (body.itemId !== undefined) await owned(body.itemId);
-        const res = await pluggy('/connect_token', {
-          method: 'POST',
-          body: JSON.stringify({
-            ...(body.itemId ? { itemId: body.itemId } : {}),
-            options: { clientUserId: uid, avoidDuplicates: true, ...(redirect ? { oauthRedirectUri: redirect } : {}) },
-          }),
-        });
-        const token = res?.accessToken;
-        if (typeof token !== 'string') throw new Stop(502, 'unknown');
-        return json(200, { token, sandbox: env('PLUGGY_SANDBOX') === '1' });
-      }
+      case 'institutions':
+        return json(200, { institutions: await institutions() });
 
-      case 'link': {
+      case 'start': {
         if (typeof body.consentVersion !== 'string' || !VERSION_RE.test(body.consentVersion))
           throw new Stop(400, 'invalid');
-        const item = await owned(body.itemId);
-        const name = connectorName(item);
-        await rpc('bank_link', { item_id: item.id, institution: name, version: body.consentVersion });
-        return json(200, toItem(item));
+        if (typeof body.institutionId !== 'string' || !ID_RE.test(body.institutionId)) throw new Stop(400, 'invalid');
+        const cpf = typeof body.cpf === 'string' ? body.cpf.replace(/\D/g, '') : '';
+        if (!validCpf(cpf)) throw new Stop(400, 'cpf');
+        const inst = (await institutions()).find((i) => i.id === body.institutionId);
+        if (!inst) throw new Stop(404, 'not_found');
+        if (!sandbox && inst.status === 'MAJOR_OUTAGE') throw new Stop(409, 'bank_down');
+
+        const payload = {
+          institution_id: inst.id,
+          cpf,
+          cliente_user_id: uid,
+          products: PRODUCTS,
+          avoidDuplicates: true,
+          ...redirectBody,
+        };
+        let c = one(await polp('/consents', { method: 'POST', body: JSON.stringify(payload) }));
+        // a Polp devolve uma autorização já existente para o mesmo CPF e banco; se for de outra conta do Baiu, cria outra
+        if (c && c.cliente_user_id !== uid) {
+          c = one(await polp('/consents', { method: 'POST', body: JSON.stringify({ ...payload, avoidDuplicates: false }) }));
+        }
+        if (!c || typeof c.id !== 'string' || !ID_RE.test(c.id)) throw new Stop(502, 'unknown');
+        // endereço de autorização vencido (vale uma hora) ou autorização recusada: pede uma nova
+        if (
+          (c.status === 'AWAITING_AUTHORIZATION' && expiresSoon(c.url_to_authenticate_expires_at)) ||
+          c.status === 'REJECTED' ||
+          c.status === 'EXPIRED'
+        ) {
+          c = one(await polp(`/consents/${c.id}/recreate`, { method: 'POST', body: JSON.stringify(redirectBody) })) ?? c;
+        }
+        await rpc('bank_link', { item_id: c.id, institution: inst.name, version: body.consentVersion, products: PRODUCTS });
+        return json(200, started(c, str(inst.name)));
+      }
+
+      case 'reconnect': {
+        if (typeof body.consentVersion !== 'string' || !VERSION_RE.test(body.consentVersion))
+          throw new Stop(400, 'invalid');
+        await owned(body.itemId);
+        const row = (await rows(false)).find((r) => r.item_id === body.itemId);
+        const c = one(await polp(`/consents/${body.itemId}/recreate`, { method: 'POST', body: JSON.stringify(redirectBody) }));
+        if (!c) throw new Stop(404, 'not_found');
+        await rpc('bank_link', {
+          item_id: body.itemId,
+          institution: row?.institution ?? '',
+          version: body.consentVersion,
+          products: PRODUCTS,
+        });
+        return json(200, started(c, row?.institution || 'Banco'));
+      }
+
+      case 'status': {
+        const c = await owned(body.itemId);
+        const row = (await rows(false)).find((r) => r.item_id === body.itemId);
+        return json(200, { consent: str(c.status), item: toItem(c, row?.institution || 'Banco') });
       }
 
       case 'sync': {
@@ -255,60 +362,77 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
           transactions: [] as Json[],
           investments: [] as Json[],
         };
-        for (const id of await myItems()) {
-          const item = await pluggy(`/items/${id}`, { method: 'GET' });
-          if (!item || item.clientUserId !== uid) continue;
-          out.items.push(toItem(item));
-          const last = typeof since[id] === 'string' ? Date.parse(since[id] as string) : NaN;
-          const from = new Date(Number.isNaN(last) ? Date.now() - FIRST_DAYS * DAY : last - OVERLAP_DAYS * DAY);
-          const dateFrom = from.toISOString().slice(0, 10);
+        for (const row of await rows(true)) {
+          const id = row.item_id;
+          const c = await consent(id);
+          // autorização cancelada no banco, ou que a pessoa nunca terminou: não aparece como banco conectado
+          if (!c || c.status === 'AWAITING_AUTHORIZATION' || c.status === 'REJECTED') continue;
+          out.items.push(toItem(c, row.institution || 'Banco'));
+          if (c.status !== 'AUTHORISED') continue;
 
-          const accounts = (await pluggy(`/accounts?itemId=${id}`, { method: 'GET' }))?.results;
-          for (const a of Array.isArray(accounts) ? (accounts as Json[]) : []) {
+          const last = typeof since[id] === 'string' ? Date.parse(since[id] as string) : NaN;
+          const fresh = Number.isNaN(last);
+          const from = fresh ? '' : `?fromCreatedAt=${new Date(last - OVERLAP_DAYS * DAY).toISOString()}`;
+
+          for (const a of await all(`/consents/${id}/accounts`)) {
+            if (typeof a.id !== 'string') continue;
             out.accounts.push(toAccount(a, id));
-            let path: string | null = `/v2/transactions?accountId=${a.id}&dateFrom=${dateFrom}`;
-            for (let page = 0; path && page < MAX_PAGES; page++) {
-              const res = await pluggy(path, { method: 'GET' });
-              for (const t of Array.isArray(res?.results) ? (res!.results as Json[]) : []) {
-                if (t.status === 'PENDING') continue;
-                out.transactions.push(toTx(t, String(a.id)));
-              }
-              const next = res?.next;
-              // `next` traz a consulta da próxima página; dela só interessa o cursor `after`
-              const after =
-                typeof next === 'string' && next
-                  ? (new URLSearchParams(next.slice(next.indexOf('?') + 1)).get('after') ?? next)
-                  : null;
-              path = after
-                ? `/v2/transactions?accountId=${a.id}&dateFrom=${dateFrom}&after=${encodeURIComponent(after)}`
-                : null;
+            for (const t of await all(`/accounts/${a.id}/transactions${from}`)) out.transactions.push(toTx(t, a.id));
+          }
+
+          for (const card of await all(`/consents/${id}/credit-cards`)) {
+            if (typeof card.id !== 'string') continue;
+            const bills = await polp(`/credit-cards/${card.id}/bills`, { method: 'GET' });
+            out.accounts.push(toCard(card, id, Array.isArray(bills?.data) ? (bills!.data as Json[]) : []));
+            for (const t of await all(`/credit-cards/${card.id}/transactions${from}`)) {
+              const tx = toCardTx(t, card.id);
+              if (tx) out.transactions.push(tx);
             }
           }
 
-          const inv = (await pluggy(`/investments?itemId=${id}&pageSize=500`, { method: 'GET' }))?.results;
-          for (const i of Array.isArray(inv) ? (inv as Json[]) : []) {
-            if (i.status === 'TOTAL_WITHDRAWAL') continue;
-            out.investments.push(toInvestment(i, id));
+          if (fresh || Date.now() - last > INVESTMENTS_EVERY) {
+            for (const [path, kind] of INVESTMENT_LISTS) {
+              for (const i of await all(`/consents/${id}/${path}`)) {
+                const inv = toInvestment(i, id, kind);
+                if (inv) out.investments.push(inv);
+              }
+            }
           }
         }
         return json(200, out);
       }
 
-      case 'refresh': {
-        await owned(body.itemId);
-        await pluggy(`/items/${body.itemId}`, { method: 'PATCH', body: JSON.stringify({}) });
-        return json(200, { ok: true });
+      case 'history': {
+        // todas as autorizações, inclusive canceladas: o Open Finance exige que a pessoa as veja
+        const list = (await rows(false)).slice(0, 50);
+        const out = [];
+        for (const r of list) {
+          let status = 'cancelada';
+          if (!r.revoked_at) {
+            const c = await consent(r.item_id);
+            status = c ? consentStatus(str(c.status)) : 'cancelada';
+          }
+          out.push({
+            id: r.item_id,
+            name: r.institution || 'Banco',
+            createdAt: r.created_at,
+            revokedAt: r.revoked_at,
+            products: Array.isArray(r.products) ? r.products : [],
+            status,
+          });
+        }
+        return json(200, { consents: out });
       }
 
       case 'unlink': {
-        const mine = await myItems();
-        if (typeof body.itemId !== 'string' || !mine.includes(body.itemId)) throw new Stop(404, 'not_found');
-        await removeItem(body.itemId);
+        if (typeof body.itemId !== 'string' || !(await rows(true)).some((r) => r.item_id === body.itemId))
+          throw new Stop(404, 'not_found');
+        await revoke(body.itemId);
         return json(200, { ok: true });
       }
 
       case 'unlink_all': {
-        for (const id of await myItems()) await removeItem(id);
+        for (const r of await rows(true)) await revoke(r.item_id);
         return json(200, { ok: true });
       }
 
@@ -323,68 +447,170 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
 }
 
 const str = (v: unknown) => (typeof v === 'string' ? v : '');
-const num = (v: unknown) => (typeof v === 'number' && Number.isFinite(v) ? v : null);
+/** Valores da Polp vêm como { amount: "1500.00", currency: "BRL" }. */
+const money = (v: unknown) => {
+  const raw = (v as Json | null | undefined)?.amount;
+  const n = typeof raw === 'number' ? raw : typeof raw === 'string' ? Number(raw) : NaN;
+  return Number.isFinite(n) ? n : null;
+};
+const num = (v: unknown) => {
+  const n = typeof v === 'number' ? v : typeof v === 'string' ? Number(v) : NaN;
+  return Number.isFinite(n) ? n : null;
+};
 
-function connectorName(item: Json) {
-  const c = item.connector as Json | undefined;
-  return str(c?.name).slice(0, 120) || 'Banco';
+/** Situação da autorização, em palavras do app. */
+function consentStatus(s: string) {
+  if (s === 'AUTHORISED') return 'autorizada';
+  if (s === 'AWAITING_AUTHORIZATION') return 'pendente';
+  if (s === 'REJECTED') return 'recusada';
+  if (s === 'EXPIRED') return 'vencida';
+  return 'cancelada';
 }
 
-function toItem(item: Json) {
-  return {
-    id: str(item.id),
-    name: connectorName(item),
-    status: str(item.status) || 'UPDATED',
-    updatedAt: str(item.lastUpdatedAt) || null,
-  };
+function toItem(c: Json, name: string) {
+  const s = str(c.status);
+  const status =
+    s === 'AUTHORISED'
+      ? c.execution_status === 'AWAITING_RESOURCES' || !c.execution_status
+        ? 'UPDATING'
+        : 'UPDATED'
+      : s === 'AWAITING_AUTHORIZATION'
+        ? 'WAITING_USER_INPUT'
+        : 'LOGIN_ERROR';
+  return { id: str(c.id), name: name.slice(0, 120), status, updatedAt: str(c.updated_at) || null };
 }
 
-/** Só o que o app usa. Sem titular, CPF ou número completo da conta. */
+const last4 = (v: unknown) => {
+  const d = str(v).replace(/\D/g, '');
+  return d ? d.slice(-4) : null;
+};
+
+/** Só o que o app usa. Sem titular, CPF, agência ou número completo da conta. */
 function toAccount(a: Json, itemId: string) {
-  const bank = a.bankData as Json | undefined;
-  const credit = a.creditData as Json | undefined;
-  const number = str(a.number).replace(/\D/g, '');
+  const type = str(a.type);
+  const balance = a.balance as Json | null | undefined;
   return {
     id: str(a.id),
     itemId,
-    type: a.type === 'CREDIT' ? 'CREDIT' : 'BANK',
-    subtype: str(a.subtype) || null,
-    name: (str(a.marketingName) || str(a.name)).slice(0, 60),
-    last4: number ? number.slice(-4) : null,
-    balance: a.type === 'BANK' ? (num(bank?.closingBalance) ?? num(a.balance) ?? 0) : (num(a.balance) ?? 0),
-    creditLimit: num(credit?.creditLimit),
-    dueDate: str(credit?.balanceDueDate) || null,
+    type: 'BANK',
+    subtype: type === 'CONTA_POUPANCA' ? 'SAVINGS_ACCOUNT' : 'CHECKING_ACCOUNT',
+    name: type === 'CONTA_POUPANCA' ? 'Poupança' : type === 'CONTA_PAGAMENTO_PRE_PAGA' ? 'Conta de pagamento' : 'Conta',
+    last4: last4(a.number),
+    balance: money(balance?.available_amount) ?? 0,
+    creditLimit: null,
+    dueDate: null,
+  };
+}
+
+/** Cartão: o que já foi usado do limite e o dia de vencimento da fatura. */
+function toCard(card: Json, itemId: string, bills: Json[]) {
+  const limits = Array.isArray(card.limits) ? (card.limits as Json[]) : [];
+  const total = limits.find((l) => l.credit_line_limit_type === 'LIMITE_CREDITO_TOTAL') ?? limits[0];
+  const methods = Array.isArray(card.payment_methods) ? (card.payment_methods as Json[]) : [];
+  const due = bills
+    .map((b) => str(b.due_date))
+    .filter((d) => /^\d{4}-\d{2}-\d{2}/.test(d))
+    .sort()
+    .pop();
+  return {
+    id: str(card.id),
+    itemId,
+    type: 'CREDIT',
+    subtype: 'CREDIT_CARD',
+    name: str(card.name).slice(0, 60) || 'Cartão',
+    last4: last4(methods[0]?.identification_number),
+    balance: money(total?.used_amount) ?? 0,
+    creditLimit: money(total?.limit_amount),
+    dueDate: due ?? null,
   };
 }
 
 /** Do outro lado do Pix ou TED, só se é pessoa ou empresa: nem nome, nem documento. */
 function toTx(t: Json, accountId: string) {
-  const pay = t.paymentData as Json | undefined;
-  const side = (t.type === 'CREDIT' ? pay?.payer : pay?.receiver) as Json | undefined;
-  const doc = str((side?.documentNumber as Json | undefined)?.type).toLowerCase();
+  const person = str(t.partie_person_type);
   return {
     id: str(t.id),
     accountId,
-    date: str(t.date),
-    description: str(t.description).slice(0, 120),
-    amount: num(t.amount) ?? 0,
-    type: t.type === 'CREDIT' ? 'CREDIT' : 'DEBIT',
-    category: str(t.category) || null,
-    operationType: str(t.operationType) || null,
-    party: doc === 'cpf' || doc === 'cnpj' ? doc : null,
+    date: str(t.transaction_date_time),
+    description: str(t.transaction_name).slice(0, 120),
+    amount: Math.abs(money(t.transaction_amount) ?? 0),
+    type: t.credit_debit_type === 'CREDITO' ? 'CREDIT' : 'DEBIT',
+    category: str(t.category_ref) || null,
+    operationType: str(t.type) || null,
+    party: person === 'PESSOA_NATURAL' ? 'cpf' : person === 'PESSOA_JURIDICA' ? 'cnpj' : null,
   };
 }
 
-function toInvestment(i: Json, itemId: string) {
+/**
+ * Compra no cartão. Parcelas futuras e lançamentos agendados (ainda sem data
+ * na fatura) ficam de fora: entram quando o banco lançar cada um.
+ */
+function toCardTx(t: Json, cardId: string) {
+  const posted = str(t.bill_post_date);
+  if (!/^\d{4}-\d{2}-\d{2}/.test(posted) || posted.startsWith('0001-')) return null;
+  const n = num(t.charge_number);
+  const i = num(t.charge_identificator);
+  const name = str(t.transaction_name);
+  const installment = n !== null && n > 1 && i !== null;
+  // cada parcela entra no mês em que caiu na fatura, não no dia da compra
+  const date = installment && i > 1 ? `${posted.slice(0, 10)}T12:00:00Z` : str(t.transaction_date_time) || `${posted}T12:00:00Z`;
   return {
-    id: str(i.id),
-    itemId,
-    name: str(i.name).slice(0, 60),
-    type: str(i.type),
-    subtype: str(i.subtype) || null,
-    balance: num(i.balance) ?? 0,
-    invested: num(i.amountOriginal) ?? num(i.amount),
+    id: str(t.id),
+    accountId: cardId,
+    date,
+    description: (installment && !/\d+\s*\/\s*\d+/.test(name) ? `${name} ${i}/${n}` : name).slice(0, 120),
+    amount: Math.abs(money(t.brazilian_amount) ?? money(t.amount) ?? 0),
+    type: t.credit_debit_type === 'CREDITO' ? 'CREDIT' : 'DEBIT',
+    category: str(t.category_ref) || null,
+    operationType: str(t.transaction_type) || null,
+    party: null,
   };
+}
+
+type InvestmentKind = 'bank' | 'credit' | 'fund' | 'treasury' | 'stock';
+const INVESTMENT_LISTS: [string, InvestmentKind][] = [
+  ['bank-fixed-incomes', 'bank'],
+  ['credit-fixed-incomes', 'credit'],
+  ['funds', 'fund'],
+  ['treasure-titles', 'treasury'],
+  ['variable-incomes', 'stock'],
+];
+
+const monthYear = (d: string) => (/^\d{4}-\d{2}/.test(d) ? `${d.slice(5, 7)}/${d.slice(0, 4)}` : '');
+
+/** Posição de um investimento. Fica de fora o que já foi resgatado por inteiro. */
+function toInvestment(i: Json, itemId: string, kind: InvestmentKind) {
+  const b = (i.balance ?? null) as Json | null;
+  const value = money(b?.net_amount) ?? money(b?.gross_amount);
+  if (value === null || value <= 0) return null;
+  const qty = num(b?.quantity);
+  const due = monthYear(str(i.due_date));
+  let name = '';
+  let type = 'FIXED_INCOME';
+  let subtype: string | null = str(i.investment_type) || null;
+  let invested: number | null = null;
+  if (kind === 'bank') {
+    name = `${subtype ?? 'Renda fixa'}${due ? ` · vence ${due}` : ''}`;
+    const unit = money(i.issue_unit_price);
+    invested = qty !== null && unit !== null ? qty * unit : null;
+  } else if (kind === 'credit') {
+    name = `${subtype === 'DEBENTURES' ? 'Debênture' : (subtype ?? 'Crédito privado')}${str(i.debtor_name) ? ` ${str(i.debtor_name)}` : ''}`;
+  } else if (kind === 'fund') {
+    name = str(i.name) || 'Fundo de investimento';
+    type = 'MUTUAL_FUND';
+    subtype = str(i.anbima_category) || null;
+  } else if (kind === 'treasury') {
+    name = str(i.product_name) || `Tesouro Direto${due ? ` ${due}` : ''}`;
+    type = 'TREASURY';
+    subtype = 'TREASURY';
+    const unit = money(b?.purchase_unit_price);
+    invested = qty !== null && unit !== null ? qty * unit : null;
+  } else {
+    name = str(i.ticker) || 'Ação';
+    type = 'EQUITY';
+    subtype = 'STOCK';
+  }
+  return { id: str(i.id), itemId, name: name.slice(0, 60), type, subtype, balance: value, invested };
 }
 
 type DenoLike = {
