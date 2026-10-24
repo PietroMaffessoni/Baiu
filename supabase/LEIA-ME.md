@@ -382,12 +382,12 @@ O Pietro cuida desta parte. O sócio só precisa receber os segredos no Supabase
 A Polp recebe os dados dos bancos pelo Open Finance por meio da Celcoin, instituição autorizada pelo Banco Central. O Baiu usa a API v2 (`https://api.polp.com.br/api/v2`). A API antiga, que usava a Pluggy, sai do ar em 28/11/2026 e não é usada.
 
 1. Crie a conta em polp.com.br. O ambiente de teste (sandbox) não exige plano nem cobra nada.
-2. No painel, gere as credenciais da API. O **client** (um UUID) vai em `POLP_CLIENT_ID` e o **secret** em `POLP_CLIENT_SECRET`. O secret aparece uma vez só: cole direto no Supabase.
+2. No painel, em **API Keys** (`polp.com.br/dashboard/api-keys`), toque em **Nova API Key**, dê o nome `baiu-supabase` e toque em **Gerar Chave**. O **Client ID** vai em `POLP_CLIENT_ID` e o **Client Secret** em `POLP_CLIENT_SECRET`. O secret aparece uma vez só: cole direto no Supabase. Confira se a chave ficou ativa na lista.
 3. Para testar, cadastre também `POLP_SANDBOX=1`. Apague antes de publicar.
-4. Para usar com bancos de verdade, assine um plano. Sem plano ativo, ou com fatura atrasada, a Polp recusa as chamadas e o app avisa que a conexão não está disponível. Cada autorização aprovada é cobrada à parte.
-5. Volta para o app depois do banco:
+4. Ainda em **Open Finance**, deixe ligados os dois enriquecimentos (categorias e contrapartes): o Baiu usa as categorias.
+5. Para usar com bancos de verdade, complete os dados da empresa em **Configurações, Empresa** (razão social, CNPJ, endereço e CPF do representante; sem isso a Polp não libera os produtos) e assine um plano. Se a API responder que a conta está pendente de aprovação, é com a Polp. Sem plano ativo, ou com fatura atrasada, a Polp recusa as chamadas e o app avisa que a conexão não está disponível. Cada autorização aprovada é cobrada à parte.
+6. Volta para o app depois do banco:
    - Ligue o GitHub Pages do repositório (**Settings, Pages**, ramo `main`, pasta `/docs`). A página `docs/open-finance/index.html` fica em `https://pietromaffessoni.github.io/Baiu/open-finance/` e abre o app.
-   - No painel da Polp, configure esse endereço como URL de redirecionamento da conta, se o plano permitir.
-   - Nos planos Pro e Ultra, cadastre também `POLP_REDIRECT_URL` com o mesmo endereço.
+   - Só no plano Pro (ou Ultra): no painel da Polp, em **Open Finance**, aba da jornada do consentimento, salve esse endereço como OAuth Redirect URI. Ou cadastre `POLP_REDIRECT_URL` com o mesmo endereço. No Starter as duas opções ficam bloqueadas.
    - Sem isso, o app funciona do mesmo jeito: depois de autorizar, a pessoa volta ao Baiu sozinha e o app confere a autorização.
-6. Antes de publicar, preencha no painel da Polp o **formulário de conformidade** da jornada do Open Finance e aceite os termos. A jornada do app segue o manual da Polp (polp.com.br/docs/celcoin/termos); os textos obrigatórios ficam em `src/lib/bank/consent-text.ts`. A Polp pode pedir capturas de tela numa auditoria.
+7. Antes de publicar, preencha no painel da Polp o **formulário de conformidade** da jornada do Open Finance e aceite os termos. A jornada do app segue o manual da Polp (polp.com.br/docs/celcoin/termos); os textos obrigatórios ficam em `src/lib/bank/consent-text.ts`. A Polp pode pedir capturas de tela numa auditoria.
