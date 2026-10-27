@@ -43,6 +43,7 @@ await as(ana);
 ok('ligar conexão funciona', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-15')`)) === null);
 ok('ligar de novo não duplica', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-15')`)) === null);
 ok('versão inválida é recusada', (await fails(`select public.bank_link('item-2', 'Itaú', 'x')`)) !== null);
+ok('versão que não é a atual é recusada', (await fails(`select public.bank_link('item-2', 'Itaú', '1999-01-01')`)) !== null);
 ok('identificador vazio é recusado', (await fails(`select public.bank_link('', 'Itaú', '2026-10-15')`)) !== null);
 await fails(`select public.bank_link('item-2', 'Itaú', '2026-10-15')`);
 const mine = await one(`select count(*)::int as n from public.bank_connections`);

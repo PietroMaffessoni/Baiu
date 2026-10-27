@@ -14,6 +14,11 @@ alter table public.consents add constraint consents_document_check
 -- a qual conexão o aceite se refere (uma autorização por banco)
 alter table public.consents add column if not exists reference text;
 
+-- versão atual do termo de conexão; muda por migração, junto com o texto no app
+alter table public.baiu_config add column if not exists bank_consent_version text
+  check (bank_consent_version ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+update public.baiu_config set bank_consent_version = '2026-10-15';
+
 -- ---------- conexões ----------
 
 create table if not exists public.bank_connections (
@@ -50,8 +55,8 @@ begin
   if uid is null then
     raise exception 'baiu: não autenticado' using errcode = '42501';
   end if;
-  if bank_link.version is null or bank_link.version !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then
-    raise exception 'baiu: versão inválida' using errcode = '22023';
+  if bank_link.version is distinct from (select c.bank_consent_version from public.baiu_config c) then
+    raise exception 'baiu: versão do termo desatualizada' using errcode = '22023';
   end if;
   insert into public.bank_connections as b (user_id, item_id, institution)
     values (uid, bank_link.item_id, left(coalesce(bank_link.institution, ''), 120))

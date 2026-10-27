@@ -97,7 +97,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   order by 1;
   ```
 
-  Resultado esperado: `assistant_usage`, `bank_connections` e `consents`, todas com `rls = true`.
+  Resultado esperado: `assistant_usage`, `baiu_config`, `bank_connections` e `consents`, todas com `rls = true`.
 
 - [ ] As permissões estão fechadas:
 
@@ -107,7 +107,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
          has_table_privilege(r, 'public.' || t, 'insert')
            or has_table_privilege(r, 'public.' || t, 'update')
            or has_table_privilege(r, 'public.' || t, 'delete') as grava
-  from unnest(array['consents', 'assistant_usage', 'bank_connections']) t,
+  from unnest(array['consents', 'assistant_usage', 'bank_connections', 'baiu_config']) t,
        unnest(array['anon', 'authenticated']) r
   order by 1, 2;
   ```
@@ -129,7 +129,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   from unnest(array[
     'public.delete_account()',
     'public.assistant_consent(boolean, text)',
-    'public.assistant_take(text, integer)',
+    'public.assistant_take()',
     'public.bank_link(text, text, text)',
     'public.bank_unlink(text)'
   ]) f;
@@ -217,20 +217,28 @@ Em **Edge Functions, Secrets**:
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | Para a IA | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
 | `BAIU_AI_MODEL` | Não | Modelo da IA. Padrão `claude-opus-5-5`; para gastar menos, `claude-sonnet-5-5` ou `claude-haiku-5-5` | Decisão do Pietro e do sócio |
-| `BAIU_AI_DAILY_LIMIT` | Não | Perguntas por pessoa por dia. Padrão 30 | Decisão do Pietro e do sócio |
 | `PLUGGY_CLIENT_ID` | Para os bancos | Identificação do app na Pluggy | Pietro |
 | `PLUGGY_CLIENT_SECRET` | Para os bancos | Senha do app na Pluggy | Pietro |
 | `PLUGGY_SANDBOX` | Só em teste | `1` mostra o banco de teste no app. **Apagar antes de publicar** | — |
-| `REVENUECAT_SECRET_KEY` | Para cobrar | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
+| `REVENUECAT_SECRET_KEY` | Sim | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
+| `BAIU_SUBSCRIPTION_OFF` | Só em teste | `1` libera a IA e os bancos sem conferir a assinatura. **Apagar antes de publicar** | — |
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
 
 - [ ] `ANTHROPIC_API_KEY` cadastrada.
 - [ ] `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
-- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, as funções atendem qualquer pessoa logada, mesmo sem assinatura.
-- [ ] Antes de publicar nas lojas: `PLUGGY_SANDBOX` **apagado**.
+- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, a IA e os bancos ficam indisponíveis para todos (desconectar banco continua funcionando). Para testar antes de o RevenueCat existir, use `BAIU_SUBSCRIPTION_OFF=1`.
+- [ ] Antes de publicar nas lojas: `PLUGGY_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` **apagados**.
 
-Sem os segredos da IA ou da Pluggy, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível.
+Sem os segredos da IA ou da Pluggy, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível. Se o RevenueCat sair do ar, as funções não liberam ninguém às cegas: pedem para tentar de novo, e só quem foi conferido nos últimos 10 minutos segue usando.
+
+**Limite de perguntas por dia e versão dos termos.** Ficam no banco, na tabela `baiu_config`, e não com quem chama a função. O limite começa em 30 e muda no SQL Editor:
+
+```sql
+update public.baiu_config set assistant_daily_limit = 50;
+```
+
+As versões dos termos da IA e da conexão com banco (`assistant_consent_version` e `bank_consent_version`) mudam só por migração nova, junto com o texto e as constantes `AI_CONSENT_VERSION` e `BANK_CONSENT_VERSION` no app. Quem aceitou uma versão antiga precisa aceitar de novo.
 
 ## 8. Ligar o app ao servidor
 
@@ -307,7 +315,7 @@ Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a 
 - [ ] **Advisors, Security Advisor** sem erros (os avisos amarelos podem ser lidos e avaliados).
 - [ ] **Advisors, Performance Advisor** sem erros.
 - [ ] A chave `secret`/`service_role` não aparece em lugar nenhum fora do painel. Para conferir, procure no repositório e no `.env.local`.
-- [ ] `PLUGGY_SANDBOX` apagado (passo 7).
+- [ ] `PLUGGY_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` apagados (passo 7).
 - [ ] Nenhuma tabela nova foi criada pelo painel sem migração (veja as regras abaixo).
 - [ ] Backups diários ativos (**Database, Backups**, no plano Pro).
 

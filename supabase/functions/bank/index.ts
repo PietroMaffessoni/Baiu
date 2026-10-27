@@ -11,7 +11,9 @@
 // Segredos (Edge Functions, Secrets):
 //   PLUGGY_CLIENT_ID, PLUGGY_CLIENT_SECRET   obrigatórios
 //   PLUGGY_SANDBOX=1                         opcional: mostra os bancos de teste no widget
-//   REVENUECAT_SECRET_KEY                    com ela, só quem assina conecta e atualiza bancos
+//   REVENUECAT_SECRET_KEY                    obrigatório: só quem assina conecta e atualiza bancos
+//   BAIU_SUBSCRIPTION_OFF=1                  opcional: libera sem conferir a assinatura.
+//                                            Só para testes; apagar antes de publicar
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
 //
 // Sem dependências externas: roda no Deno do Supabase e nos testes em Node
@@ -58,13 +60,17 @@ export function _resetSubscriptions() {
 type RevenueCatEntitlement = { expires_date?: string | null; grace_period_expires_date?: string | null };
 
 /**
- * A pessoa tem a assinatura ativa no RevenueCat? Sem REVENUECAT_SECRET_KEY, não
- * há cobrança e tudo fica liberado. Com o RevenueCat fora do ar, libera (quem
- * paga não fica sem o serviço); com a chave recusada, bloqueia e avisa no log.
+ * A pessoa tem a assinatura ativa no RevenueCat? Na dúvida, não libera: sem a
+ * chave, a função está mal configurada; com o RevenueCat fora do ar, pede para
+ * tentar de novo. Quem foi conferido há pouco segue liberado pelo cache.
  */
-async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured'> {
+async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured' | 'busy'> {
+  if (env('BAIU_SUBSCRIPTION_OFF') === '1') return 'ok';
   const key = env('REVENUECAT_SECRET_KEY');
-  if (!key) return 'ok';
+  if (!key) {
+    console.error('bank: falta REVENUECAT_SECRET_KEY');
+    return 'misconfigured';
+  }
   const now = Date.now();
   if ((paid.get(uid) ?? 0) > now) return 'ok';
   let r: Response;
@@ -75,8 +81,8 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
       signal: AbortSignal.timeout(8_000),
     });
   } catch {
-    console.error('bank: RevenueCat sem resposta; liberado');
-    return 'ok';
+    console.error('bank: RevenueCat sem resposta');
+    return 'busy';
   }
   if (r.status === 401 || r.status === 403) {
     console.error('bank: RevenueCat recusou a chave', r.status);
@@ -84,14 +90,15 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
   }
   if (!r.ok) {
     console.error('bank: RevenueCat respondeu', r.status);
-    return r.status === 429 || r.status >= 500 ? 'ok' : 'none';
+    return 'busy';
   }
   let ent: RevenueCatEntitlement | undefined;
   try {
     const data = (await r.json()) as { subscriber?: { entitlements?: Record<string, RevenueCatEntitlement> } };
     ent = data.subscriber?.entitlements?.[env('REVENUECAT_ENTITLEMENT') || 'assinatura'];
   } catch {
-    return 'ok';
+    console.error('bank: RevenueCat respondeu em formato inesperado');
+    return 'busy';
   }
   if (!ent) return 'none';
   // sem data de fim: acesso vitalício (ex.: cortesia dada pelo painel)
@@ -197,6 +204,7 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     if (body.action === 'token' || body.action === 'link' || body.action === 'sync' || body.action === 'refresh') {
       const paying = await subscription(uid, env, http);
       if (paying === 'misconfigured') throw new Stop(503, 'not_configured');
+      if (paying === 'busy') throw new Stop(503, 'busy');
       if (paying === 'none') throw new Stop(402, 'subscription');
     }
 
