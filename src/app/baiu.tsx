@@ -6,6 +6,7 @@ import {
   Platform,
   Pressable,
   ScrollView,
+  type ScrollViewInstance,
   StyleSheet,
   TextInput,
   View,
@@ -41,7 +42,7 @@ export default function BaiuChat() {
   const [text, setText] = useState('');
   const [enabling, setEnabling] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
   const hide = state.settings.hideValues;
   const { seen, greeted, declined } = state.assistant;
 

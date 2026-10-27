@@ -10,7 +10,7 @@ adaptive
 
 ## Stack
 
-Expo SDK 57 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Polp (com a Celcoin) e assinatura pelas lojas com o RevenueCat. A IA (Anthropic) está desligada nesta versão. O módulo nativo de compras exige build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
+Expo SDK 58 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Polp (com a Celcoin) e assinatura pelas lojas com o RevenueCat. A IA (Anthropic) está desligada nesta versão. O módulo nativo de compras exige build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
 
 ## Users
 

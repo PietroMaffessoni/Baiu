@@ -88,7 +88,7 @@ export default function Home() {
         linked ? (
           <RefreshControl
             refreshing={bankStatus.running}
-            onRefresh={syncNow}
+            onRefresh={() => void syncNow()}
             tintColor={color.lantern}
             progressViewOffset={insets.top}
           />

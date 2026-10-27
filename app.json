@@ -164,7 +164,8 @@
       ],
       "expo-sharing",
       "@react-native-community/datetimepicker",
-      "./plugins/with-recents-privacy"
+      "./plugins/with-recents-privacy",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

@@ -6,7 +6,7 @@ export async function shareCsv(name: string, content: string) {
   const file = new File(Paths.cache, name);
   if (file.exists) file.delete();
   file.create();
-  file.write(content);
+  await file.write(content);
   if (!(await Sharing.isAvailableAsync())) throw new Error('Compartilhamento indisponível neste aparelho.');
   await Sharing.shareAsync(file.uri, {
     mimeType: 'text/csv',

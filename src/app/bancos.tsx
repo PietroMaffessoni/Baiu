@@ -56,7 +56,7 @@ export default function Bancos() {
       contentContainerStyle={{ padding: gutter, paddingBottom: insets.bottom + 40, gap: 14 }}
       refreshControl={
         items.length ? (
-          <RefreshControl refreshing={status.running} onRefresh={syncNow} tintColor={color.lantern} />
+          <RefreshControl refreshing={status.running} onRefresh={() => void syncNow()} tintColor={color.lantern} />
         ) : undefined
       }>
       <T variant="callout" tone="ink2">

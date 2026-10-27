@@ -36,6 +36,7 @@ const theme = {
 
 const pushedHeader = {
   headerShown: true,
+  headerTransparent: false,
   headerStyle: { backgroundColor: color.night },
   headerTintColor: color.lantern,
   headerTitleStyle: { fontFamily: font.bold, color: color.paper, fontSize: 17 },

@@ -1,5 +1,6 @@
 import { TabList, TabSlot, Tabs, TabTrigger, type TabTriggerSlotProps } from 'expo-router/ui';
-import { Pressable, StyleSheet, View } from 'react-native';
+import type { Ref } from 'react';
+import { Pressable, StyleSheet, View, type ViewInstance } from 'react-native';
 
 import { T } from '@/theme/text';
 import { color } from '@/theme/tokens';
@@ -28,7 +29,10 @@ export default function AppTabs() {
   );
 }
 
-function TabButton({ children, isFocused, icon, ...props }: TabTriggerSlotProps & { icon: IconName }) {
+// O expo-router ainda tipa o ref do gatilho com o tipo antigo de View; aqui ele chega como a view nativa.
+type TabButtonProps = Omit<TabTriggerSlotProps, 'ref'> & { ref?: Ref<ViewInstance>; icon: IconName };
+
+function TabButton({ children, isFocused, icon, ...props }: TabButtonProps) {
   const tint = isFocused ? color.lantern : color.ink3;
   return (
     <Pressable {...props} style={styles.btn}>
