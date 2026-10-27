@@ -63,6 +63,7 @@ function world({
       return res(200, {
         data: [
           { id: NUBANK, name: 'Nubank', status: 'OPERATIONAL', type: 'BOTH', logo_url: 'x', description: 'Banco' },
+          { id: 'inst-itau', name: 'Itaú', status: 'OPERATIONAL', type: 'BOTH' },
           { id: 'inst-fora', name: 'Banco Parado', status: 'MAJOR_OUTAGE', type: 'PERSONAL' },
           { id: 'inst-pj', name: 'Banco Só Empresas', status: 'OPERATIONAL', type: 'BUSINESS' },
         ],
@@ -172,7 +173,7 @@ ok('cpf: dígito errado, repetido ou curto é recusado', !validCpf('52998224724'
 // bancos
 {
   const r = await call({ action: 'institutions' });
-  ok('institutions: lista os bancos de pessoa física', r.status === 200 && r.body.institutions.length === 2 && !r.body.institutions.some((i) => i.name === 'Banco Só Empresas'));
+  ok('institutions: lista os bancos de pessoa física', r.status === 200 && r.body.institutions.length === 3 && !r.body.institutions.some((i) => i.name === 'Banco Só Empresas'));
   ok('institutions: só nome, situação e id', JSON.stringify(r.body.institutions[0]) === JSON.stringify({ id: NUBANK, name: 'Nubank', status: 'OPERATIONAL' }));
 }
 
@@ -220,6 +221,19 @@ ok('start: sem versão do aceite, recusa', (await call({ ...START, consentVersio
 {
   const r = await call(START, world({ rows: [] }), env({ POLP_SANDBOX: '1' }));
   ok('start: no ambiente de teste, usa as rotas /sandbox e avisa o app', r.body.sandbox === true && r.calls.some((c) => c.url === 'https://api.polp.com.br/api/v2/sandbox/consents'));
+}
+
+// limite de 3 bancos
+{
+  const ITAU = { ...START, institutionId: 'inst-itau' };
+  const full = world({ rows: ['c-1', 'c-2', 'c-3'] });
+  const r = await call(ITAU, full);
+  ok('limite: com 3 bancos autorizados, o 4º é recusado sem criar nada na Polp', r.status === 409 && r.body.error === 'limit' && !r.calls.some((c) => c.method === 'POST' && c.url.includes('polp')));
+  ok('limite: o mesmo banco de novo (reconectar) não conta', (await call(START, world({ rows: ['c-1', 'c-2', 'c-3'] }))).status === 200);
+  ok('limite: com 2 bancos, conecta o 3º sem consultar os outros', (await call(ITAU, world({ rows: ['c-1', 'c-2'] }))).calls.filter((c) => c.method === 'GET' && c.url.includes('/consents/c-')).length === 0);
+  const stale = world({ rows: ['c-1', 'c-2', 'c-3'], status: 'AWAITING_AUTHORIZATION', expiresAt: soon(-30) });
+  const r2 = await call(ITAU, stale);
+  ok('limite: autorizações abandonadas no meio são canceladas e liberam lugar', r2.status === 200 && r2.calls.filter((c) => c.method === 'DELETE').length === 3 && r2.calls.filter((c) => c.url.endsWith('/rpc/bank_unlink')).length === 3);
 }
 
 // reconnect e status

@@ -9,7 +9,7 @@ Marque cada caixa só depois de conferir no painel ou com a consulta indicada. S
 O Supabase cuida de quatro coisas:
 
 - **Contas.** Cadastro, login, códigos por e-mail, troca de senha e exclusão da conta.
-- **Conversa com IA.** A função `baiu-chat` leva a pergunta à Anthropic e conta as perguntas de cada pessoa no dia.
+- **Conversa com IA (adiada).** A função `baiu-chat` leva a pergunta à Anthropic e conta as perguntas de cada pessoa no dia. **A IA está desligada no app desde 27/10/2026, para não ter esse custo no lançamento.** Tudo que fala de IA neste guia (a função `baiu-chat`, `ANTHROPIC_API_KEY`, o teste da IA e o apêndice A) fica para quando ela voltar. A migração do assistente roda do mesmo jeito.
 - **Bancos conectados.** A função `bank` faz a ponte com a Polp, que recebe os dados pelo Open Finance por meio da Celcoin.
 - **Assinatura.** As funções conferem no RevenueCat quem assina. A função `subscription` apaga a pessoa do RevenueCat quando ela exclui a conta.
 
@@ -42,7 +42,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | --- | --- |
 | Tudo dentro do painel do Supabase (passos 1 a 9 e 11 a 13) | Sócio |
 | Contrato e chaves da Polp (Open Finance) | Pietro |
-| Chaves da Anthropic e do RevenueCat | Quem criar essas contas; os valores vão direto para o painel (passo 7) |
+| Chave do RevenueCat (e a da Anthropic, quando a IA voltar) | Quem criar essas contas; os valores vão direto para o painel (passo 7) |
 | Variáveis do app no EAS (passo 8) | Quem tiver acesso à conta `pitroibas` no Expo |
 
 **Regra das chaves secretas.** Uma chave secreta só pode ficar em dois lugares: no painel do serviço que a gerou e em **Edge Functions, Secrets** no Supabase. Nunca mande essas chaves por WhatsApp, e-mail ou GitHub, nem coloque no app. Se precisar repassar uma, use um gerenciador de senhas. O mais simples é a pessoa que tem a chave colá-la ela mesma no Supabase.
@@ -186,15 +186,15 @@ O envio padrão do Supabase serve só para testes: manda poucos e-mails por hora
 
 ## 6. Funções (Edge Functions)
 
-São três funções, cada uma num arquivo só, sem dependências:
+São três funções, cada uma num arquivo só, sem dependências. Por enquanto, publique só `bank` e `subscription`: a `baiu-chat` é da IA, que está desligada.
 
 | Nome da função | Arquivo |
 | --- | --- |
-| `baiu-chat` | `supabase/functions/baiu-chat/index.ts` |
+| `baiu-chat` (adiada) | `supabase/functions/baiu-chat/index.ts` |
 | `bank` | `supabase/functions/bank/index.ts` |
 | `subscription` | `supabase/functions/subscription/index.ts` |
 
-- [ ] As três aparecem em **Edge Functions**, com o nome exato da tabela acima.
+- [ ] `bank` e `subscription` aparecem em **Edge Functions**, com o nome exato da tabela acima.
 
   Se alguma faltar, publique de um destes jeitos:
 
@@ -203,7 +203,6 @@ São três funções, cada uma num arquivo só, sem dependências:
 
     ```bash
     npx supabase login
-    npx supabase functions deploy baiu-chat --no-verify-jwt --project-ref ID-DO-PROJETO
     npx supabase functions deploy bank --no-verify-jwt --project-ref ID-DO-PROJETO
     npx supabase functions deploy subscription --no-verify-jwt --project-ref ID-DO-PROJETO
     ```
@@ -217,7 +216,7 @@ Em **Edge Functions, Secrets**:
 
 | Nome | Obrigatório? | O que é | De onde vem |
 | --- | --- | --- | --- |
-| `ANTHROPIC_API_KEY` | Para a IA | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
+| `ANTHROPIC_API_KEY` | Adiado (IA desligada) | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
 | `BAIU_AI_MODEL` | Não | Modelo da IA. Padrão `claude-opus-5-5`; para gastar menos, `claude-sonnet-5-5` ou `claude-haiku-5-5` | Decisão do Pietro e do sócio |
 | `BAIU_AI_DAILY_LIMIT` | Não | Perguntas por pessoa por dia. Padrão 30 | Decisão do Pietro e do sócio |
 | `POLP_CLIENT_ID` | Para os bancos | `x-api-client` da Polp (um UUID) | Pietro (apêndice C) |
@@ -230,7 +229,6 @@ Em **Edge Functions, Secrets**:
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
 
-- [ ] `ANTHROPIC_API_KEY` cadastrada.
 - [ ] `POLP_CLIENT_ID` e `POLP_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
 - [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, as funções atendem qualquer pessoa logada, mesmo sem assinatura.
 - [ ] `POLP_REDIRECT_URL` cadastrada (o plano escolhido é o Pro).
@@ -318,7 +316,7 @@ Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a 
 - [ ] Depois do cadastro aparece "Começar meu mês grátis". Assine com a conta Sandbox da Apple ou com um testador de licença do Google.
 - [ ] No RevenueCat, em **Customers**, a pessoa aparece só com o id da conta.
 
-**IA**
+**IA** (adiado: só quando a IA voltar)
 
 - [ ] Em **Conversar com o Baiu**, toque em **Ativar a conversa com IA** e pergunte algo. A resposta vem da IA.
 - [ ] `consents` ganhou uma linha `assistente`, e `assistant_usage` ganhou a linha do dia com `count = 1`:
@@ -398,7 +396,7 @@ Quem não consegue abrir o app pode pedir a exclusão por e-mail (`docs/excluir-
 
 ---
 
-## Apêndice A: conta na Anthropic (IA)
+## Apêndice A: conta na Anthropic (IA, adiado)
 
 1. Crie a conta em console.anthropic.com, de preferência com o e-mail do suporte.
 2. Em **Billing**, cadastre o cartão, coloque créditos e defina um **limite de gasto mensal**.

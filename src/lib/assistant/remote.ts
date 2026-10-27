@@ -5,6 +5,15 @@ import type { ChatMsg } from '@/data/types';
 import { getSupabaseClient } from '../auth/supabase';
 import type { AssistantContext } from './context';
 
+/**
+ * Conversa com IA ligada no app? Desligada desde 27/10/2026 para não ter o
+ * custo da Anthropic no lançamento: o Baiu responde só com as respostas
+ * prontas, calculadas no aparelho, e não pede o aceite da IA. Para voltar,
+ * troque para true e devolva aos textos legais as partes da IA (estão no
+ * histórico do git, no commit que desligou).
+ */
+export const AI_ENABLED = false;
+
 /** Versão do texto de consentimento da conversa com IA. Mudou o texto, muda a versão. */
 export const AI_CONSENT_VERSION = '2026-10-15';
 

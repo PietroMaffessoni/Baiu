@@ -11,6 +11,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import type { ChatMsg } from '@/data/types';
+import { AI_ENABLED } from '@/lib/assistant/remote';
 import { maskValues } from '@/lib/assistant/text';
 import { T } from '@/theme/text';
 import { color, radius } from '@/theme/tokens';
@@ -63,7 +64,7 @@ export function Bubble({ msg, score, hide, avatar = true, onAsk, onBill, disable
           <T variant="body" selectable>
             {text}
           </T>
-          {msg.source === 'pronta' ? (
+          {AI_ENABLED && msg.source === 'pronta' ? (
             <T variant="micro" tone="ink3" style={{ marginTop: 6 }}>
               Resposta pronta, sem IA
             </T>

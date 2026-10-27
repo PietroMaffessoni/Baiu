@@ -34,9 +34,9 @@ const PLANS = {
     id: '$rc_annual',
     productId: 'baiu_anual',
     period: 'ano',
-    price: 'R$ 249,90',
-    amount: 249.9,
-    perMonth: 'R$ 20,83',
+    price: 'R$ 229,90',
+    amount: 229.9,
+    perMonth: 'R$ 19,16',
   },
 } as const;
 

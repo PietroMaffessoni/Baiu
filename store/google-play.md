@@ -43,7 +43,7 @@ REGISTRE O QUE ENTRA E O QUE SAI
 Com os bancos conectados, tudo chega sozinho. Nas contas manuais, entradas, gastos e transferências em poucos toques. O extrato mostra cada dia do mês e quanto você guardou.
 
 CONVERSE COM O BAIU
-O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. A conversa com inteligência artificial é opcional e só começa com a sua permissão.
+O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. Tudo calculado no seu celular.
 
 ENTENDA SEU FÔLEGO
 O fôlego vai de 0 a 100 e soma quatro pilares: gastar menos do que entrou, ter reserva de emergência, manter os vencimentos em dia e investir com constância. O app mostra a conta de cada pilar e o próximo passo para o Baiu encher.
@@ -117,9 +117,8 @@ Abra o formulário e leia as opções. Com a conexão de bancos, o Baiu agrega c
 | Informações pessoais: IDs de usuário | Coletado, não compartilhado, obrigatório, para funcionalidade do app e gerenciamento da conta |
 | Informações financeiras: Histórico de compras | Coletado, não compartilhado, obrigatório, para funcionalidade do app |
 | Informações financeiras: Outras informações financeiras | Coletado, não compartilhado, opcional, para funcionalidade do app |
-| Atividade no app: Outros conteúdos gerados pelo usuário | Coletado, não compartilhado, opcional, para funcionalidade do app |
 
-Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. As linhas opcionais vêm de duas funções: os bancos conectados pelo Open Finance (movimentos, saldos e investimentos chegam pela Celcoin e pela Polp e passam pelo nosso servidor até o aparelho) e a conversa com IA (a pergunta e um resumo dos números vão para a Anthropic). O histórico de compras e o ID de usuário vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos do Google Play para saber se a assinatura está ativa. O Supabase, a Polp, a Celcoin, a Anthropic e o RevenueCat são prestadores de serviço, então não contam como compartilhamento.
+Todos os outros tipos: não coletados. Os registros financeiros ficam só no aparelho e, pelas regras do Google, dados processados apenas no aparelho não contam como coleta. A linha opcional vem dos bancos conectados pelo Open Finance (movimentos, saldos e investimentos chegam pela Celcoin e pela Polp e passam pelo nosso servidor até o aparelho). A conversa com IA está desligada nesta versão; quando voltar, declare também "Outros conteúdos gerados pelo usuário". O histórico de compras e o ID de usuário vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos do Google Play para saber se a assinatura está ativa. O Supabase, a Polp, a Celcoin e o RevenueCat são prestadores de serviço, então não contam como compartilhamento.
 
 ### Exclusão de conta
 
@@ -139,8 +138,9 @@ Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A pág
 | Oferta | ID `mes-gratis`, teste gratuito de 1 mês, para quem nunca teve esta assinatura |
 
 4. Ative o plano básico e a oferta.
-5. Em **Configuração, Teste de licença**, adicione os e-mails de quem vai testar: as compras deles não são cobradas.
-6. O RevenueCat precisa ler as compras: siga o guia dele para dar acesso a uma conta de serviço (pode ser a mesma do envio automático, com a permissão de dados financeiros) e para ligar as notificações em tempo real (Pub/Sub). O arquivo da conta de serviço vai direto para o painel do RevenueCat, nunca por mensagem.
+5. Plano anual: crie a assinatura `baiu_anual` (nome Baiu anual) com o plano básico `anual`, renovação automática a cada 1 ano, R$ 229,90, e ative. No RevenueCat, ligue-a ao mesmo direito de uso `assinatura`.
+6. Em **Configuração, Teste de licença**, adicione os e-mails de quem vai testar: as compras deles não são cobradas.
+7. O RevenueCat precisa ler as compras: siga o guia dele para dar acesso a uma conta de serviço (pode ser a mesma do envio automático, com a permissão de dados financeiros) e para ligar as notificações em tempo real (Pub/Sub). O arquivo da conta de serviço vai direto para o painel do RevenueCat, nunca por mensagem.
 
 O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
 

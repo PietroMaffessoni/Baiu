@@ -17,7 +17,7 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
   await signup('Marina Couto', 'marina.couto@gmail.com', '11996421873', { subscribe: false });
   await step('03 conta nova: tela de assinatura com o mês grátis', async () => {}, [
     'Seu primeiro mês é por nossa conta', 'Use tudo por 1 mês sem pagar nada. Depois, R$ 24,90 por mês', 'Bancos conectados',
-    'Privado de verdade', 'Mensal', 'Anual', 'R$ 249,90 por ano · R$ 20,83 por mês', '1º mês grátis', 'Começar meu mês grátis',
+    'Privado de verdade', 'Mensal', 'Anual', 'R$ 229,90 por ano · R$ 19,16 por mês', '1º mês grátis', 'Começar meu mês grátis',
     'Grátis por 1 mês. Depois, R$ 24,90 por mês, cobrados na sua conta da loja de teste, com renovação automática até você cancelar',
     'cancele até 24 horas antes do fim do período grátis', 'Avisamos 2 dias antes', 'Restaurar compras', 'Termos de uso', 'Privacidade',
     'Seus dados continuam seus', 'Minha conta',
@@ -72,9 +72,9 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
   await step('22 assinar o anual', async () => {
     await page.getByRole('radio', { name: /^Anual/ }).click();
     await page.waitForTimeout(500);
-    await btn('Assinar por R$ 249,90 por ano', { wait: 3000 });
+    await btn('Assinar por R$ 229,90 por ano', { wait: 3000 });
   }, ['Saldo nas contas']);
-  await step('23 anual na tela da assinatura', () => go('/assinatura'), ['Assinatura ativa', 'Anual', 'R$ 249,90 por ano', 'Próxima cobrança']);
+  await step('23 anual na tela da assinatura', () => go('/assinatura'), ['Assinatura ativa', 'Anual', 'R$ 229,90 por ano', 'Próxima cobrança']);
   await step('24 excluir a conta avisa que a loja continua cobrando', async () => {
     await go('/minha-conta');
     await btn('Excluir conta', { wait: 500 });
@@ -91,6 +91,6 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
       localStorage.setItem('baiu:fake-store', JSON.stringify({ ...d, offered: ['mensal'] }));
     });
     await signup('Otávio Reis', 'otavio.reis@gmail.com', '41998765432', { subscribe: false });
-  }, ['Começar meu mês grátis', 'R$ 24,90 por mês'], ['Anual', 'R$ 249,90']);
+  }, ['Começar meu mês grátis', 'R$ 24,90 por mês'], ['Anual', 'R$ 229,90']);
 };
 module.exports.pace = { go: 1800, btn: 900 };

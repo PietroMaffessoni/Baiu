@@ -36,9 +36,9 @@ Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode
 
 ## Sugestões e conversas não são recomendação
 
-O fôlego, os selos, os próximos passos, os avisos e as respostas do Baiu, inclusive as da inteligência artificial, são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.
+O fôlego, os selos, os próximos passos, os avisos e as respostas do Baiu são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.
 
-O Baiu não indica ativos específicos, como ações, fundos ou criptomoedas, e não promete rentabilidade. A inteligência artificial pode errar ou trazer informações incompletas: confira números e condições antes de decidir.
+O Baiu não indica ativos específicos, como ações, fundos ou criptomoedas, e não promete rentabilidade. Confira números e condições antes de decidir.
 
 Antes de decisões financeiras importantes, procure um profissional habilitado.
 
@@ -55,12 +55,6 @@ A conexão com bancos é opcional e depende da sua autorização no Baiu e no se
 As categorias são escolhidas automaticamente e podem errar: confira e corrija quando precisar. Para valores oficiais, vale o extrato do seu banco.
 
 A conexão pode ficar indisponível por falhas, manutenção ou mudanças nos bancos, no Open Finance, na Celcoin ou na Polp. Você pode desconectar quando quiser.
-
-## Conversa com IA
-
-A conversa com inteligência artificial é opcional, depende do seu aceite e pode ser desligada a qualquer momento em Ajustes.
-
-Ela tem um limite diário de perguntas. Podemos mudar esse limite ou suspender a função para manter o serviço funcionando. Não use a conversa para fins ilegais nem para tentar burlar as regras do assistente.
 
 ## Uso do aplicativo
 

@@ -22,7 +22,7 @@ Escreva para **suporte.baiu@gmail.com** a partir do e-mail cadastrado, com o ass
 
 ## O que é apagado
 
-- Do servidor, na hora: nome, e-mail, celular, senha protegida, registros de aceite, a lista dos bancos conectados e o contador de perguntas à IA.
+- Do servidor, na hora: nome, e-mail, celular, senha protegida, registros de aceite e a lista dos bancos conectados.
 - Da Polp e da Celcoin, que fazem a conexão com os bancos: as autorizações são canceladas antes da exclusão, e o Baiu deixa de receber dados dos seus bancos. Se quiser, confira no app do seu banco, na área de Open Finance, que a autorização acabou.
 - Do RevenueCat, que confere a assinatura: o cadastro ligado à sua conta. As lojas guardam o registro das compras conforme as regras delas.
 - Do aparelho: os registros financeiros da conta, quando a exclusão é feita pelo app. Se a exclusão for feita por e-mail, desinstale o app para apagar os registros do aparelho.

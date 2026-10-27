@@ -10,7 +10,7 @@ adaptive
 
 ## Stack
 
-Expo SDK 57 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Polp (com a Celcoin), IA pela Anthropic e assinatura pelas lojas com o RevenueCat. O módulo nativo de compras exige build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
+Expo SDK 57 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Polp (com a Celcoin) e assinatura pelas lojas com o RevenueCat. A IA (Anthropic) está desligada nesta versão. O módulo nativo de compras exige build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
 
 ## Users
 
@@ -32,8 +32,8 @@ Uso no celular, em sessões curtas: conferir saldo consolidado, ver um gasto que
 
 - Versão 1.0: conta de usuário (Supabase, código por e-mail), registros financeiros só no aparelho e cifrados, modo exemplo sem conta.
 - Conexão real com bancos pelo Open Finance, via Polp (plano de produção pendente). Contas manuais continuam possíveis.
-- Assistente: avisos e respostas prontas calculados no aparelho; conversa com IA (Anthropic) opcional, com consentimento.
-- Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas, conferida pelo RevenueCat. R$ 24,90 por mês, decidido em 27/10/2026 para cobrir as lojas, a Polp (plano Pro e R$ 3,60 por banco conectado) e a IA. O plano anual é opcional e ainda não tem preço (R$ 249,90 é o exemplo da loja de teste).
+- Assistente: avisos e respostas prontas calculados no aparelho. A conversa com IA (Anthropic) ficou para depois, para não ter esse custo no lançamento (27/10/2026); o código continua no app, desligado por `AI_ENABLED`.
+- Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas, conferida pelo RevenueCat. R$ 24,90 por mês, decidido em 27/10/2026 para cobrir as lojas e a Polp (plano Pro e R$ 3,60 por banco conectado). Plano anual: R$ 229,90 (decidido em 27/10/2026), cerca de R$ 19,16 por mês.
 - Indefinido: fórmula final do índice de saúde financeira (a regra atual é simples e explicável, em `src/lib/folego.ts`).
 - Indefinido: suporte a tablet. O app foi desenhado para celular; o iOS está limitado a iPhone, mas o Android ainda instala em tablets.
 

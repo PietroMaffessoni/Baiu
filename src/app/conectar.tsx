@@ -19,7 +19,7 @@ import { FieldLabel, ModalHeader, TextField } from '@/components/form';
 import { Icon, type IconName } from '@/components/icon';
 import { Plate } from '@/components/layout';
 import { normalize } from '@/lib/assistant/insights';
-import { BANK_MESSAGES, BankFailure, bankBackend } from '@/lib/bank/client';
+import { BANK_MESSAGES, BankFailure, bankBackend, MAX_BANKS } from '@/lib/bank/client';
 import {
   CATEGORIES,
   CELCOIN_LINKS,
@@ -244,7 +244,24 @@ export default function Conectar() {
           </>
         ) : null}
 
-        {step === 'intro' && !reconnect ? (
+        {step === 'intro' && !reconnect && state.bank.items.length >= MAX_BANKS ? (
+          <View style={styles.center}>
+            <Baiu score={folego.score} width={130} still />
+            <T variant="title2" align="center">
+              {`Você já tem ${MAX_BANKS} bancos conectados`}
+            </T>
+            <T variant="callout" tone="ink2" align="center">
+              {`A assinatura inclui até ${MAX_BANKS} bancos. Para conectar outro, desconecte um dos que estão no Baiu. O que já veio dele continua aqui, se você quiser.`}
+            </T>
+            <Button
+              label="Ver bancos conectados"
+              onPress={() => router.replace('/bancos')}
+              style={{ alignSelf: 'stretch' }}
+            />
+          </View>
+        ) : null}
+
+        {step === 'intro' && !reconnect && state.bank.items.length < MAX_BANKS ? (
           <>
             <T variant="title1">Conectar seu banco</T>
             <T variant="body" tone="ink2">

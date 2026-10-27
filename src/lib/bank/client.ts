@@ -7,6 +7,9 @@ import { validCpf } from './cpf';
 import { fakeBankData, FAKE_BANKS } from './fake-data';
 import type { ConnectStart, ConsentRecord, Institution, RemoteItem, SyncPayload } from './types';
 
+/** Bancos por pessoa na assinatura. O servidor usa o mesmo número (supabase/functions/bank). */
+export const MAX_BANKS = 3;
+
 /** Versão do texto de autorização da conexão de contas. Mudou o texto, muda a versão. */
 export const BANK_CONSENT_VERSION = '2026-10-23';
 
@@ -20,6 +23,7 @@ export type BankErrorCode =
   | 'cpf'
   | 'bank_down'
   | 'refused'
+  | 'limit'
   | 'unknown';
 
 export class BankFailure extends Error {
@@ -39,6 +43,7 @@ export const BANK_MESSAGES: Record<BankErrorCode, string> = {
   cpf: 'Confira o CPF. Ele precisa ser o do titular da conta no banco.',
   bank_down: 'Esse banco está fora do ar no Open Finance agora. Tente mais tarde.',
   refused: 'O banco não aceitou o pedido agora. Tente de novo em instantes ou escolha outro banco.',
+  limit: `Você já tem ${MAX_BANKS} bancos conectados, o máximo da assinatura. Para conectar outro, desconecte um em Bancos conectados.`,
   unknown: 'Algo deu errado do nosso lado. Tente de novo em instantes.',
 };
 
@@ -180,6 +185,7 @@ export function createFakeBank(opts: { latencyMs?: number; now?: () => Date; off
       const bank = FAKE_BANKS.find((b) => b.id === institutionId);
       if (!bank) throw new BankFailure(institutionId === 'parado' ? 'bank_down' : 'not_found');
       const d = load();
+      if (d.items.length >= MAX_BANKS) throw new BankFailure('limit');
       const id = `fake-${bank.id}-${++d.n}`;
       d.items.push({ id, name: bank.name, at: now().toISOString() });
       d.history.unshift({

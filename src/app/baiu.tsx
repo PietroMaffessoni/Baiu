@@ -27,7 +27,8 @@ import { T } from '@/theme/text';
 import { color, gutter, radius } from '@/theme/tokens';
 
 /**
- * Conversa com o Baiu. Respostas da IA só com consentimento; sem ele, no
+ * Conversa com o Baiu. Com a IA desligada no app (AI_ENABLED), só respostas
+ * prontas. Com ela ligada, respostas da IA só com consentimento; sem ele, no
  * modo exemplo ou sem internet, o Baiu responde com as respostas prontas,
  * calculadas no aparelho.
  */
@@ -214,6 +215,7 @@ export default function BaiuChat() {
 }
 
 const MODE_LABEL: Record<AiMode, string> = {
+  local: 'Seu assistente financeiro',
   demo: 'Respostas prontas do modo exemplo',
   indisponivel: 'Respostas prontas',
   desligada: 'Respostas prontas',
@@ -221,7 +223,7 @@ const MODE_LABEL: Record<AiMode, string> = {
 };
 
 function ModeNote({ mode, declined, onEnable }: { mode: AiMode; declined: boolean; onEnable: () => void }) {
-  if (mode === 'ligada' || (mode === 'desligada' && !declined)) return null;
+  if (mode === 'local' || mode === 'ligada' || (mode === 'desligada' && !declined)) return null;
   const text =
     mode === 'demo'
       ? 'No modo exemplo o Baiu usa respostas prontas. Crie sua conta para conversar com a inteligência artificial.'

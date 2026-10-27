@@ -41,7 +41,7 @@ REGISTRE O QUE ENTRA E O QUE SAI
 Com os bancos conectados, tudo chega sozinho. Nas contas manuais, entradas, gastos e transferências em poucos toques. O extrato mostra cada dia do mês e quanto você guardou.
 
 CONVERSE COM O BAIU
-O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. A conversa com inteligência artificial é opcional e só começa com a sua permissão.
+O Baiu fica de olho nos seus gastos e avisa quando algo foge do normal, como um mês com mais açaí do que o anterior ou uma conta de luz acima da média. Ele reconhece as contas que se repetem e responde suas dúvidas: onde economizar, como montar a reserva, por onde começar a investir. Tudo calculado no seu celular.
 
 ENTENDA SEU FÔLEGO
 O fôlego vai de 0 a 100 e soma quatro pilares: gastar menos do que entrou, ter reserva de emergência, manter os vencimentos em dia e investir com constância. O app mostra a conta de cada pilar e o próximo passo para o Baiu encher.
@@ -78,13 +78,12 @@ Em App Store Connect, Privacidade do app, declare que o app **coleta dados**, co
 | Informações de contato: Endereço de e-mail | Sim | Não | Funcionalidade do app |
 | Informações de contato: Número de telefone | Sim | Não | Funcionalidade do app |
 | Informações financeiras: Outras informações financeiras | Sim | Não | Funcionalidade do app |
-| Conteúdo do usuário: Outro conteúdo do usuário | Não | Não | Funcionalidade do app |
 | Compras: Histórico de compras | Sim | Não | Funcionalidade do app |
 | Identificadores: ID do usuário | Sim | Não | Funcionalidade do app |
 
-Todos os outros tipos: não coletados. "Outras informações financeiras" cobre os bancos conectados pelo Open Finance (opcional): os dados vêm do banco pela Celcoin e pela Polp, que mantêm a autorização ligada à conta da pessoa, e passam pelo nosso servidor até o aparelho. Por isso ficam vinculados. "Outro conteúdo do usuário" vem da conversa com IA, também opcional: com ela ligada, a pergunta e um resumo dos números (sem nome, e-mail, celular ou bancos) vão para a Anthropic a cada mensagem. O conteúdo da conversa não fica vinculado: nada que identifique a pessoa vai para a IA, e o servidor do Baiu não guarda o conteúdo. "Histórico de compras" e "ID do usuário" vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos da App Store para saber se a assinatura está ativa. O manifesto de privacidade do app já declara esses sete tipos.
+Todos os outros tipos: não coletados. "Outras informações financeiras" cobre os bancos conectados pelo Open Finance (opcional): os dados vêm do banco pela Celcoin e pela Polp, que mantêm a autorização ligada à conta da pessoa, e passam pelo nosso servidor até o aparelho. Por isso ficam vinculados. "Histórico de compras" e "ID do usuário" vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos da App Store para saber se a assinatura está ativa. O manifesto de privacidade do app já declara esses seis tipos.
 
-A diretriz 5.1.2(i) da Apple pede que o app diga claramente quando dados pessoais vão para uma IA de terceiros e peça permissão antes. O Baiu mostra esse aviso, com o resumo exato do que é enviado, e só envia depois do toque em "Ativar a conversa com IA".
+A conversa com IA está desligada nesta versão (`AI_ENABLED` em `src/lib/assistant/remote.ts`): o Baiu responde só com respostas calculadas no aparelho. Quando ela voltar, a diretriz 5.1.2(i) da Apple pede que o app diga claramente quando dados pessoais vão para uma IA de terceiros e peça permissão antes (o app já tem essa tela), e é preciso voltar a declarar "Outro conteúdo do usuário" aqui e no manifesto.
 
 ## Criptografia (conformidade de exportação)
 
@@ -120,7 +119,7 @@ A Apple só libera assinaturas depois do contrato de apps pagos. Faça na ordem:
 5. Em **Usuários e acesso, Integrações, Compra dentro do app**, gere uma chave (arquivo `.p8`) para o RevenueCat. Não envie esse arquivo por mensagem: ele vai direto para o painel do RevenueCat. Lá também está o endereço para **App Store Server Notifications**, que você cola na página do app, em Informações do app.
 6. Em **Usuários e acesso, Sandbox**, crie uma conta de teste para comprar sem pagar. No sandbox, um mês dura poucos minutos.
 
-Plano anual é opcional: crie `baiu_anual` no mesmo grupo e ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
+Plano anual: crie `baiu_anual` no mesmo grupo, por R$ 229,90 por ano, também com o primeiro mês grátis. Ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
 
 ## Capturas de tela
 

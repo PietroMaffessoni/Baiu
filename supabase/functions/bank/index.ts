@@ -33,6 +33,8 @@ const OVERLAP_DAYS = 7;
 /** A Polp atualiza investimentos no máximo a cada 6 horas: não adianta pedir antes. */
 const INVESTMENTS_EVERY = 6 * 3_600_000;
 const MAX_PAGES = 20;
+/** Bancos por pessoa na assinatura. O app usa o mesmo número (src/lib/bank/client.ts). */
+const BANK_LIMIT = 3;
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ID_RE = /^[\w-]{1,100}$/;
 
@@ -439,6 +441,23 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
         const inst = (await institutions()).find((i) => i.id === body.institutionId);
         if (!inst) throw new Stop(404, 'not_found');
         if (!sandbox && inst.status === 'MAJOR_OUTAGE') throw new Stop(409, 'bank_down');
+
+        // no máximo BANK_LIMIT bancos por pessoa; o mesmo banco de novo não conta
+        const active = await rows(true);
+        if (active.length >= BANK_LIMIT && !active.some((r) => r.institution === inst.name)) {
+          let count = 0;
+          for (const r of active) {
+            const c = await consent(r.item_id);
+            const stale =
+              !c ||
+              c.status === 'REJECTED' ||
+              (c.status === 'AWAITING_AUTHORIZATION' && expiresSoon(c.url_to_authenticate_expires_at));
+            // autorização abandonada no meio ou recusada: não custa nada e só ocupa lugar
+            if (stale) await revoke(r.item_id);
+            else count++;
+          }
+          if (count >= BANK_LIMIT) throw new Stop(409, 'limit');
+        }
 
         const payload = {
           institution_id: inst.id,

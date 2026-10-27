@@ -500,6 +500,12 @@ describe('banco de teste', () => {
     expect(h.revokedAt).toBe(NOW.toISOString());
   });
 
+  it('no máximo 3 bancos', async () => {
+    const b = createFakeBank();
+    for (let i = 0; i < 3; i++) await b.start('exemplo', '529.982.247-25');
+    await expect(b.start('digital', '529.982.247-25')).rejects.toEqual(new BankFailure('limit'));
+  });
+
   it('CPF inválido e banco fora do ar', async () => {
     const b = createFakeBank();
     await expect(b.start('exemplo', '111.111.111-11')).rejects.toEqual(new BankFailure('cpf'));

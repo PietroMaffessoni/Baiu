@@ -80,11 +80,6 @@ async function captureRaw(browser) {
     // a conversa abre pelo aviso do Baiu, que some da tela inicial depois de visto
     await t.btn('Conversar sobre isso', { wait: 1500 });
     await t.btn('Onde posso economizar?', { wait: 2000 });
-    // no modo exemplo o subtítulo diz "do modo exemplo"; numa conta com a IA desligada, só "Respostas prontas"
-    await page.evaluate(() => {
-      const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      for (let n = walk.nextNode(); n; n = walk.nextNode()) if (n.nodeValue === 'Respostas prontas do modo exemplo') n.nodeValue = 'Respostas prontas';
-    });
     await shot('assistente');
     await back();
     await shot('inicio');

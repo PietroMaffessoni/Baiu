@@ -7,7 +7,7 @@ O Baiu organiza suas finanças pessoais e mostra, pelo tamanho e pela luz do bai
 ### Conta e dados
 
 **Onde ficam meus dados?**
-Seus registros financeiros ficam só no seu aparelho, criptografados. No servidor do Baiu ficam apenas os dados da conta (nome, e-mail, celular e a senha protegida), os registros dos seus aceites, a lista dos bancos que você conectou e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do seu aparelho e não ficam guardados lá.
+Seus registros financeiros ficam só no seu aparelho, criptografados. No servidor do Baiu ficam apenas os dados da conta (nome, e-mail, celular e a senha protegida), os registros dos seus aceites e a lista dos bancos que você conectou. Saldos e movimentos dos bancos passam pelo servidor só a caminho do seu aparelho e não ficam guardados lá.
 
 **Esqueci minha senha.**
 Na tela Entrar, toque em "Esqueci minha senha". Enviamos um código para o seu e-mail; com ele você cria uma senha nova.
@@ -44,19 +44,10 @@ Você continua usando tudo até o fim do período pago. Sete dias depois que a a
 **Como desconecto um banco?**
 Em Contas, Bancos conectados, toque em "Desconectar", ou toque na autorização em "Suas autorizações" e em "Cancelar autorização". Você escolhe entre manter no aparelho o que já veio, como contas manuais, ou apagar tudo daquele banco. A autorização também pode ser cancelada no app do seu banco, na área de Open Finance. O histórico das autorizações, inclusive as canceladas, fica em Bancos conectados.
 
-### Conversa com o Baiu e inteligência artificial
+### Conversa com o Baiu
 
 **O que é a conversa com o Baiu?**
-Na tela inicial, toque em "Conversar com o Baiu". Ele avisa quando um gasto foge do normal, reconhece as contas que se repetem e responde dúvidas sobre os seus números, como onde economizar e como montar a reserva. Os avisos são calculados no próprio aparelho.
-
-**A conversa usa inteligência artificial?**
-Só se você ligar. Sem ela, o Baiu responde com respostas prontas, calculadas no aparelho. Com a IA ligada, cada pergunta vai para a Anthropic, a empresa que faz a IA, junto com um resumo dos seus números. Esse resumo não leva nome, e-mail, celular nem nomes de bancos. Antes de ligar, o app mostra exatamente o que seria enviado. O servidor do Baiu não guarda o conteúdo das conversas.
-
-**Como desligo a IA ou paro de enviar meus números?**
-Em Ajustes, Assistente: "Conversa com IA" liga e desliga a IA, e "Usar meus números" decide se o resumo vai junto com a pergunta. "O que o Baiu envia" mostra o resumo atual. Na conversa, "Apagar conversa" apaga as mensagens do aparelho.
-
-**Apareceu "Você chegou ao limite de perguntas com IA de hoje".**
-Cada conta pode fazer até 30 perguntas por dia à IA. No dia seguinte o limite volta. Enquanto isso, o Baiu continua com as respostas prontas.
+Na tela inicial, toque em "Conversar com o Baiu". Ele avisa quando um gasto foge do normal, reconhece as contas que se repetem e responde dúvidas comuns sobre os seus números, como onde economizar e como montar a reserva. Tudo é calculado no próprio aparelho, sem enviar seus dados para fora. Na conversa, "Apagar conversa" apaga as mensagens do aparelho.
 
 **Os avisos de gastos não chegam.**
 Confira se as notificações do Baiu estão permitidas nos ajustes do aparelho e se "Avisos de gastos" está ligado em Ajustes, Assistente. O Baiu manda no máximo um aviso por vez, entre 10h e 20h, sem valores no texto.
