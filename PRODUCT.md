@@ -33,7 +33,7 @@ Uso no celular, em sessões curtas: conferir saldo consolidado, ver um gasto que
 - Versão 1.0: conta de usuário (Supabase, código por e-mail), registros financeiros só no aparelho e cifrados, modo exemplo sem conta.
 - Conexão real com bancos pelo Open Finance, via Polp (plano de produção pendente). Contas manuais continuam possíveis.
 - Assistente: avisos e respostas prontas calculados no aparelho; conversa com IA (Anthropic) opcional, com consentimento.
-- Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas, conferida pelo RevenueCat. Preço a definir (R$ 14,90 é o exemplo usado nos textos).
+- Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas, conferida pelo RevenueCat. R$ 24,90 por mês, decidido em 27/10/2026 para cobrir as lojas, a Polp (plano Pro e R$ 3,60 por banco conectado) e a IA. O plano anual é opcional e ainda não tem preço (R$ 249,90 é o exemplo da loja de teste).
 - Indefinido: fórmula final do índice de saúde financeira (a regra atual é simples e explicável, em `src/lib/folego.ts`).
 - Indefinido: suporte a tablet. O app foi desenhado para celular; o iOS está limitado a iPhone, mas o Android ainda instala em tablets.
 

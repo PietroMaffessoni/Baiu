@@ -38,6 +38,9 @@ O Baiu busca os movimentos novos quando você abre o app, quando volta para ele 
 **Um movimento veio com a categoria errada.**
 Toque no movimento e troque a categoria. O Baiu aprende: os movimentos parecidos mudam junto e os próximos já chegam certos. O que ele não teve certeza aparece em "Confira", na tela inicial.
 
+**Cancelei a assinatura. O que acontece com os bancos?**
+Você continua usando tudo até o fim do período pago. Sete dias depois que a assinatura termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais. Se voltar a assinar, é só conectar os bancos de novo.
+
 **Como desconecto um banco?**
 Em Contas, Bancos conectados, toque em "Desconectar", ou toque na autorização em "Suas autorizações" e em "Cancelar autorização". Você escolhe entre manter no aparelho o que já veio, como contas manuais, ou apagar tudo daquele banco. A autorização também pode ser cancelada no app do seu banco, na área de Open Finance. O histórico das autorizações, inclusive as canceladas, fica em Bancos conectados.
 

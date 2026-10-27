@@ -57,7 +57,7 @@ A regra está em `src/lib/folego.ts`.
 
 1. **Assinar:** depois do cadastro, a tela `src/app/assinatura.tsx` mostra o que está incluso, o preço e as condições. A compra acontece na loja do celular; o Baiu nunca vê dados de pagamento.
 2. **Conferir:** o RevenueCat (`src/lib/subscription/revenuecat.ts`) confere os recibos e conhece a pessoa só pelo id da conta. Sem assinatura ativa, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os registros.
-3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Polp ou com a IA. Desconectar bancos e excluir a conta funcionam sempre.
+3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Polp ou com a IA. Desconectar bancos e excluir a conta funcionam sempre. Uma tarefa diária (pg_cron chamando a função `bank`) cancela na Polp as autorizações de quem está sem assinatura há mais de 7 dias, para o Baiu não pagar por bancos que ninguém usa.
 4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim do mês grátis, uma notificação avisa.
 5. **Excluir a conta:** a função `supabase/functions/subscription` apaga o cadastro no RevenueCat.
 

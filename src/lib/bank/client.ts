@@ -205,14 +205,16 @@ export function createFakeBank(opts: { latencyMs?: number; now?: () => Date; off
       if (!it) throw new BankFailure('not_found');
       return { consent: 'AUTHORISED', item: remote(it) };
     },
-    async sync() {
+    async sync(since) {
       await wait();
-      const parts = load().items.map((i) => fakeBankData(i.id, i.name, now()));
+      const items = load().items;
+      const parts = items.map((i) => fakeBankData(i.id, i.name, now()));
       return {
         items: parts.flatMap((p) => p.items),
         accounts: parts.flatMap((p) => p.accounts),
         transactions: parts.flatMap((p) => p.transactions),
         investments: parts.flatMap((p) => p.investments),
+        revoked: Object.keys(since).filter((id) => !items.some((i) => i.id === id)),
       };
     },
     async history() {

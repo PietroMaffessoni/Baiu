@@ -1,5 +1,5 @@
 {
-  "updated": "23 de outubro de 2026",
+  "updated": "27 de outubro de 2026",
   "contact": "mailto:suporte.baiu@gmail.com",
   "privacy": {
     "title": "Política de Privacidade",
@@ -84,7 +84,7 @@
         "heading": "Com quem os dados são compartilhados",
         "body": [
           "Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda as funções que encaminham as perguntas à inteligência artificial e os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.",
-          "Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco enquanto a autorização existir, para entregá-los ao Baiu.",
+          "Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco, com criptografia e controle de acesso, para entregá-los ao Baiu. Se o contrato entre o Baiu e a Polp terminar, ela apaga ou anonimiza os dados em até 60 dias, e as cópias de segurança em até 90 dias, salvo obrigação legal.",
           "Celcoin Instituição de Pagamento: instituição autorizada pelo Banco Central que recebe os dados dos bancos pelo Open Finance, só se você conectar algum banco, conforme os Termos de Uso e a Norma de Privacidade Externa dela.",
           "Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha.",
           "Anthropic, PBC: fornece a inteligência artificial da conversa com o Baiu, como operadora, só se você ativar essa função. Fica nos Estados Unidos, o que configura transferência internacional, autorizada pelo seu consentimento específico (art. 33, VIII).",
@@ -181,7 +181,7 @@
           "Cobrança: ao fim do mês grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.",
           "Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim do mês grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de o mês grátis acabar.",
           "Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.",
-          "Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes."
+          "Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar."
         ]
       },
       {

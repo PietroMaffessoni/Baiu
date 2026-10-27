@@ -172,7 +172,7 @@ function Paywall({ ent, locked }: { ent: Entitlement | null; locked: boolean }) 
         </T>
         <T variant="body" tone="ink2" align="center">
           {returning && locked
-            ? 'Sua assinatura terminou. Seus registros continuam guardados neste aparelho: assine de novo para continuar de onde parou.'
+            ? 'Sua assinatura terminou. Seus registros continuam guardados neste aparelho: assine de novo para continuar de onde parou. Os bancos conectados são desconectados 7 dias depois do fim.'
             : trial && plan
               ? `Use tudo por ${periodLabel(trial)} sem pagar nada. Depois, ${priceLabel(plans!.find((p) => p.period === 'mes') ?? plan)}. Cancele quando quiser.`
               : plan
@@ -432,6 +432,9 @@ function Manage({ ent }: { ent: Entitlement }) {
             Você continua usando tudo{until ? ` até ${until}` : ' até o fim do período'}
             {ent.status === 'teste' ? ' e não paga nada' : ' e não é cobrado de novo'}. Seus registros continuam neste
             aparelho.
+          </T>
+          <T variant="callout" tone="ink2">
+            Sete dias depois do fim, o Baiu desconecta seus bancos. O que já veio deles fica, como contas manuais.
           </T>
           <Button label={`Ir para a ${store}`} kind="danger" onPress={manage} loading={busy} />
           <Button label="Manter assinatura" kind="quiet" onPress={() => setCancelling(false)} />

@@ -18,19 +18,26 @@ const fails = async (sql, params = []) => {
 const one = async (sql, params = []) => (await db.query(sql, params)).rows[0];
 
 await db.exec(`
-  create role anon nologin; create role authenticated nologin;
+  create role anon nologin; create role authenticated nologin; create role service_role nologin;
   create schema auth;
   create table auth.users (id uuid primary key default gen_random_uuid(), email text, raw_user_meta_data jsonb);
   create function auth.uid() returns uuid language sql stable as
     $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
-  grant usage on schema public, auth to anon, authenticated;
+  grant usage on schema public, auth to anon, authenticated, service_role;
   grant execute on function auth.uid() to anon, authenticated;
   alter default privileges in schema public grant all on functions to anon, authenticated;
 `);
-for (const f of ['20261014120000_contas.sql', '20261015120000_assistente.sql', '20261015130000_bancos.sql', '20261023120000_polp.sql'])
+for (const f of [
+  '20261014120000_contas.sql',
+  '20261015120000_assistente.sql',
+  '20261015130000_bancos.sql',
+  '20261023120000_polp.sql',
+  '20261027120000_bancos_sem_assinatura.sql',
+])
   await db.exec(read(f));
 await db.exec(read('20261015130000_bancos.sql'));
 await db.exec(read('20261023120000_polp.sql'));
+await db.exec(read('20261027120000_bancos_sem_assinatura.sql'));
 ok('migrações dos bancos rodam duas vezes sem erro', true);
 
 const meta = JSON.stringify({ full_name: 'Maria Silva', phone: '+5511996421873', terms_version: '2026-10-15', privacy_version: '2026-10-15', adult: true });
@@ -79,6 +86,21 @@ await db.exec(`reset role`);
 await db.exec(`set role anon`);
 ok('visitante anônimo não chama as funções', /permission denied/.test((await fails(`select public.bank_link('i', 'X', '2026-10-15')`)) ?? ''));
 ok('visitante anônimo não lê conexões', (await fails(`select * from public.bank_connections`)) !== null);
+ok('visitante anônimo não lista as conexões de todos', (await fails(`select * from public.bank_active_connections()`)) !== null);
+
+// tarefa diária: só a chave secreta (service_role) lista e encerra conexões de qualquer pessoa
+await db.exec(`reset role`);
+await as(bia);
+ok('pessoa logada não lista as conexões de todos', /permission denied/.test((await fails(`select * from public.bank_active_connections()`)) ?? ''));
+ok('pessoa logada não encerra conexão alheia pela tarefa', /permission denied/.test((await fails(`select public.bank_lapse($1, 'item-1')`, [ana])) ?? ''));
+await db.exec(`reset role`);
+await db.exec(`set role service_role`);
+const all = (await db.query(`select * from public.bank_active_connections()`)).rows;
+ok('a tarefa lista só as conexões ativas', all.length === 2 && all.every((r) => r.user_id === ana), JSON.stringify(all));
+ok('a tarefa encerra uma conexão', (await fails(`select public.bank_lapse($1, 'item-2')`, [ana])) === null);
+await db.exec(`reset role`);
+const lapsed = await one(`select (select revoked_at from public.bank_connections where item_id = 'item-2') as b, (select revoked_at from public.consents where reference = 'item-2' order by accepted_at desc limit 1) as c`);
+ok('encerrar pela tarefa marca a conexão e o aceite, sem apagar', lapsed.b !== null && lapsed.c !== null, JSON.stringify(lapsed));
 
 await db.exec(`reset role`);
 await as(ana);

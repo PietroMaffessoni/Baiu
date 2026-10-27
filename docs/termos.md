@@ -1,6 +1,6 @@
 # Termos de Uso do Baiu
 
-Atualizada em 23 de outubro de 2026.
+Atualizada em 27 de outubro de 2026.
 
 Ao criar uma conta ou usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
 
@@ -32,7 +32,7 @@ Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Ass
 
 Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.
 
-Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes.
+Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar.
 
 ## Sugestões e conversas não são recomendação
 

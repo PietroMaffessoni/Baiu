@@ -135,7 +135,7 @@ Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A pág
 | --- | --- |
 | ID do produto | `baiu_mensal` |
 | Nome | Baiu mensal |
-| Plano básico | ID `mensal`, renovação automática, a cada 1 mês, preço escolhido (por exemplo, R$ 14,90) |
+| Plano básico | ID `mensal`, renovação automática, a cada 1 mês, preço escolhido (R$ 24,90 por mês) |
 | Oferta | ID `mes-gratis`, teste gratuito de 1 mês, para quem nunca teve esta assinatura |
 
 4. Ative o plano básico e a oferta.

@@ -68,6 +68,11 @@ export default function Bancos() {
           {BANK_MESSAGES[status.error]}
         </T>
       ) : null}
+      {status.ended?.length ? (
+        <T variant="callout" tone="lantern">
+          {`A autorização de ${status.ended.join(', ')} terminou. O que já tinha vindo continua no Baiu, como contas manuais. Para voltar a receber os dados, conecte de novo.`}
+        </T>
+      ) : null}
 
       {items.length === 0 ? (
         <EmptyPlate text="Nenhum banco conectado ainda. Conecte o banco onde seu dinheiro entra e o Baiu faz o resto." />

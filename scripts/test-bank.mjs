@@ -305,6 +305,99 @@ ok('unlink: autorização que não é da lista da pessoa, recusa', (await call({
   ok('unlink: não revoga na Polp o que não é da pessoa, mas marca aqui', r.status === 200 && !r.calls.some((c) => c.method === 'DELETE'));
 }
 
+// bancos que saíram: o app tira da lista
+{
+  const r = await call({ action: 'sync', since: { 'c-1': '2026-10-20T10:00:00Z', 'c-velho': '2026-10-20T10:00:00Z' } });
+  ok('sync: avisa quais bancos do aparelho não têm mais autorização', JSON.stringify(r.body.revoked) === '["c-velho"]');
+}
+
+// tarefa diária: cancela as autorizações de quem ficou sem assinatura
+{
+  const DAY = 86_400_000;
+  const iso = (ms) => new Date(Date.now() + ms).toISOString();
+  const SECRET = 'segredo-da-tarefa-diaria';
+  const CLEAN = { ...ENV, BANK_CLEANUP_SECRET: SECRET, REVENUECAT_SECRET_KEY: 'sk_rc', SUPABASE_SECRET_KEYS: JSON.stringify({ default: 'sb_secret_x' }) };
+  /** `subs`: direito de uso de cada pessoa no RevenueCat (undefined: nunca assinou). */
+  const cleanWorld = (subs, rows) => {
+    const calls = [];
+    const res = (code, body) => new Response(body === undefined ? null : JSON.stringify(body), { status: code });
+    const http = async (url, init = {}) => {
+      const u = new URL(url);
+      calls.push({ url, method: init.method ?? 'GET', headers: init.headers ?? {}, body: init.body ? JSON.parse(init.body) : null });
+      if (u.host === 'api.revenuecat.com') {
+        const uid = decodeURIComponent(u.pathname.split('/').pop());
+        const ent = subs[uid];
+        return res(200, { subscriber: { entitlements: ent ? { assinatura: ent } : {} } });
+      }
+      if (u.pathname === '/rest/v1/rpc/bank_active_connections') return res(200, rows);
+      if (u.pathname === '/rest/v1/rpc/bank_lapse') return res(204);
+      const show = u.pathname.match(/^\/api\/v2\/consents\/([\w-]+)$/);
+      if (show) {
+        if (init.method === 'DELETE') return res(200, { message: 'Consentimento revogado.' });
+        const owner = rows.find((r) => r.item_id === show[1])?.user_id;
+        return res(200, { data: { id: show[1], cliente_user_id: owner, status: 'AUTHORISED' } });
+      }
+      return res(404, {});
+    };
+    return { http, calls };
+  };
+  const run = async (w, e = CLEAN, secret = SECRET) => {
+    const r = await handle(
+      new Request('https://proj.supabase.co/functions/v1/bank', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-cleanup-secret': secret },
+        body: '{"action":"cleanup"}',
+      }),
+      (k) => e[k],
+      w.http,
+    );
+    return { status: r.status, body: await r.json().catch(() => null), calls: w.calls };
+  };
+  const rows = [
+    { user_id: 'ativa', item_id: 'c-a', created_at: iso(-90 * DAY) },
+    { user_id: 'saiu-ontem', item_id: 'c-b', created_at: iso(-90 * DAY) },
+    { user_id: 'saiu-faz-tempo', item_id: 'c-c', created_at: iso(-90 * DAY) },
+    { user_id: 'saiu-faz-tempo', item_id: 'c-d', created_at: iso(-90 * DAY) },
+    { user_id: 'acertando-pagamento', item_id: 'c-e', created_at: iso(-90 * DAY) },
+    { user_id: 'vitalicia', item_id: 'c-f', created_at: iso(-90 * DAY) },
+  ];
+  const subs = {
+    ativa: { expires_date: iso(10 * DAY) },
+    'saiu-ontem': { expires_date: iso(-1 * DAY) },
+    'saiu-faz-tempo': { expires_date: iso(-20 * DAY) },
+    'acertando-pagamento': { expires_date: iso(-20 * DAY), grace_period_expires_date: iso(3 * DAY) },
+    vitalicia: { expires_date: null },
+  };
+  const r = await run(cleanWorld(subs, rows));
+  const deleted = r.calls.filter((c) => c.method === 'DELETE').map((c) => c.url.split('/').pop());
+  const lapsed = r.calls.filter((c) => c.url.endsWith('/rpc/bank_lapse')).map((c) => c.body.p_item);
+  ok('limpeza: cancela na Polp e marca aqui só quem saiu há mais de 7 dias', r.status === 200 && deleted.join() === 'c-c,c-d' && lapsed.join() === 'c-c,c-d', JSON.stringify([deleted, lapsed]));
+  ok('limpeza: conta as pessoas conferidas e as autorizações canceladas', r.body.checked === 5 && r.body.revoked === 2);
+  ok('limpeza: usa a chave secreta nova só no apikey', r.calls.find((c) => c.url.endsWith('/rpc/bank_active_connections')).headers.apikey === 'sb_secret_x' && !r.calls.find((c) => c.url.endsWith('/rpc/bank_active_connections')).headers.Authorization);
+  {
+    const w = cleanWorld({}, [{ user_id: 'nunca', item_id: 'c-g', created_at: iso(-30 * DAY) }, { user_id: 'nunca-novo', item_id: 'c-h', created_at: iso(-2 * DAY) }]);
+    const r2 = await run(w);
+    ok('limpeza: sem assinatura nenhuma, conta a partir da conexão', r2.body.revoked === 1 && w.calls.some((c) => c.method === 'DELETE' && c.url.endsWith('/c-g')));
+  }
+  {
+    const r3 = await run(cleanWorld(subs, rows), { ...CLEAN, BANK_LAPSE_DAYS: '0' });
+    ok('limpeza: prazo configurável (BANK_LAPSE_DAYS)', r3.body.revoked === 3);
+  }
+  {
+    const w = cleanWorld(subs, rows);
+    const r4 = await run(w, { ...CLEAN, SUPABASE_SECRET_KEYS: undefined, SUPABASE_SERVICE_ROLE_KEY: 'eyJ.antiga' });
+    ok('limpeza: aceita a chave antiga (service_role), também no Authorization', r4.status === 200 && w.calls.find((c) => c.url.includes('/rpc/')).headers.Authorization === 'Bearer eyJ.antiga');
+  }
+  ok('limpeza: segredo errado, recusa sem tocar em nada', (await run(cleanWorld(subs, rows), CLEAN, 'errado-errado-errado-err')).status === 401);
+  ok('limpeza: sem segredo configurado, recusa', (await run(cleanWorld(subs, rows), { ...CLEAN, BANK_CLEANUP_SECRET: undefined })).status === 401);
+  {
+    const w = cleanWorld(subs, rows);
+    const r5 = await run(w, { ...CLEAN, REVENUECAT_SECRET_KEY: undefined });
+    ok('limpeza: sem cobrança configurada, não cancela nada', r5.status === 200 && r5.body.revoked === 0 && !w.calls.some((c) => c.method === 'DELETE'));
+  }
+  ok('limpeza: sem a chave secreta do Supabase, avisa', (await run(cleanWorld(subs, rows), { ...CLEAN, SUPABASE_SECRET_KEYS: undefined })).body?.error === 'not_configured');
+}
+
 // erros
 ok('sem chaves da Polp: indisponível', (await call({ action: 'sync' }, world(), env({ POLP_CLIENT_SECRET: undefined }))).body.error === 'not_configured');
 ok('chaves da Polp erradas: indisponível', (await call({ action: 'sync' }, world(), env({ POLP_CLIENT_SECRET: 'errado' }))).body.error === 'not_configured');

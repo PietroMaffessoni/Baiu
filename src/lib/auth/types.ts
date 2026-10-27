@@ -1,6 +1,6 @@
 /** Versões dos documentos aceitos no cadastro. Mudou o texto, muda a versão. */
-export const TERMS_VERSION = '2026-10-23';
-export const PRIVACY_VERSION = '2026-10-23';
+export const TERMS_VERSION = '2026-10-27';
+export const PRIVACY_VERSION = '2026-10-27';
 
 export type Profile = {
   id: string;

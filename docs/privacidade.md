@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 23 de outubro de 2026.
+Atualizada em 27 de outubro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni, que é o controlador dos dados tratados pelo app. Esta política explica, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), quais dados usamos, por quê e como você controla cada um deles.
 
@@ -102,7 +102,7 @@ O celular só é usado para falar com você sobre a sua conta. Não enviamos pro
 
 Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda as funções que encaminham as perguntas à inteligência artificial e os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
 
-Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco enquanto a autorização existir, para entregá-los ao Baiu.
+Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco, com criptografia e controle de acesso, para entregá-los ao Baiu. Se o contrato entre o Baiu e a Polp terminar, ela apaga ou anonimiza os dados em até 60 dias, e as cópias de segurança em até 90 dias, salvo obrigação legal.
 
 Celcoin Instituição de Pagamento: instituição autorizada pelo Banco Central que recebe os dados dos bancos pelo Open Finance, só se você conectar algum banco, conforme os Termos de Uso e a Norma de Privacidade Externa dela.
 

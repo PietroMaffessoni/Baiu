@@ -15,6 +15,8 @@ const { BASE, PORT, launch, newPhone, tools } = require('./lib');
 const ROOT = path.resolve(__dirname, '..');
 const WEB = path.join(__dirname, '.web');
 const RAW = path.join(__dirname, 'capturas', 'lojas');
+// Data fixa e sem enfeite de época (o Baiu usa chapéu no Halloween, gorro no Natal...): as imagens não mudam com o dia.
+const DIA = new Date('2026-11-10T12:00:00-03:00');
 const OUT = path.join(ROOT, 'store', 'imagens');
 const url = (p) => 'file:///' + p.replace(/\\/g, '/');
 
@@ -63,6 +65,7 @@ async function captureRaw(browser) {
   // Dados de exemplo, navegando por dentro do app (o modo exemplo não sobrevive a recarregar a página).
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     const shot = async (name) => {
       await t.W(1800);
@@ -108,6 +111,7 @@ async function captureRaw(browser) {
   // Conta com o banco de teste conectado.
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     await t.signup('Helena Prado', 'helena.prado@gmail.com', '11996421873');
     await t.btn('Conecte seu banco', { wait: 1200 });
@@ -122,6 +126,7 @@ async function captureRaw(browser) {
   // Tela de assinatura, como aparece no iPhone para quem acabou de criar a conta, só com o plano mensal.
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     await t.go('/');
     await page.evaluate(() => localStorage.setItem('baiu:fake-store', JSON.stringify({ subs: {}, trialUsed: {}, offered: ['mensal'] })));

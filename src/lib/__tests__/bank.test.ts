@@ -492,7 +492,9 @@ describe('banco de teste', () => {
     expect(p.accounts).toHaveLength(2);
     expect(p.transactions.every((t) => new Date(t.date) <= NOW)).toBe(true);
     await b.unlink(c.id);
-    expect((await b.sync({})).items).toHaveLength(0);
+    const after = await b.sync({ [c.id]: NOW.toISOString() });
+    expect(after.items).toHaveLength(0);
+    expect(after.revoked).toEqual([c.id]);
     const [h] = await b.history();
     expect(h).toMatchObject({ id: c.id, status: 'cancelada', products: ['ACCOUNT', 'CREDIT_CARD_ACCOUNT', 'INVESTMENTS'] });
     expect(h.revokedAt).toBe(NOW.toISOString());

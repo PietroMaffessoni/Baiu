@@ -80,7 +80,7 @@ export function trialName(p: Period) {
   return p.count === 1 && p.unit === 'mes' ? 'mês grátis' : `${periodLabel(p)} grátis`;
 }
 
-/** "R$ 14,90 por mês". */
+/** "R$ 24,90 por mês". */
 export function priceLabel(plan: Plan) {
   return `${plan.price} por ${plan.period === 'ano' ? 'ano' : 'mês'}`;
 }

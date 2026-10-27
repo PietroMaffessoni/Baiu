@@ -111,7 +111,7 @@ A Apple só libera assinaturas depois do contrato de apps pagos. Faça na ordem:
 | Nome de referência | Baiu mensal |
 | ID do produto | `baiu_mensal` |
 | Duração | 1 mês |
-| Preço | o valor escolhido (por exemplo, R$ 14,90) |
+| Preço | o valor escolhido (R$ 24,90 por mês) |
 | Nome exibido (pt-BR) | Baiu mensal |
 | Descrição (pt-BR) | Bancos conectados, avisos de gastos e o Baiu assistente |
 
@@ -139,7 +139,7 @@ As capturas já estão prontas em `store/imagens/app-store/`, no tamanho de iPho
 
 Elas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer todas, por exemplo depois de mudar uma tela: `npm run store:images`.
 
-A captura da tela de assinatura para a revisão da compra (seção Assinatura, passo 4) é `store/imagens/revisao-assinatura.png`. Ela mostra o preço de exemplo, R$ 14,90. Se o preço for outro, refaça as imagens depois de trocar o valor de exemplo em `src/lib/subscription/fake.ts`.
+A captura da tela de assinatura para a revisão da compra (seção Assinatura, passo 4) é `store/imagens/revisao-assinatura.png`. Ela mostra o preço de R$ 24,90. Se o preço for outro, refaça as imagens depois de trocar o valor de exemplo em `src/lib/subscription/fake.ts`.
 
 ## Passo a passo para publicar
 
