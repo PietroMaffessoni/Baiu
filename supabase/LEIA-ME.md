@@ -10,7 +10,7 @@ O Supabase cuida de quatro coisas:
 
 - **Contas.** Cadastro, login, códigos por e-mail, troca de senha e exclusão da conta.
 - **Conversa com IA.** A função `baiu-chat` leva a pergunta à Anthropic e conta as perguntas de cada pessoa no dia.
-- **Bancos conectados.** A função `bank` faz a ponte com a Pluggy (Open Finance).
+- **Bancos conectados.** A função `bank` faz a ponte com a Polp, que recebe os dados pelo Open Finance por meio da Celcoin.
 - **Assinatura.** As funções conferem no RevenueCat quem assina. A função `subscription` apaga a pessoa do RevenueCat quando ela exclui a conta.
 
 O servidor guarda pouco:
@@ -29,6 +29,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | `migrations/20261014120000_contas.sql` | Tabela `consents`, validação do cadastro e exclusão da conta |
 | `migrations/20261015120000_assistente.sql` | Aceite da IA e tabela `assistant_usage` (limite diário) |
 | `migrations/20261015130000_bancos.sql` | Tabela `bank_connections` e aceite de cada banco |
+| `migrations/20261023120000_polp.sql` | Histórico das autorizações dos bancos (desconectar marca a data em vez de apagar) e categorias autorizadas |
 | `functions/baiu-chat/index.ts` | Função da conversa com IA |
 | `functions/bank/index.ts` | Função dos bancos conectados |
 | `functions/subscription/index.ts` | Função que apaga a pessoa do RevenueCat |
@@ -39,7 +40,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | Parte | Responsável |
 | --- | --- |
 | Tudo dentro do painel do Supabase (passos 1 a 9 e 11 a 13) | Sócio |
-| Contrato e chaves da Pluggy (Open Finance) | Pietro |
+| Contrato e chaves da Polp (Open Finance) | Pietro |
 | Chaves da Anthropic e do RevenueCat | Quem criar essas contas; os valores vão direto para o painel (passo 7) |
 | Variáveis do app no EAS (passo 8) | Quem tiver acesso à conta `pitroibas` no Expo |
 
@@ -55,7 +56,7 @@ Em 15/10/2026 o Pietro deixou isto pronto. Ninguém conferiu ainda se funcionou:
 - RLS automático ligado;
 - integração com o GitHub conectada.
 
-O passo 2 confere se as três migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
+O passo 2 confere se as quatro migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
 
 ---
 
@@ -78,15 +79,15 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   | Production branch | `main` |
   | Deploy to production | Ligado |
 
-- [ ] As três migrações rodaram. Confira no **SQL Editor**:
+- [ ] As quatro migrações rodaram. Confira no **SQL Editor**:
 
   ```sql
   select version, name from supabase_migrations.schema_migrations order by version;
   ```
 
-  O resultado deve ter `20261014120000`, `20261015120000` e `20261015130000`.
+  O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000` e `20261023120000`.
 
-  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os três arquivos podem rodar de novo sem estragar nada.
+  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os quatro arquivos podem rodar de novo sem estragar nada.
 
 - [ ] As tabelas existem e estão com RLS ligado:
 
@@ -130,7 +131,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
     'public.delete_account()',
     'public.assistant_consent(boolean, text)',
     'public.assistant_take()',
-    'public.bank_link(text, text, text)',
+    'public.bank_link(text, text, text, text[])',
     'public.bank_unlink(text)'
   ]) f;
   ```
@@ -217,20 +218,21 @@ Em **Edge Functions, Secrets**:
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | Para a IA | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
 | `BAIU_AI_MODEL` | Não | Modelo da IA. Padrão `claude-opus-5-5`; para gastar menos, `claude-sonnet-5-5` ou `claude-haiku-5-5` | Decisão do Pietro e do sócio |
-| `PLUGGY_CLIENT_ID` | Para os bancos | Identificação do app na Pluggy | Pietro |
-| `PLUGGY_CLIENT_SECRET` | Para os bancos | Senha do app na Pluggy | Pietro |
-| `PLUGGY_SANDBOX` | Só em teste | `1` mostra o banco de teste no app. **Apagar antes de publicar** | — |
+| `POLP_CLIENT_ID` | Para os bancos | `x-api-client` da Polp (um UUID) | Pietro (apêndice C) |
+| `POLP_CLIENT_SECRET` | Para os bancos | `x-api-secret` da Polp. Aparece uma vez só | Pietro (apêndice C) |
+| `POLP_SANDBOX` | Só em teste | `1` usa o ambiente de teste da Polp: dados fictícios, sem banco de verdade e sem cobrança. **Apagar antes de publicar** | — |
+| `POLP_REDIRECT_URL` | Não | Página que devolve a pessoa ao app depois do banco: `https://pietromaffessoni.github.io/Baiu/open-finance/`. Só vale nos planos Pro e Ultra da Polp | Pietro (apêndice C) |
 | `REVENUECAT_SECRET_KEY` | Sim | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
 | `BAIU_SUBSCRIPTION_OFF` | Só em teste | `1` libera a IA e os bancos sem conferir a assinatura. **Apagar antes de publicar** | — |
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
 
 - [ ] `ANTHROPIC_API_KEY` cadastrada.
-- [ ] `PLUGGY_CLIENT_ID` e `PLUGGY_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
-- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, a IA e os bancos ficam indisponíveis para todos (desconectar banco continua funcionando). Para testar antes de o RevenueCat existir, use `BAIU_SUBSCRIPTION_OFF=1`.
-- [ ] Antes de publicar nas lojas: `PLUGGY_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` **apagados**.
+- [ ] `POLP_CLIENT_ID` e `POLP_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
+- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, a IA e os bancos ficam indisponíveis para todos (ver e cancelar autorizações continua funcionando). Para testar antes de o RevenueCat existir, use `BAIU_SUBSCRIPTION_OFF=1`.
+- [ ] Antes de publicar nas lojas: `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` **apagados**.
 
-Sem os segredos da IA ou da Pluggy, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível. Se o RevenueCat sair do ar, as funções não liberam ninguém às cegas: pedem para tentar de novo, e só quem foi conferido nos últimos 10 minutos segue usando.
+Sem os segredos da IA ou da Polp, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível. Se o RevenueCat sair do ar, as funções não liberam ninguém às cegas: pedem para tentar de novo, e só quem foi conferido nos últimos 10 minutos segue usando.
 
 **Limite de perguntas por dia e versão dos termos.** Ficam no banco, na tabela `baiu_config`, e não com quem chama a função. O limite começa em 30 e muda no SQL Editor:
 
@@ -292,18 +294,19 @@ Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a 
 
 - [ ] Desativar a IA no app preenche `revoked_at` na linha `assistente`.
 
-**Bancos** (com `PLUGGY_SANDBOX=1`)
+**Bancos** (com `POLP_SANDBOX=1`)
 
-- [ ] Em **Conectar banco**, escolha **Pluggy Bank** e use o usuário `user-ok` e a senha `password-ok`. Contas, movimentos e investimentos aparecem no app.
-- [ ] `bank_connections` ganhou uma linha, e `consents` ganhou uma linha `conexao_bancaria` com o id da conexão em `reference`.
-- [ ] Desconectar o banco apaga a linha de `bank_connections` e preenche `revoked_at` no aceite.
+- [ ] Em **Conectar banco**, escolha qualquer banco e use um CPF válido (o seu, por exemplo). No ambiente de teste a autorização já volta aprovada, sem abrir o banco. Contas, cartões, movimentos e investimentos de teste aparecem no app.
+- [ ] `bank_connections` ganhou uma linha com `products` preenchido, e `consents` ganhou uma linha `conexao_bancaria` com o id da autorização em `reference`.
+- [ ] Desconectar o banco preenche `revoked_at` na linha de `bank_connections` (ela fica, para o histórico) e no aceite.
+- [ ] Em Bancos conectados, "Suas autorizações" mostra a autorização como "Cancelada".
 
 **Exclusão da conta**
 
 - [ ] Exclua a conta de teste pelo app (Minha conta). Depois confira:
   - [ ] o usuário sumiu de **Authentication, Users**;
   - [ ] `consents`, `assistant_usage` e `bank_connections` não têm mais linhas desse id (saem juntas, em cascata);
-  - [ ] a conexão sumiu da Pluggy (**Items**);
+  - [ ] a autorização aparece revogada no painel da Polp (**Consentimentos**);
   - [ ] a pessoa sumiu do RevenueCat (**Customers**).
 
 **Logs**
@@ -315,7 +318,7 @@ Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a 
 - [ ] **Advisors, Security Advisor** sem erros (os avisos amarelos podem ser lidos e avaliados).
 - [ ] **Advisors, Performance Advisor** sem erros.
 - [ ] A chave `secret`/`service_role` não aparece em lugar nenhum fora do painel. Para conferir, procure no repositório e no `.env.local`.
-- [ ] `PLUGGY_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` apagados (passo 7).
+- [ ] `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` apagados (passo 7).
 - [ ] Nenhuma tabela nova foi criada pelo painel sem migração (veja as regras abaixo).
 - [ ] Backups diários ativos (**Database, Backups**, no plano Pro).
 
@@ -330,7 +333,7 @@ A Apple e o Google precisam entrar no app para revisá-lo.
 
 Quem não consegue abrir o app pode pedir a exclusão por e-mail (`docs/excluir-conta.md`). Antes de tudo, confirme que o pedido veio do e-mail cadastrado. Depois, apague o mesmo que o app apagaria:
 
-1. Na Pluggy, em **Items**, apague as conexões com o id da pessoa (aparece como `clientUserId`).
+1. No painel da Polp, em **Consentimentos**, revogue as autorizações com o id da pessoa (aparece como `cliente_user_id`).
 2. No RevenueCat, em **Customers**, procure o id da pessoa e use **Delete customer**. Se a assinatura ainda estiver ativa, avise a pessoa de que o cancelamento é feito na loja.
 3. No Supabase, em **Authentication, Users**, apague o usuário. Os aceites, as conexões e o contador saem junto.
 
@@ -354,7 +357,7 @@ Quem não consegue abrir o app pode pedir a exclusão por e-mail (`docs/excluir-
 | O cadastro falha com "dados inválidos" | O gatilho `baiu_check_user` recusou o nome ou o celular. Veja **Logs, Postgres** |
 | Toda chamada de função dá 401 | **Enforce JWT verification** ligado (passo 6) |
 | "A conversa com IA ainda não está disponível" | Falta `ANTHROPIC_API_KEY`, a função `baiu-chat` não foi publicada ou a migração do assistente não rodou. O log da função diz qual |
-| "Conectar banco" diz que não está disponível | Faltam as chaves da Pluggy ou a migração dos bancos. O log da função `bank` diz qual |
+| "Conectar banco" diz que não está disponível | Faltam as chaves da Polp, o plano da Polp está inativo ou com fatura atrasada, ou falta a migração dos bancos. O log da função `bank` diz qual |
 | Assinante recebe o pedido para assinar | `REVENUECAT_SECRET_KEY` errada, ou direito de uso com nome diferente de `assinatura` (apêndice B) |
 | Log com "aplique a migração..." | Passo 2 |
 
@@ -380,10 +383,19 @@ Os produtos das lojas são configurados antes. Veja a seção Assinatura de `sto
    - Copie as chaves públicas do SDK (`appl_...` e `goog_...`) para o `.env.local` e para o EAS, com os nomes `EXPO_PUBLIC_REVENUECAT_IOS_KEY` e `EXPO_PUBLIC_REVENUECAT_ANDROID_KEY`. Sem elas, o app não cobra ninguém.
    - Crie uma **Secret API key** da versão 1 (`sk_...`) e cole em `REVENUECAT_SECRET_KEY` (passo 7).
 
-## Apêndice C: Pluggy (bancos), com o Pietro
+## Apêndice C: Polp (bancos), com o Pietro
 
 O Pietro cuida desta parte. O sócio só precisa receber os segredos no Supabase (passo 7).
 
-1. Em dashboard.pluggy.ai, crie um aplicativo chamado Baiu.
-2. Pegue o **Client ID** e o **Client Secret**.
-3. Para produção, o acesso ao Open Finance, a categorização e a atualização automática dependem de contrato com a Pluggy. Os produtos necessários são ACCOUNTS, CREDIT_CARDS, TRANSACTIONS, INVESTMENTS e a categorização (enrichment).
+A Polp recebe os dados dos bancos pelo Open Finance por meio da Celcoin, instituição autorizada pelo Banco Central. O Baiu usa a API v2 (`https://api.polp.com.br/api/v2`). A API antiga, que usava a Pluggy, sai do ar em 28/11/2026 e não é usada.
+
+1. Crie a conta em polp.com.br. O ambiente de teste (sandbox) não exige plano nem cobra nada.
+2. No painel, em **API Keys** (`polp.com.br/dashboard/api-keys`), toque em **Nova API Key**, dê o nome `baiu-supabase` e toque em **Gerar Chave**. O **Client ID** vai em `POLP_CLIENT_ID` e o **Client Secret** em `POLP_CLIENT_SECRET`. O secret aparece uma vez só: cole direto no Supabase. Confira se a chave ficou ativa na lista.
+3. Para testar, cadastre também `POLP_SANDBOX=1`. Apague antes de publicar.
+4. Ainda em **Open Finance**, deixe ligados os dois enriquecimentos (categorias e contrapartes): o Baiu usa as categorias.
+5. Para usar com bancos de verdade, complete os dados da empresa em **Configurações, Empresa** (razão social, CNPJ, endereço e CPF do representante; sem isso a Polp não libera os produtos) e assine um plano. Se a API responder que a conta está pendente de aprovação, é com a Polp. Sem plano ativo, ou com fatura atrasada, a Polp recusa as chamadas e o app avisa que a conexão não está disponível. Cada autorização aprovada é cobrada à parte.
+6. Volta para o app depois do banco:
+   - Ligue o GitHub Pages do repositório (**Settings, Pages**, ramo `main`, pasta `/docs`). A página `docs/open-finance/index.html` fica em `https://pietromaffessoni.github.io/Baiu/open-finance/` e abre o app.
+   - Só no plano Pro (ou Ultra): no painel da Polp, em **Open Finance**, aba da jornada do consentimento, salve esse endereço como OAuth Redirect URI. Ou cadastre `POLP_REDIRECT_URL` com o mesmo endereço. No Starter as duas opções ficam bloqueadas.
+   - Sem isso, o app funciona do mesmo jeito: depois de autorizar, a pessoa volta ao Baiu sozinha e o app confere a autorização.
+7. Antes de publicar, preencha no painel da Polp o **formulário de conformidade** da jornada do Open Finance e aceite os termos. A jornada do app segue o manual da Polp (polp.com.br/docs/celcoin/termos); os textos obrigatórios ficam em `src/lib/bank/consent-text.ts`. A Polp pode pedir capturas de tela numa auditoria.

@@ -111,9 +111,10 @@ async function captureRaw(browser) {
     const t = tools(page, 'lojas');
     await t.signup('Helena Prado', 'helena.prado@gmail.com', '11996421873');
     await t.btn('Conecte seu banco', { wait: 1200 });
-    await t.btn('Concordo e quero conectar', { wait: 1200 });
-    await t.btn('Banco Exemplo');
-    await t.btn('Autorizar', { wait: 4500 });
+    await t.btn('Continuar', { wait: 1500 });
+    await t.btn('Banco Exemplo', { wait: 700 });
+    await t.field('CPF do titular da conta').fill('52998224725');
+    await t.btn('Ir para o banco', { wait: 4500 });
     await page.screenshot({ path: path.join(RAW, 'bancos.png') });
     await ctx.close();
   }

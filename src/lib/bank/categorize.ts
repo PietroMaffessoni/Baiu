@@ -7,7 +7,7 @@ import type { RemoteTx } from './types';
  * Categoria automática dos movimentos que vêm do banco, em camadas:
  * 1. o que a pessoa já corrigiu antes (regras aprendidas);
  * 2. dinheiro que só muda de lugar (fatura, Pix para si, aplicação, resgate);
- * 3. a categoria do provedor;
+ * 3. a categoria do provedor (a da Polp, ou a antiga em inglês);
  * 4. um dicionário de lojas e serviços brasileiros;
  * 5. sem certeza: vai para "Confira", para a pessoa olhar.
  */
@@ -39,7 +39,7 @@ export function ruleKey(description: string): string | null {
 
 const has = (text: string, re: RegExp) => re.test(text);
 
-/** Categoria do provedor (em inglês) -> categoria do Baiu. */
+/** Categoria antiga do provedor (em inglês) -> categoria do Baiu. */
 const PROVIDER: [RegExp, OutCategory | InCategory][] = [
   [/^(salary|retirement|salario|aposentadoria)$/, 'salario'],
   [/^(entrepreneurial activities)$/, 'renda_extra'],
@@ -125,10 +125,48 @@ const INVEST_OUT =
   /\b(aplicacao|aplic|investimento|caixinha|cofrinho|porquinho|guardar dinheiro|tesouro direto|compra de titulo)\b/;
 const INVEST_IN = /\b(resgate|resg|retirada caixinha|venda de titulo)\b/;
 
-function provider(
-  category: string | null | undefined,
-): OutCategory | InCategory | 'transfer' | 'same' | 'invest' | 'bill' | null {
+type ProviderGuess = OutCategory | InCategory | 'transfer' | 'same' | 'invest' | 'bill';
+
+/**
+ * Categoria da Polp (taxonomia em códigos, como "FOOD_AND_DRINK_GROCERIES") ->
+ * categoria do Baiu. A primeira que bater vale; vale o começo do código.
+ */
+const POLP: [RegExp, ProviderGuess][] = [
+  [/^INCOME_(SALARY|RETIREMENT_PENSION|MILITARY)$/, 'salario'],
+  [/^INCOME_(CONTRACTOR|GIG_ECONOMY|RENTAL)$/, 'renda_extra'],
+  [/^INCOME_(DIVIDENDS|INTEREST_EARNED)$/, 'rendimento'],
+  [/^INCOME_TAX_REFUND$/, 'reembolso'],
+  [/^INCOME/, 'outras_entradas'],
+  [/^TRANSFER_(IN|OUT)_ACCOUNT_TRANSFER$/, 'same'],
+  [/^TRANSFER_(IN|OUT)_(INVESTMENT_AND_RETIREMENT_FUNDS|SAVINGS)$/, 'invest'],
+  [/^TRANSFER_/, 'transfer'],
+  [/^LOAN_PAYMENTS_CREDIT_CARD_PAYMENT$/, 'bill'],
+  [/^LOAN_DISBURSEMENTS/, 'outras_entradas'],
+  [/^(LOAN_PAYMENTS|BANK_FEES|GOVERNMENT_AND_NON_PROFIT)/, 'contas'],
+  [/^ENTERTAINMENT_(TV_AND_MOVIES|MUSIC_AND_AUDIO)$/, 'assinaturas'],
+  [/^ENTERTAINMENT/, 'lazer'],
+  [/^(FOOD_AND_DRINK_GROCERIES|GENERAL_MERCHANDISE_SUPERSTORES)$/, 'mercado'],
+  [/^FOOD_AND_DRINK/, 'alimentacao'],
+  [/^(GENERAL_MERCHANDISE_PET_SUPPLIES|MEDICAL_VETERINARY_SERVICES)$/, 'pets'],
+  [/^GENERAL_MERCHANDISE/, 'compras'],
+  [/^HOME_IMPROVEMENT/, 'casa'],
+  [/^(MEDICAL|PERSONAL_CARE_GYMS_AND_FITNESS_CENTERS)/, 'saude'],
+  [/^PERSONAL_CARE/, 'compras'],
+  [/^GENERAL_SERVICES_(EDUCATION|CHILDCARE)$/, 'educacao'],
+  [/^GENERAL_SERVICES_AUTOMOTIVE$/, 'transporte'],
+  [/^GENERAL_SERVICES/, 'contas'],
+  [/^TRANSPORTATION/, 'transporte'],
+  [/^TRAVEL/, 'viagem'],
+  [/^RENT_AND_UTILITIES_RENT$/, 'casa'],
+  [/^RENT_AND_UTILITIES/, 'contas'],
+];
+
+/** Categorias da Polp largas demais: o dicionário de lojas decide antes (cinema não é assinatura). */
+const SOFT = /^ENTERTAINMENT_(TV_AND_MOVIES|MUSIC_AND_AUDIO)$/;
+
+function provider(category: string | null | undefined): ProviderGuess | null {
   if (!category) return null;
+  if (/^[A-Z][A-Z_]+$/.test(category)) return POLP.find(([re]) => re.test(category))?.[1] ?? null;
   const c = normalize(category);
   if (/^same person transfer/.test(c)) return 'same';
   if (/^credit card payment/.test(c)) return 'bill';
@@ -198,8 +236,10 @@ export function categorize(
   }
 
   // 3 e 4. saídas
-  if (provCat && isOut(provCat)) return { kind, category: provCat, review: false, by: 'banco' };
+  const soft = SOFT.test(tx.category ?? '');
+  if (provCat && isOut(provCat) && !soft) return { kind, category: provCat, review: false, by: 'banco' };
   for (const [re, cat] of WORDS) if (re.test(text)) return { kind, category: cat, review: false, by: 'baiu' };
+  if (provCat && isOut(provCat)) return { kind, category: provCat, review: false, by: 'banco' };
   if (['TARIFA', 'PACOTE_TARIFA_SERVICOS', 'TARIFA_SERVICOS_AVULSOS', 'ENCARGOS_JUROS_CHEQUE_ESPECIAL'].includes(op)) {
     return { kind, category: 'contas', review: false, by: 'baiu' };
   }

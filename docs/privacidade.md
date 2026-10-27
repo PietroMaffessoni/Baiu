@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 15 de outubro de 2026.
+Atualizada em 23 de outubro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni, que é o controlador dos dados tratados pelo app. Esta política explica, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), quais dados usamos, por quê e como você controla cada um deles.
 
@@ -48,13 +48,15 @@ A conversa com o Baiu também fica só no aparelho, cifrada junto com os seus re
 
 Conectar bancos é opcional. Você autoriza no Baiu e depois no app do seu banco, pelo Open Finance, o sistema regulado pelo Banco Central. O Baiu nunca vê sua senha do banco e não consegue movimentar dinheiro: o acesso é só para leitura.
 
-A conexão é feita pela Pluggy, empresa brasileira que atua como operadora a pedido do Baiu. Ela recebe dos bancos os dados que você autorizar: contas, saldos, cartões e faturas, movimentos dos últimos 12 meses (valor, data e descrição) e investimentos.
+Os dados vêm do seu banco para a Celcoin Instituição de Pagamento, autorizada pelo Banco Central e participante do Open Finance, que os recebe conforme os Termos de Uso e a Norma de Privacidade Externa dela, apresentados quando você conecta. A Polp, empresa brasileira de tecnologia, faz a ponte entre a Celcoin e o Baiu, como operadora a pedido do Baiu. Elas recebem os dados que você autorizar: contas e saldos, cartões e faturas, movimentos (valor, data e descrição) e investimentos, com o histórico que cada banco disponibiliza.
+
+Para criar a autorização, você informa o seu CPF. Ele vai para a Polp e a Celcoin, e o banco confere se é o titular da conta. O Baiu não guarda o seu CPF.
 
 Para o seu aparelho mandamos só o necessário para organizar suas finanças. Não repassamos ao app seu CPF, o nome do titular, o número completo das contas nem o nome ou o documento de quem enviou ou recebeu um Pix; do outro lado de um Pix ou TED, o app só sabe se é pessoa ou empresa.
 
 Os dados passam pelo nosso servidor apenas para chegar ao seu celular. Não ficam guardados no servidor e não são registrados em logs.
 
-A autorização vale pelo prazo escolhido por você no banco, de até 12 meses. Você pode encerrá-la a qualquer momento em Ajustes, Bancos conectados, ou no app do seu banco. Ao desconectar, a conexão é apagada na Pluggy e você escolhe se mantém ou apaga do aparelho os dados que já vieram.
+A autorização vale por prazo indeterminado, até você cancelar. Você pode cancelar a qualquer momento em Bancos conectados, no próprio Baiu, ou no app do seu banco. Ali também ficam todas as autorizações que você já deu, inclusive as canceladas. Ao cancelar, o Baiu encerra a autorização no Open Finance e você escolhe se mantém ou apaga do aparelho os dados que já vieram.
 
 ## Conversa com o Baiu (inteligência artificial)
 
@@ -100,7 +102,9 @@ O celular só é usado para falar com você sobre a sua conta. Não enviamos pro
 
 Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda as funções que encaminham as perguntas à inteligência artificial e os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
 
-Pluggy: faz a conexão com os bancos pelo Open Finance, como operadora, só se você conectar algum banco. Recebe os dados que você autorizou no banco e os mantém enquanto a conexão existir, conforme o contrato dela.
+Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco enquanto a autorização existir, para entregá-los ao Baiu.
+
+Celcoin Instituição de Pagamento: instituição autorizada pelo Banco Central que recebe os dados dos bancos pelo Open Finance, só se você conectar algum banco, conforme os Termos de Uso e a Norma de Privacidade Externa dela.
 
 Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha.
 
@@ -116,7 +120,7 @@ Não compartilhamos dados com anunciantes, bancos ou parceiros comerciais. Autor
 
 Enquanto sua conta existir. Ao excluir a conta, os dados dela saem do nosso servidor na hora; cópias de segurança do provedor podem guardá-los por um curto período, até serem sobrescritas.
 
-Conexões com bancos: enquanto estiverem ativas. Ao desconectar um banco, ou ao excluir sua conta, apagamos a conexão na Pluggy; o registro da autorização fica guardado como prova do consentimento.
+Conexões com bancos: enquanto estiverem ativas. Ao cancelar uma autorização, ou ao excluir sua conta, o Baiu a encerra no Open Finance. O histórico das autorizações (banco, categorias de dados e datas) fica guardado enquanto sua conta existir, como prova do consentimento e para você consultar em Bancos conectados.
 
 O registro do aceite da conversa com IA fica guardado enquanto a conta existir, como prova do consentimento, mesmo depois de você desligar. O contador de uso da IA é apagado depois de 30 dias.
 

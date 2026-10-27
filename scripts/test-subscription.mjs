@@ -1,4 +1,4 @@
-// Testa a assinatura no servidor, em Node, com Supabase, RevenueCat, Pluggy e
+// Testa a assinatura no servidor, em Node, com Supabase, RevenueCat, Polp e
 // IA simulados. Nada vai para a internet.
 // - supabase/functions/subscription: apaga o cadastro no RevenueCat na exclusão da conta;
 // - bank e baiu-chat: só quem assina usa o que custa dinheiro.
@@ -16,8 +16,8 @@ const iso = (ms) => new Date(Date.now() + ms).toISOString();
 const ENV = {
   SUPABASE_URL: 'https://proj.supabase.co',
   SUPABASE_ANON_KEY: 'anon',
-  PLUGGY_CLIENT_ID: 'cid',
-  PLUGGY_CLIENT_SECRET: 'segredo',
+  POLP_CLIENT_ID: 'cid',
+  POLP_CLIENT_SECRET: 'segredo',
   ANTHROPIC_API_KEY: 'sk-ia',
   REVENUECAT_SECRET_KEY: 'sk_rc_secreta',
 };
@@ -56,19 +56,18 @@ function world({
     }
     if (u.host === 'proj.supabase.co') {
       if (u.pathname === '/auth/v1/user') return user ? res(200, { id: user }) : res(401, {});
-      if (u.pathname === '/rest/v1/bank_connections') return res(200, [{ item_id: 'item-1' }]);
+      if (u.pathname === '/rest/v1/bank_connections')
+        return res(200, [{ item_id: 'item-1', institution: 'Nubank', created_at: '2026-10-15T10:00:00Z', revoked_at: null, products: [] }]);
       if (u.pathname === '/rest/v1/rpc/assistant_take') return res(200, { ok: true, remaining: 5 });
       if (u.pathname.startsWith('/rest/v1/rpc/')) return res(200, null);
       return res(404, {});
     }
-    if (u.host === 'api.pluggy.ai') {
-      if (u.pathname === '/auth') return res(200, { apiKey: 'chave-pluggy' });
-      if (u.pathname === '/connect_token') return res(200, { accessToken: 'token-de-conexao' });
-      if (u.pathname.startsWith('/items/')) {
-        if (init.method === 'DELETE') return res(204);
-        return res(200, { id: 'item-1', clientUserId: UID, status: 'UPDATED', connector: { name: 'Nubank' } });
+    if (u.host === 'api.polp.com.br') {
+      if (u.pathname === '/api/v2/consents/item-1') {
+        if (init.method === 'DELETE') return res(200, { message: 'Consentimento revogado.' });
+        return res(200, { data: { id: 'item-1', cliente_user_id: UID, status: 'AUTHORISED', execution_status: 'SUCCESS' } });
       }
-      return res(200, { results: [] });
+      return res(200, { data: [], meta: { next_cursor: null } });
     }
     if (u.pathname === '/v1/messages')
       return res(200, { content: [{ type: 'text', text: 'Guarde 10%.' }], stop_reason: 'end_turn' });
@@ -122,32 +121,32 @@ const rcCalls = (calls) => calls.filter((c) => c.url.startsWith('https://api.rev
 }
 ok(
   'bancos: no mês grátis também funciona',
-  (await callBank({ action: 'token' }, world({ ent: { expires_date: iso(10 * DAY), period_type: 'trial' } })))
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ ent: { expires_date: iso(10 * DAY), period_type: 'trial' } })))
     .status === 200,
 );
 {
   const r = await callBank({ action: 'sync', since: {} }, world({ ent: null }));
   ok(
     'bancos: sem assinatura, 402 e nada é lido no banco',
-    r.status === 402 && r.body.error === 'subscription' && !r.calls.some((c) => c.url.includes('pluggy')),
+    r.status === 402 && r.body.error === 'subscription' && !r.calls.some((c) => c.url.includes('polp')),
   );
 }
 ok(
   'bancos: assinatura vencida, 402',
-  (await callBank({ action: 'token' }, world({ ent: { expires_date: iso(-DAY) } }))).status === 402,
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ ent: { expires_date: iso(-DAY) } }))).status === 402,
 );
 ok(
   'bancos: vencida mas no prazo de acerto do pagamento, libera',
   (
     await callBank(
-      { action: 'refresh', itemId: 'item-1' },
+      { action: 'status', itemId: 'item-1' },
       world({ ent: { expires_date: iso(-DAY), grace_period_expires_date: iso(5 * DAY) } }),
     )
   ).status === 200,
 );
 ok(
   'bancos: cortesia sem data de fim, libera',
-  (await callBank({ action: 'token' }, world({ ent: { expires_date: null } }))).status === 200,
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ ent: { expires_date: null } }))).status === 200,
 );
 {
   const r = await callBank({ action: 'unlink', itemId: 'item-1' }, world({ ent: null }));
@@ -158,29 +157,29 @@ ok(
   (await callBank({ action: 'unlink_all' }, world({ ent: null }))).status === 200,
 );
 {
-  const r = await callBank({ action: 'token' }, world({ rc: 'cai' }));
+  const r = await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 'cai' }));
   ok(
     'bancos: RevenueCat fora do ar não libera, pede para tentar de novo',
-    r.status === 503 && r.body.error === 'busy' && !r.calls.some((c) => c.url.includes('connect_token')),
+    r.status === 503 && r.body.error === 'busy' && !r.calls.some((c) => c.url.includes('polp')),
   );
 }
 ok(
   'bancos: RevenueCat com erro 500 não libera',
-  (await callBank({ action: 'token' }, world({ rc: 500 }))).body.error === 'busy',
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 500 }))).body.error === 'busy',
 );
 ok(
   'bancos: RevenueCat com limite de chamadas (429) não libera',
-  (await callBank({ action: 'token' }, world({ rc: 429 }))).body.error === 'busy',
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 429 }))).body.error === 'busy',
 );
 {
   _resetCache();
   resetBank();
-  const first = await bank(req('bank', { action: 'token' }), env(), world().http);
-  const r = await bank(req('bank', { action: 'token' }), env(), world({ rc: 'cai' }).http);
+  const first = await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), world().http);
+  const r = await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), world({ rc: 'cai' }).http);
   ok('bancos: quem foi conferido há pouco segue liberado se o RevenueCat cair', first.status === 200 && r.status === 200);
 }
 {
-  const r = await callBank({ action: 'token' }, world({ rc: 401 }));
+  const r = await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 401 }));
   ok('bancos: chave do RevenueCat recusada bloqueia e avisa', r.status === 503 && r.body.error === 'not_configured');
 }
 {
@@ -191,7 +190,7 @@ ok(
   );
   ok(
     'bancos: sem a chave do RevenueCat no servidor, indisponível',
-    r.status === 503 && r.body.error === 'not_configured' && !r.calls.some((c) => c.url.includes('pluggy')),
+    r.status === 503 && r.body.error === 'not_configured' && !r.calls.some((c) => c.url.includes('polp')),
   );
 }
 {
@@ -210,8 +209,8 @@ ok(
   _resetCache();
   resetBank();
   const w = world();
-  await bank(req('bank', { action: 'token' }), env(), w.http);
-  await bank(req('bank', { action: 'token' }), env(), w.http);
+  await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), w.http);
+  await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), w.http);
   ok('bancos: guarda a conferência por alguns minutos', rcCalls(w.calls).length === 1);
 }
 

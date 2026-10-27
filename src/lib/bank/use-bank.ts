@@ -6,8 +6,12 @@ import { useStore } from '@/store/store';
 import { bankBackend, BankFailure, type BankBackend, type BankErrorCode } from './client';
 import { mergeBankSync, type SyncSummary } from './merge';
 
-/** Busca automática no máximo a cada 30 minutos, ao abrir ou voltar ao app. */
-const AUTO_EVERY = 30 * 60_000;
+/**
+ * Busca automática no máximo a cada hora, ao abrir ou voltar ao app. A Polp
+ * atualiza saldos a cada 2 horas e movimentos a cada 3 (limite do Open
+ * Finance): buscar mais vezes só gasta o limite de requisições.
+ */
+const AUTO_EVERY = 60 * 60_000;
 
 type Status = { running: boolean; error?: BankErrorCode; last?: SyncSummary; at?: number };
 
@@ -57,27 +61,6 @@ export function useBank(backend: BankBackend = bankBackend) {
     }
   }, [backend, dispatch]);
 
-  /** Pede dados novos ao banco e espera a coleta terminar (até cerca de 40 segundos). */
-  const refresh = useCallback(
-    async (itemId: string) => {
-      try {
-        await backend.refresh(itemId);
-      } catch (e) {
-        set({ error: e instanceof BankFailure ? e.code : 'unknown' });
-        return null;
-      }
-      let summary: SyncSummary | null = null;
-      for (let i = 0; i < 8; i++) {
-        await new Promise((r) => setTimeout(r, i === 0 ? 1500 : 4000));
-        summary = await syncNow();
-        const item = latest.current.bank.items.find((x) => x.id === itemId);
-        if (!item || item.status !== 'atualizando') break;
-      }
-      return summary;
-    },
-    [backend, syncNow],
-  );
-
   const unlink = useCallback(
     async (itemId: string, keep: boolean) => {
       await backend.unlink(itemId);
@@ -86,7 +69,7 @@ export function useBank(backend: BankBackend = bankBackend) {
     [backend, dispatch],
   );
 
-  return { syncNow, refresh, unlink, backend };
+  return { syncNow, unlink, backend };
 }
 
 /** Mantém os bancos em dia sozinho: ao abrir o app e ao voltar para ele. */

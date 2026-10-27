@@ -121,6 +121,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="assistente-dados" options={sheet} />
               <Stack.Screen name="conectar" options={modal} />
               <Stack.Screen name="bancos" options={{ ...pushedHeader, title: 'Bancos conectados' }} />
+              <Stack.Screen name="autorizacao/[id]" options={{ ...pushedHeader, title: 'Autorização' }} />
               <Stack.Screen name="revisar" options={{ ...pushedHeader, title: 'Confira' }} />
               <Stack.Screen name="open-finance" options={{ animation: 'none' }} />
               <Stack.Screen name="nova-conta" options={modal} />

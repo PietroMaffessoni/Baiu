@@ -59,6 +59,30 @@ describe('categoria automática', () => {
     expect(cat(debit('X', { category: 'Pet supplies and vet' })).category).toBe('pets');
   });
 
+  it('entende as categorias da Polp', () => {
+    expect(cat(debit('ESTABELECIMENTO 123', { category: 'FOOD_AND_DRINK_GROCERIES' }))).toMatchObject({
+      category: 'mercado',
+      by: 'banco',
+    });
+    expect(cat(debit('X', { category: 'FOOD_AND_DRINK_RESTAURANT' })).category).toBe('alimentacao');
+    expect(cat(debit('X', { category: 'RENT_AND_UTILITIES_GAS_AND_ELECTRICITY' })).category).toBe('contas');
+    expect(cat(debit('X', { category: 'RENT_AND_UTILITIES_RENT' })).category).toBe('casa');
+    expect(cat(debit('X', { category: 'MEDICAL_VETERINARY_SERVICES' })).category).toBe('pets');
+    expect(cat(debit('X', { category: 'TRANSPORTATION_TAXIS_AND_RIDE_SHARES' })).category).toBe('transporte');
+    expect(cat(credit('ACME', { category: 'INCOME_SALARY' })).category).toBe('salario');
+    expect(cat(credit('X', { category: 'INCOME_DIVIDENDS' })).category).toBe('rendimento');
+    expect(cat(debit('PAG FAT', { category: 'LOAN_PAYMENTS_CREDIT_CARD_PAYMENT' })).internal).toBe('fatura');
+    expect(cat(debit('PIX', { category: 'TRANSFER_OUT_ACCOUNT_TRANSFER' })).internal).toBe('mesma-pessoa');
+    expect(cat(debit('APLIC', { category: 'TRANSFER_OUT_INVESTMENT_AND_RETIREMENT_FUNDS' })).internal).toBe('aplicacao');
+    expect(cat(debit('X', { category: 'OTHER_OTHER' }))).toMatchObject({ category: 'outros', review: true });
+  });
+
+  it('streaming da Polp é assinatura, mas o nome da loja decide antes (cinema é lazer)', () => {
+    expect(cat(debit('NETFLIX.COM', { category: 'ENTERTAINMENT_TV_AND_MOVIES' })).category).toBe('assinaturas');
+    expect(cat(debit('SERVICO X', { category: 'ENTERTAINMENT_TV_AND_MOVIES' })).category).toBe('assinaturas');
+    expect(cat(debit('CINEMARK SHOPPING', { category: 'ENTERTAINMENT_TV_AND_MOVIES' })).category).toBe('lazer');
+  });
+
   it('reconhece salário pelo provedor, pela operação ou pelo texto', () => {
     expect(cat(credit('ACME', { category: 'Salary' })).category).toBe('salario');
     expect(cat(credit('CREDITO', { operationType: 'FOLHA_PAGAMENTO' })).category).toBe('salario');
@@ -457,15 +481,27 @@ describe('casos especiais', () => {
 });
 
 describe('banco de teste', () => {
-  it('cria, busca e desconecta', async () => {
+  it('autoriza, busca e cancela, guardando o histórico', async () => {
     const b = createFakeBank({ now: () => NOW });
-    const id = b._create('exemplo');
-    await expect(b.link(id)).resolves.toMatchObject({ id, name: 'Banco Exemplo' });
+    const banks = await b.institutions();
+    expect(banks.map((x) => x.name)).toContain('Banco Exemplo');
+    const c = await b.start('exemplo', '529.982.247-25');
+    expect(c).toMatchObject({ name: 'Banco Exemplo', status: 'AUTHORISED', url: null });
+    await expect(b.status(c.id)).resolves.toMatchObject({ consent: 'AUTHORISED', item: { id: c.id } });
     const p = await b.sync({});
     expect(p.accounts).toHaveLength(2);
     expect(p.transactions.every((t) => new Date(t.date) <= NOW)).toBe(true);
-    await b.unlink(id);
+    await b.unlink(c.id);
     expect((await b.sync({})).items).toHaveLength(0);
+    const [h] = await b.history();
+    expect(h).toMatchObject({ id: c.id, status: 'cancelada', products: ['ACCOUNT', 'CREDIT_CARD_ACCOUNT', 'INVESTMENTS'] });
+    expect(h.revokedAt).toBe(NOW.toISOString());
+  });
+
+  it('CPF inválido e banco fora do ar', async () => {
+    const b = createFakeBank();
+    await expect(b.start('exemplo', '111.111.111-11')).rejects.toEqual(new BankFailure('cpf'));
+    await expect(b.start('parado', '529.982.247-25')).rejects.toEqual(new BankFailure('bank_down'));
   });
 
   it('sem internet', async () => {
@@ -474,6 +510,6 @@ describe('banco de teste', () => {
   });
 
   it('conexão que não existe', async () => {
-    await expect(createFakeBank().link('nada')).rejects.toEqual(new BankFailure('not_found'));
+    await expect(createFakeBank().status('nada')).rejects.toEqual(new BankFailure('not_found'));
   });
 });

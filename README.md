@@ -9,7 +9,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 | Área | O que dá para fazer |
 | --- | --- |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
-| Bancos conectados | Open Finance pela Pluggy: contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
+| Bancos conectados | Open Finance pela Polp (dados recebidos pela Celcoin): contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
 | Assinatura | Primeiro mês grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |
 | Contas | Conta corrente, reserva, cartão de crédito e corretora, conectadas ou com saldo informado pelo usuário |
 | Movimentos | Entradas, saídas e transferências, com categoria, forma de pagamento e data; editar e apagar |
@@ -46,17 +46,18 @@ A regra está em `src/lib/folego.ts`.
 
 ## Como a conexão com bancos funciona
 
-1. **Conectar:** a pessoa autoriza no Baiu e no app do banco, pelo widget da Pluggy (`src/app/conectar.tsx`). A conexão é criada com o id da pessoa no provedor.
-2. **Buscar:** a função `supabase/functions/bank` confere o login, confere no provedor que a conexão é da pessoa e devolve contas, movimentos e investimentos enxutos, sem CPF nem nomes. Nada fica guardado no servidor.
+1. **Conectar:** na jornada exigida pelo Banco Central (`src/app/conectar.tsx`), a pessoa aceita os termos da Celcoin, escolhe o banco, confere as categorias de dados, a finalidade e o prazo, informa o CPF e autoriza no app do banco. A autorização é criada na Polp com o id da pessoa. Os textos obrigatórios estão em `src/lib/bank/consent-text.ts`.
+2. **Buscar:** a função `supabase/functions/bank` confere o login, confere na Polp que a autorização é da pessoa e devolve contas, movimentos e investimentos enxutos, sem CPF nem nomes. Nada fica guardado no servidor.
 3. **Organizar no aparelho** (`src/lib/bank/merge.ts` e `categorize.ts`): saldos vêm do banco; cada movimento ganha uma categoria (regras aprendidas, depois a categoria do provedor, depois um dicionário de lojas); pagamento de fatura, Pix para si e aplicações viram transferências; salário é reconhecido pela repetição; vencimentos cadastrados são marcados como pagos.
-4. **Atualizar:** ao abrir o app e ao voltar para ele (no máximo a cada 30 minutos), puxando a tela inicial para baixo, ou em Bancos conectados.
+4. **Atualizar:** a Polp sincroniza com os bancos sozinha (saldos a cada 2 horas, movimentos a cada 3, pelo limite do Open Finance). O app busca ao abrir e ao voltar para ele (no máximo a cada hora), puxando a tela inicial para baixo, ou em Bancos conectados.
 5. **Conferir:** o que o Baiu não teve certeza vai para "Confira". Corrigir uma categoria corrige os parecidos e vale para os próximos.
+6. **Cancelar:** Bancos conectados é o "Portal" do Open Finance: mostra todas as autorizações, inclusive as canceladas (`src/app/autorizacao/[id].tsx`), e cancela a qualquer momento.
 
 ## Como a assinatura funciona
 
 1. **Assinar:** depois do cadastro, a tela `src/app/assinatura.tsx` mostra o que está incluso, o preço e as condições. A compra acontece na loja do celular; o Baiu nunca vê dados de pagamento.
 2. **Conferir:** o RevenueCat (`src/lib/subscription/revenuecat.ts`) confere os recibos e conhece a pessoa só pelo id da conta. Sem assinatura ativa, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os registros.
-3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Pluggy ou com a IA. Desconectar bancos e excluir a conta funcionam sempre.
+3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Polp ou com a IA. Desconectar bancos e excluir a conta funcionam sempre.
 4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim do mês grátis, uma notificação avisa.
 5. **Excluir a conta:** a função `supabase/functions/subscription` apaga o cadastro no RevenueCat.
 

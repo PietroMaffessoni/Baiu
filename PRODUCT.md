@@ -10,7 +10,7 @@ adaptive
 
 ## Stack
 
-Expo SDK 57 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Pluggy, IA pela Anthropic e assinatura pelas lojas com o RevenueCat. Os módulos nativos (webview do widget dos bancos e compras) exigem build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
+Expo SDK 57 + expo-router + TypeScript. Servidor no Supabase (contas, aceites e as funções da IA, dos bancos e da assinatura). Open Finance pela Polp (com a Celcoin), IA pela Anthropic e assinatura pelas lojas com o RevenueCat. O módulo nativo de compras exige build de desenvolvimento ou de teste: o app completo não roda no Expo Go.
 
 ## Users
 
@@ -31,7 +31,7 @@ Uso no celular, em sessões curtas: conferir saldo consolidado, ver um gasto que
 ## Capabilities and Constraints
 
 - Versão 1.0: conta de usuário (Supabase, código por e-mail), registros financeiros só no aparelho e cifrados, modo exemplo sem conta.
-- Conexão real com bancos pelo Open Finance, via Pluggy (contrato de produção pendente). Contas manuais continuam possíveis.
+- Conexão real com bancos pelo Open Finance, via Polp (plano de produção pendente). Contas manuais continuam possíveis.
 - Assistente: avisos e respostas prontas calculados no aparelho; conversa com IA (Anthropic) opcional, com consentimento.
 - Monetização: assinatura mensal com o primeiro mês grátis, pelas lojas, conferida pelo RevenueCat. Preço a definir (R$ 14,90 é o exemplo usado nos textos).
 - Indefinido: fórmula final do índice de saúde financeira (a regra atual é simples e explicável, em `src/lib/folego.ts`).

@@ -16,7 +16,7 @@ Na tela Entrar, toque em "Esqueci minha senha". Enviamos um código para o seu e
 Confira a caixa de spam e a aba de promoções. Espere um minuto e toque em "Reenviar código". Se o e-mail já tiver conta, nenhum código é enviado: entre com sua senha ou recupere a senha.
 
 **Troquei de celular e meus registros sumiram.**
-Sua conta funciona em qualquer aparelho. Os bancos conectados voltam sozinhos no aparelho novo, com os movimentos dos últimos 12 meses. Já o que você digitou à mão fica só no aparelho onde foi criado, e a chave que protege esses registros não sai dele. Antes de trocar de aparelho, use Ajustes, Exportar movimentos, para guardar uma cópia em planilha.
+Sua conta funciona em qualquer aparelho. Os bancos conectados voltam sozinhos no aparelho novo, com o histórico de movimentos que os bancos disponibilizam. Já o que você digitou à mão fica só no aparelho onde foi criado, e a chave que protege esses registros não sai dele. Antes de trocar de aparelho, use Ajustes, Exportar movimentos, para guardar uma cópia em planilha.
 
 **Como corrijo meus dados?**
 Em Ajustes, toque no seu nome para abrir Minha conta. Lá você corrige nome e celular e troca a senha. Para trocar o e-mail, escreva para o suporte.
@@ -27,19 +27,19 @@ Em Minha conta, toque em "Excluir conta". A exclusão também desconecta seus ba
 ### Bancos conectados
 
 **O Baiu se conecta ao meu banco?**
-Sim, se você quiser. Em Contas, toque em "Conectar banco". A conexão usa o Open Finance, o sistema regulado pelo Banco Central, por meio da Pluggy, empresa brasileira que faz a ponte com os bancos. Você autoriza no app do seu banco; o Baiu nunca vê sua senha e o acesso é só para leitura, então ele não consegue movimentar dinheiro. Se preferir, cadastre as contas à mão e informe os saldos.
+Sim, se você quiser. Em Contas, toque em "Conectar banco". A conexão usa o Open Finance, o sistema regulado pelo Banco Central, por meio da Celcoin, instituição autorizada pelo Banco Central, e da Polp, empresa brasileira que faz a ponte com o Baiu. Você autoriza no app do seu banco; o Baiu nunca vê sua senha e o acesso é só para leitura, então ele não consegue movimentar dinheiro. Se preferir, cadastre as contas à mão e informe os saldos.
 
 **O que o Baiu recebe do banco?**
-Contas, saldos, cartões e faturas, investimentos e os movimentos dos últimos 12 meses (valor, data e descrição). Seu CPF, o nome do titular, o número completo das contas e o nome de quem enviou ou recebeu um Pix não chegam ao app.
+Contas, saldos, cartões e faturas, investimentos e os movimentos (valor, data e descrição), com o histórico que o seu banco disponibiliza. Seu CPF, o nome do titular, o número completo das contas e o nome de quem enviou ou recebeu um Pix não chegam ao app.
 
 **Meus movimentos não atualizaram.**
-O Baiu busca os movimentos novos quando você abre o app, quando volta para ele (no máximo a cada 30 minutos) e quando você puxa a tela inicial para baixo. Em Ajustes, Bancos conectados, toque em "Atualizar agora". Se ali aparecer "Precisa reconectar", toque em "Reconectar" e autorize de novo no app do banco. Alguns bancos levam algumas horas para mostrar um movimento pelo Open Finance.
+O Baiu busca os movimentos novos quando você abre o app, quando volta para ele (no máximo a cada hora) e quando você puxa a tela inicial para baixo. Em Ajustes, Bancos conectados, toque em "Atualizar agora". Se ali aparecer "Precisa reconectar", toque em "Reconectar" e autorize de novo no app do banco. Pelas regras do Open Finance, saldos se atualizam a cada 2 horas e movimentos a cada 3; alguns bancos levam mais tempo.
 
 **Um movimento veio com a categoria errada.**
 Toque no movimento e troque a categoria. O Baiu aprende: os movimentos parecidos mudam junto e os próximos já chegam certos. O que ele não teve certeza aparece em "Confira", na tela inicial.
 
 **Como desconecto um banco?**
-Em Ajustes, Bancos conectados, toque em "Desconectar". Você escolhe entre manter no aparelho o que já veio, como contas manuais, ou apagar tudo daquele banco. A autorização também pode ser cancelada no app do seu banco, na área de Open Finance.
+Em Contas, Bancos conectados, toque em "Desconectar", ou toque na autorização em "Suas autorizações" e em "Cancelar autorização". Você escolhe entre manter no aparelho o que já veio, como contas manuais, ou apagar tudo daquele banco. A autorização também pode ser cancelada no app do seu banco, na área de Open Finance. O histórico das autorizações, inclusive as canceladas, fica em Bancos conectados.
 
 ### Conversa com o Baiu e inteligência artificial
 

@@ -57,3 +57,6 @@ google-service-account.json
 # testes de navegador: versão web gerada e capturas das falhas
 e2e/.web/
 e2e/capturas/
+
+# Supabase CLI (dados locais do link)
+supabase/.temp/
