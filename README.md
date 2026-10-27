@@ -8,6 +8,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 
 | Área | O que dá para fazer |
 | --- | --- |
+| Apresentação | No primeiro uso do aparelho, antes das boas-vindas: os números do dinheiro no Brasil (dívidas, nome negativado, reserva, assinaturas), cada um com fonte, a conta "E no seu bolso?" e o que o Baiu faz. Dados e fontes em `src/content/apresentacao.ts` |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
 | Bancos conectados | Open Finance pela Polp (dados recebidos pela Celcoin): contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
 | Assinatura | Primeiro mês grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |

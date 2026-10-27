@@ -14,7 +14,7 @@ const { PORT, launch, newPhone, tools } = require('./lib');
 
 const ROOT = path.resolve(__dirname, '..');
 const WEB = path.join(__dirname, '.web');
-const SUITES = ['fluxo', 'cadastro', 'bancos', 'assistente', 'assinatura', 'personalizar', 'telas-pequenas'];
+const SUITES = ['apresentacao', 'fluxo', 'cadastro', 'bancos', 'assistente', 'assinatura', 'personalizar', 'telas-pequenas'];
 
 /** Gera a versão web com os serviços falsos (EXPO_PUBLIC_AUTH_FAKE=1). */
 function build() {

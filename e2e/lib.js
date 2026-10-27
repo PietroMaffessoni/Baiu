@@ -139,9 +139,13 @@ function tools(page, suite, pace = {}) {
   return { page, results, W, text, shot, go, btn, tap, radio, field, fill, typeIn, keys, step, passPaywall, signup, signOut, BASE, CODE, PASSWORD };
 }
 
-/** Abre uma aba de celular e junta os erros do console. */
-async function newPhone(browser, extra = {}) {
+/**
+ * Abre uma aba de celular e junta os erros do console. A apresentação do
+ * primeiro uso já vem vista; `intro: true` mostra (roteiro "apresentacao").
+ */
+async function newPhone(browser, { intro, ...extra } = {}) {
   const ctx = await browser.newContext({ ...phone, ...extra });
+  if (!intro) await ctx.addInitScript(() => localStorage.setItem('baiu:apresentacao-vista', '1'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message));
