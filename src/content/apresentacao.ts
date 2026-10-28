@@ -21,31 +21,22 @@ const thousands = (n: number) => Math.round(n).toLocaleString('pt-BR');
 
 export const STATS: Stat[] = [
   {
-    value: 82,
+    value: 48,
     format: (n) => `${Math.round(n)}%`,
-    spoken: '82 por cento',
-    title: 'das famílias brasileiras têm dívidas',
-    detail: 'Cartão, carnê, empréstimo, financiamento: 8 em cada 10 famílias começam o mês devendo. E 3 em cada 10 têm contas em atraso.',
-    source: 'CNC, Pesquisa de Endividamento e Inadimplência do Consumidor (Peic), agosto de 2026.',
-    score: 46,
+    spoken: '48 por cento',
+    title: 'dos brasileiros não controlam o próprio dinheiro',
+    detail: '1 em cada 4 confia só na memória para lembrar o que gastou, e 1 em cada 5 não anota nada. Você sabe quanto gastou no mês passado?',
+    source: 'CNDL e SPC Brasil, pesquisa de educação financeira nas 27 capitais, janeiro de 2020.',
+    score: 34,
   },
   {
-    value: 84,
-    format: (n) => `${Math.round(n)} milhões`,
-    spoken: '84 milhões',
-    title: 'de brasileiros estão com o nome negativado',
-    detail: 'Uma conta atrasada vira juros, que viram outra conta atrasada.',
-    source: 'Serasa, Mapa da Inadimplência, agosto de 2026 (83,98 milhões).',
-    score: 30,
-  },
-  {
-    value: 63,
+    value: 62,
     format: (n) => `${Math.round(n)}%`,
-    spoken: '63 por cento',
-    title: 'não têm reserva suficiente para emergências',
-    detail: '31% não têm nenhum dinheiro guardado. Basta um imprevisto para a conta ir parar no cartão.',
-    source: 'Anbima e Datafolha, Raio-X do Investidor, 9ª edição, com dados de 2025 (31% sem reserva e 32% com menos do que o recomendado).',
-    score: 18,
+    spoken: '62 por cento',
+    title: 'dos milionários sabem quanto a família gasta com comida, roupa e moradia',
+    detail: 'Entre quem ganha bem mas não ficou rico, só 35% sabem. Aqui, só 13% das classes A e B estão sem reserva para emergências; nas classes D e E, são 48%.',
+    source: 'Thomas Stanley e William Danko, "O Milionário Mora ao Lado", pesquisa com milionários dos EUA; Anbima e Datafolha, Raio-X do Investidor, 9ª edição (dados de 2025).',
+    score: 68,
   },
   {
     value: 1416,
@@ -54,7 +45,7 @@ export const STATS: Stat[] = [
     title: 'por ano em assinaturas, em média',
     detail: 'São R$ 118 por mês, em quase 4 serviços. E 1 em cada 3 brasileiros paga por uma assinatura que nem usa.',
     source: 'Bango, pesquisa feita pela 3Gem em abril e maio de 2024.',
-    score: 8,
+    score: 14,
   },
 ];
 

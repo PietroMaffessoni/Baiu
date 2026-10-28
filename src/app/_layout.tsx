@@ -103,15 +103,17 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
         <Unreadable />
       ) : (
         <LockGate>
+          {/* cada grupo diz para onde vai quem não pode entrar nele (redirectTo, SDK 58): sem isso o
+              Expo Router escolhe "a primeira tela disponível", e a ordem não é garantida */}
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.night } }}>
-            <Stack.Protected guard={!inApp}>
+            <Stack.Protected guard={!inApp} redirectTo="/">
               <Stack.Screen name="boas-vindas" options={{ animation: 'fade' }} />
               <Stack.Screen name="cadastro" />
               <Stack.Screen name="entrar" />
               <Stack.Screen name="verificar-email" />
               <Stack.Screen name="recuperar-senha" />
             </Stack.Protected>
-            <Stack.Protected guard={inApp && !locked}>
+            <Stack.Protected guard={inApp && !locked} redirectTo={inApp ? '/assinatura' : '/boas-vindas'}>
               <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
               <Stack.Screen name="conta/[id]" options={{ ...pushedHeader, title: '' }} />
               <Stack.Screen name="vencimentos" options={{ ...pushedHeader, title: 'Vencimentos' }} />
@@ -136,8 +138,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="investimento/[id]" options={sheet} />
               <Stack.Screen name="folego" options={sheet} />
             </Stack.Protected>
-            <Stack.Protected guard={signedIn}>
-              {/* primeira da lista: é para onde vai quem está sem assinatura */}
+            <Stack.Protected guard={signedIn} redirectTo={inApp ? '/' : '/boas-vindas'}>
               <Stack.Screen name="assinatura" options={{ ...pushedHeader, title: 'Assinatura' }} />
               <Stack.Screen name="minha-conta" options={{ ...pushedHeader, title: 'Minha conta' }} />
             </Stack.Protected>
