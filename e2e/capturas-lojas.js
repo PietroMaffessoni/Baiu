@@ -15,7 +15,7 @@ const { BASE, PORT, launch, newPhone, tools } = require('./lib');
 const ROOT = path.resolve(__dirname, '..');
 const WEB = path.join(__dirname, '.web');
 const RAW = path.join(__dirname, 'capturas', 'lojas');
-// Data fixa e sem enfeite de época (o Baiu usa chapéu no Halloween, gorro no Natal...): as imagens não mudam com o dia.
+// Data fixa: as imagens não mudam com o dia.
 const DIA = new Date('2026-11-10T12:00:00-03:00');
 const OUT = path.join(ROOT, 'store', 'imagens');
 const url = (p) => 'file:///' + p.replace(/\\/g, '/');
@@ -29,7 +29,6 @@ const SHOTS = [
   ['extrato', 'Veja para onde foi', 'O extrato do mês, dia a dia.'],
   ['vencimentos', 'Nenhum vencimento esquecido', 'Lembrete um dia antes e no dia.'],
   ['investir', 'Investimentos em dia', 'Rendimento do mês e constância de aportes.'],
-  ['personalizar', 'Do seu jeito', 'Escolha a cor e veja o Baiu nas datas comemorativas.'],
 ];
 
 function build() {
@@ -94,12 +93,6 @@ async function captureRaw(browser) {
     await t.btn('Ajustes', { wait: 900 });
     await t.tap('Vencimentos', { nth: -1, wait: 900 });
     await shot('vencimentos');
-    await back();
-    await t.tap('Personalizar o Baiu', { wait: 900 });
-    await page.getByRole('radio', { name: 'Turquesa', exact: true }).click();
-    await t.W(400);
-    await page.getByRole('button', { name: /^Natal,/ }).click();
-    await shot('personalizar');
     await ctx.close();
   }
 

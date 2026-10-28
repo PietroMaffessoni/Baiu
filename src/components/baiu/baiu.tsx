@@ -15,10 +15,9 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { moodOf, type Mood } from '@/lib/folego';
-import { paletteFor, type BaiuColor, type Season } from '@/lib/look';
+import { paletteFor } from '@/lib/palette';
 import { BaiuBody, BaiuEyes, BaiuFin, Halo } from './art';
 import { CX, geom, VB_H, VB_W } from './geometry';
-import { useBaiuLook } from './use-look';
 
 type Props = {
   /** Fôlego de 0 a 100. Define humor e tamanho. */
@@ -32,10 +31,6 @@ type Props = {
   interactive?: boolean;
   /** Mostra a luz suave atrás do Baiu. */
   halo?: boolean;
-  /** Força uma cor (prévia da personalização). */
-  color?: BaiuColor;
-  /** Força um enfeite; null tira o enfeite da data. */
-  season?: Season | null;
 };
 
 const FIN_SPEED: Record<Mood, number> = { estufado: 520, cheio: 700, meio: 950, murcho: 1500 };
@@ -48,20 +43,8 @@ export function levelScale(score: number) {
 /** Altura da caixa de desenho para uma largura. */
 export const baiuHeight = (width: number) => (width * VB_H) / VB_W;
 
-export function Baiu({
-  score,
-  width = 180,
-  still,
-  mood: forced,
-  interactive = false,
-  halo = true,
-  color: forcedColor,
-  season: forcedSeason,
-}: Props) {
+export function Baiu({ score, width = 180, still, mood: forced, interactive = false, halo = true }: Props) {
   const mood = forced ?? moodOf(score).mood;
-  const look = useBaiuLook();
-  const tint = forcedColor ?? look.color;
-  const season = forcedSeason === undefined ? look.season : forcedSeason;
   const reduce = useReducedMotion();
   const animate = !still && !reduce;
   const [puffed, setPuffed] = useState(false);
@@ -69,10 +52,10 @@ export function Baiu({
   const f = width / VB_W;
   const H = baiuHeight(width);
   const g = geom(mood);
-  const pal = paletteFor(tint, mood);
+  const pal = paletteFor(mood);
   // id único por Baiu: na web, dois desenhos na mesma página não podem dividir o degradê
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
-  const id = `baiu-${uid}-${tint}-${mood}`;
+  const id = `baiu-${uid}-${mood}`;
   const haloSize = width * 2;
   const bodyCenterY = g.cy * f;
 
@@ -189,7 +172,7 @@ export function Baiu({
         <BaiuFin mood={mood} width={width} side={1} pal={pal} />
       </Animated.View>
       <View style={styles.abs}>
-        <BaiuBody mood={mood} width={width} pal={pal} id={id} puffed={puffed} season={season} />
+        <BaiuBody mood={mood} width={width} pal={pal} id={id} puffed={puffed} />
       </View>
       <Animated.View style={[styles.abs, eyeStyle]}>
         <BaiuEyes mood={mood} width={width} puffed={puffed} />

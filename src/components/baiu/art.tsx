@@ -1,8 +1,8 @@
 import type { ReactNode } from 'react';
-import Svg, { Circle, ClipPath, Defs, Ellipse, G, Line, Path, RadialGradient, Rect, Stop } from 'react-native-svg';
+import Svg, { Circle, ClipPath, Defs, Ellipse, G, Line, Path, RadialGradient, Stop } from 'react-native-svg';
 
 import type { Mood } from '@/lib/folego';
-import type { BaiuPalette, Season } from '@/lib/look';
+import type { BaiuPalette } from '@/lib/palette';
 import { color } from '@/theme/tokens';
 import { bodyPath, CX, geom, rimPoint, VB_H, VB_W } from './geometry';
 
@@ -26,8 +26,8 @@ const SPINE_ANGLES = Array.from({ length: 26 }, (_, i) => i * (360 / 26) + 3).fi
     (a < 246 || a > 296),
 );
 
-/** Corpo do baiacu: rabo, dorsal, pele, barriga, pintas, espinhos, rosto e enfeite da data. */
-export function BaiuBody({ mood, width, pal, id, puffed, season }: ArtProps & { season?: Season | null }) {
+/** Corpo do baiacu: rabo, dorsal, pele, barriga, pintas, espinhos e rosto. */
+export function BaiuBody({ mood, width, pal, id, puffed }: ArtProps) {
   const g = geom(mood);
   const d = bodyPath(mood);
   const showSpines = puffed || mood === 'estufado';
@@ -88,26 +88,24 @@ export function BaiuBody({ mood, width, pal, id, puffed, season }: ArtProps & { 
         ))}
       </G>
 
-      {/* nadadeira dorsal: some quando há chapéu */}
-      {(!season || season === 'namorados') && (
-        <G transform={`translate(${dorsal.x} ${dorsal.y})`}>
-          <Path
-            d="M -16 6 C -14 -8 -4 -19 9 -21 C 13 -13 16 -4 16 7 Z"
-            fill={pal.fin}
-            stroke={pal.rim}
-            strokeOpacity={0.5}
-            strokeWidth={1.2}
-            strokeLinejoin="round"
-          />
-          {[
-            [-8, -10],
-            [0, -15],
-            [8, -16],
-          ].map(([x, y]) => (
-            <Line key={x} x1={x * 0.3} y1={4} x2={x} y2={y} stroke={pal.rim} strokeOpacity={0.35} strokeWidth={1} />
-          ))}
-        </G>
-      )}
+      {/* nadadeira dorsal */}
+      <G transform={`translate(${dorsal.x} ${dorsal.y})`}>
+        <Path
+          d="M -16 6 C -14 -8 -4 -19 9 -21 C 13 -13 16 -4 16 7 Z"
+          fill={pal.fin}
+          stroke={pal.rim}
+          strokeOpacity={0.5}
+          strokeWidth={1.2}
+          strokeLinejoin="round"
+        />
+        {[
+          [-8, -10],
+          [0, -15],
+          [8, -16],
+        ].map(([x, y]) => (
+          <Line key={x} x1={x * 0.3} y1={4} x2={x} y2={y} stroke={pal.rim} strokeOpacity={0.35} strokeWidth={1} />
+        ))}
+      </G>
 
       {/* espinhos: aparecem quando ele estufa */}
       {showSpines &&
@@ -170,7 +168,6 @@ export function BaiuBody({ mood, width, pal, id, puffed, season }: ArtProps & { 
       <Circle cx={glossDot.x} cy={glossDot.y} r={2.2} fill="#FFFFFF" fillOpacity={0.5} />
 
       <Face mood={mood} puffed={puffed} />
-      {season ? <Accessory season={season} mood={mood} pal={pal} id={id} /> : null}
     </>,
   );
 }
@@ -346,280 +343,4 @@ export function Halo({ size, tint, id }: { size: number; tint: string; id: strin
       <Circle cx={50} cy={50} r={50} fill={`url(#${id}-halo)`} />
     </Svg>
   );
-}
-
-// ---------- enfeites das datas comemorativas ----------
-
-const CONFETTI: [number, number, number, string][] = [
-  [26, 52, 20, '#F25C9C'],
-  [170, 46, -30, '#F5C542'],
-  [16, 104, 45, '#4AA8F0'],
-  [184, 98, 10, '#72C266'],
-  [30, 160, -15, '#F5C542'],
-  [176, 150, 35, '#F25C9C'],
-  [60, 22, 60, '#4AA8F0'],
-  [146, 18, -50, '#A688E6'],
-];
-
-function Confetti() {
-  return (
-    <>
-      {CONFETTI.map(([x, y, a, c], i) => (
-        <Rect
-          key={i}
-          x={x - 3}
-          y={y - 1.6}
-          width={6}
-          height={3.2}
-          rx={1}
-          fill={c}
-          transform={`rotate(${a} ${x} ${y})`}
-        />
-      ))}
-    </>
-  );
-}
-
-function heart(x: number, y: number, s: number) {
-  return `M ${x} ${y + 6 * s} C ${x - 12 * s} ${y - 3 * s} ${x - 6 * s} ${y - 13 * s} ${x} ${y - 6 * s} C ${x + 6 * s} ${y - 13 * s} ${x + 12 * s} ${y - 3 * s} ${x} ${y + 6 * s} Z`;
-}
-
-function Headband({ mood, stroke, width = 5 }: { mood: Mood; stroke: string; width?: number }) {
-  const a = rimPoint(mood, 208, 0.99);
-  const b = rimPoint(mood, 332, 0.99);
-  const g = geom(mood);
-  return (
-    <Path
-      d={`M ${a.x} ${a.y} A ${g.rx * 0.99} ${g.ryT * 0.99} 0 0 1 ${b.x} ${b.y}`}
-      stroke={stroke}
-      strokeWidth={width}
-      strokeLinecap="round"
-      fill="none"
-    />
-  );
-}
-
-function Accessory({ season, mood, pal, id }: { season: Season; mood: Mood; pal: BaiuPalette; id: string }) {
-  const g = geom(mood);
-  const t = g.top;
-  const w = g.rx;
-
-  switch (season) {
-    case 'natal': {
-      const tip = { x: CX + w * 0.86, y: t + 6 };
-      return (
-        <G>
-          <Path
-            d={`M ${CX - w * 0.6} ${t + 10} C ${CX - w * 0.52} ${t - 20} ${CX + w * 0.05} ${t - 36} ${CX + w * 0.46} ${t - 22} C ${CX + w * 0.68} ${t - 14} ${CX + w * 0.82} ${t - 6} ${tip.x} ${tip.y} L ${CX + w * 0.74} ${t + 2} C ${CX + w * 0.62} ${t - 6} ${CX + w * 0.54} ${t - 2} ${CX + w * 0.56} ${t + 9} Z`}
-            fill="#D9353B"
-            stroke="#A3262B"
-            strokeWidth={1.2}
-            strokeLinejoin="round"
-          />
-          <Path
-            d={`M ${CX - w * 0.2} ${t - 18} C ${CX} ${t - 28} ${CX + w * 0.3} ${t - 26} ${CX + w * 0.46} ${t - 20}`}
-            stroke="#FFFFFF"
-            strokeOpacity={0.25}
-            strokeWidth={3}
-            strokeLinecap="round"
-            fill="none"
-          />
-          <Rect
-            x={CX - w * 0.68}
-            y={t + 2}
-            width={w * 1.34}
-            height={14}
-            rx={7}
-            fill="#F8F4EC"
-            stroke="#DDD3C4"
-            strokeWidth={1}
-          />
-          <Circle cx={tip.x} cy={tip.y + 2} r={7} fill="#F8F4EC" stroke="#DDD3C4" strokeWidth={1} />
-        </G>
-      );
-    }
-    case 'halloween':
-      return (
-        <G>
-          <Ellipse cx={CX} cy={t + 9} rx={w * 0.86} ry={8.5} fill="#33264F" stroke="#21183A" strokeWidth={1.2} />
-          <Path
-            d={`M ${CX - w * 0.42} ${t + 7} C ${CX - w * 0.26} ${t - 8} ${CX - w * 0.1} ${t - 24} ${CX + w * 0.04} ${t - 29} Q ${CX + w * 0.22} ${t - 35} ${CX + w * 0.4} ${t - 29} Q ${CX + w * 0.2} ${t - 24} ${CX + w * 0.16} ${t - 15} C ${CX + w * 0.22} ${t - 5} ${CX + w * 0.34} ${t + 2} ${CX + w * 0.42} ${t + 7} Z`}
-            fill="#3D2D5E"
-            stroke="#21183A"
-            strokeWidth={1.2}
-            strokeLinejoin="round"
-          />
-          <Path
-            d={`M ${CX - w * 0.38} ${t + 2} Q ${CX} ${t + 6} ${CX + w * 0.38} ${t + 2} L ${CX + w * 0.32} ${t - 5} Q ${CX} ${t - 1} ${CX - w * 0.33} ${t - 5} Z`}
-            fill="#F28C28"
-          />
-          <Rect x={CX - 4} y={t - 4} width={8} height={7} rx={1.5} fill="none" stroke="#F5C542" strokeWidth={1.8} />
-        </G>
-      );
-    case 'pascoa':
-      return (
-        <G>
-          {[-1, 1].map((s) => (
-            <G key={s} transform={`rotate(${s * 14} ${CX + s * w * 0.3} ${t + 4})`}>
-              <Ellipse
-                cx={CX + s * w * 0.3}
-                cy={t - 16}
-                rx={9}
-                ry={23}
-                fill="#FBF7F2"
-                stroke="#E3D8CC"
-                strokeWidth={1.2}
-              />
-              <Ellipse cx={CX + s * w * 0.3} cy={t - 14} rx={4.4} ry={16} fill="#F6A9C2" />
-            </G>
-          ))}
-          <Headband mood={mood} stroke="#F6A9C2" />
-        </G>
-      );
-    case 'ano-novo':
-      return (
-        <G>
-          <Confetti />
-          <ClipPath id={`${id}-party`}>
-            <Path d={`M ${CX - w * 0.34} ${t + 8} L ${CX - w * 0.08} ${t - 30} L ${CX + w * 0.24} ${t + 4} Z`} />
-          </ClipPath>
-          <Path
-            d={`M ${CX - w * 0.34} ${t + 8} L ${CX - w * 0.08} ${t - 30} L ${CX + w * 0.24} ${t + 4} Z`}
-            fill="#F5C542"
-          />
-          <G clipPath={`url(#${id}-party)`}>
-            {[-14, 0, 14].map((y) => (
-              <Line
-                key={y}
-                x1={CX - w * 0.5}
-                y1={t + y + 2}
-                x2={CX + w * 0.4}
-                y2={t + y - 10}
-                stroke="#E84A8A"
-                strokeWidth={4.5}
-              />
-            ))}
-          </G>
-          <Path
-            d={`M ${CX - w * 0.34} ${t + 8} L ${CX - w * 0.08} ${t - 30} L ${CX + w * 0.24} ${t + 4} Z`}
-            fill="none"
-            stroke="#C99A1E"
-            strokeWidth={1.2}
-            strokeLinejoin="round"
-          />
-          <Circle cx={CX - w * 0.08} cy={t - 31} r={5.5} fill="#4AA8F0" />
-        </G>
-      );
-    case 'carnaval': {
-      const feathers = ['#A688E6', '#3FC7C0', '#F5C542', '#F25C9C', '#F28C28'];
-      return (
-        <G>
-          <Confetti />
-          {[-44, -22, 0, 22, 44].map((a, i) => (
-            <G key={a} transform={`rotate(${a} ${CX} ${t + 8})`}>
-              <Path
-                d={`M ${CX} ${t + 6} C ${CX - 7} ${t - 6} ${CX - 7} ${t - 20} ${CX} ${t - 30} C ${CX + 7} ${t - 20} ${CX + 7} ${t - 6} ${CX} ${t + 6} Z`}
-                fill={feathers[i]}
-              />
-              <Line x1={CX} y1={t + 4} x2={CX} y2={t - 24} stroke="#FFFFFF" strokeOpacity={0.6} strokeWidth={1} />
-            </G>
-          ))}
-          <Headband mood={mood} stroke="#F5C542" width={6} />
-          {[-0.36, 0, 0.36].map((x) => {
-            const p = rimPoint(mood, 270 + x * 90, 0.99);
-            return <Circle key={x} cx={p.x} cy={p.y} r={3.2} fill={x === 0 ? '#F25C9C' : '#3FC7C0'} />;
-          })}
-        </G>
-      );
-    }
-    case 'namorados':
-      return (
-        <G>
-          <Path d={heart(CX + w * 0.92, t + 4, 1)} fill="#F2576E" />
-          <Path d={heart(CX + w * 1.08, t - 20, 0.65)} fill="#F78AA0" />
-          <Path d={heart(CX - w * 0.98, t + 12, 0.75)} fill="#F78AA0" />
-          {[-1, 1].map((s) => (
-            <Path key={s} d={heart(CX + s * g.cheekDX, g.cheekY + 1, 0.42)} fill="#F2576E" fillOpacity={0.65} />
-          ))}
-        </G>
-      );
-    case 'junina':
-      return (
-        <G>
-          <Ellipse cx={CX} cy={t + 8} rx={w * 0.98} ry={10} fill="#E9C46A" stroke="#B98F3C" strokeWidth={1.2} />
-          {[-0.7, -0.35, 0.35, 0.7].map((x) => (
-            <Line
-              key={x}
-              x1={CX + x * w}
-              y1={t + 4}
-              x2={CX + x * w * 1.12}
-              y2={t + 13}
-              stroke="#B98F3C"
-              strokeOpacity={0.6}
-              strokeWidth={1}
-            />
-          ))}
-          <Path
-            d={`M ${CX - w * 0.46} ${t + 7} C ${CX - w * 0.46} ${t - 18} ${CX + w * 0.46} ${t - 18} ${CX + w * 0.46} ${t + 7} Z`}
-            fill="#E2B95A"
-            stroke="#B98F3C"
-            strokeWidth={1.2}
-          />
-          <Path
-            d={`M ${CX - w * 0.46} ${t + 1} C ${CX - w * 0.2} ${t + 4} ${CX + w * 0.2} ${t + 4} ${CX + w * 0.46} ${t + 1} L ${CX + w * 0.46} ${t + 7} C ${CX + w * 0.2} ${t + 10} ${CX - w * 0.2} ${t + 10} ${CX - w * 0.46} ${t + 7} Z`}
-            fill="#D9353B"
-          />
-          <Rect x={CX + w * 0.1} y={t - 11} width={10} height={9} rx={1} fill="#C7774A" />
-          <Path
-            d={`M ${CX + w * 0.1 + 2} ${t - 9} l 6 5 M ${CX + w * 0.1 + 8} ${t - 9} l -6 5`}
-            stroke="#8E4E2C"
-            strokeWidth={0.9}
-          />
-          {[-1, 1].map((s) =>
-            [
-              [-3, -2],
-              [3, -2.5],
-              [0, 2.5],
-            ].map(([dx, dy], i) => (
-              <Circle
-                key={`${s}${i}`}
-                cx={CX + s * g.cheekDX + dx}
-                cy={g.cheekY + dy}
-                r={1.3}
-                fill={pal.spot}
-                fillOpacity={0.75}
-              />
-            )),
-          )}
-        </G>
-      );
-    case 'criancas': {
-      return (
-        <G>
-          <ClipPath id={`${id}-cap`}>
-            <Path
-              d={`M ${CX - w * 0.52} ${t + 10} C ${CX - w * 0.52} ${t - 16} ${CX + w * 0.52} ${t - 16} ${CX + w * 0.52} ${t + 10} Z`}
-            />
-          </ClipPath>
-          <G clipPath={`url(#${id}-cap)`}>
-            <Rect x={CX - w * 0.6} y={t - 20} width={w * 0.4} height={34} fill="#E84A4A" />
-            <Rect x={CX - w * 0.2} y={t - 20} width={w * 0.4} height={34} fill="#F5C542" />
-            <Rect x={CX + w * 0.2} y={t - 20} width={w * 0.4} height={34} fill="#4A90E2" />
-          </G>
-          <Path
-            d={`M ${CX - w * 0.52} ${t + 10} C ${CX - w * 0.52} ${t - 16} ${CX + w * 0.52} ${t - 16} ${CX + w * 0.52} ${t + 10} Z`}
-            fill="none"
-            stroke="#2A1A10"
-            strokeOpacity={0.25}
-            strokeWidth={1.2}
-          />
-          <Ellipse cx={CX} cy={t + 10} rx={w * 0.34} ry={5} fill="#3D7BD0" />
-          <Line x1={CX} y1={t - 9} x2={CX} y2={t - 17} stroke="#2A1A10" strokeWidth={2} />
-          <Ellipse cx={CX - 9} cy={t - 18} rx={9} ry={3} fill="#E84A4A" />
-          <Ellipse cx={CX + 9} cy={t - 18} rx={9} ry={3} fill="#4A90E2" />
-          <Circle cx={CX} cy={t - 18} r={2.6} fill="#F5C542" />
-        </G>
-      );
-    }
-  }
 }

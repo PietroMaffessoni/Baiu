@@ -119,7 +119,6 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="vencimentos" options={{ ...pushedHeader, title: 'Vencimentos' }} />
               <Stack.Screen name="selos" options={{ ...pushedHeader, title: 'Selos' }} />
               <Stack.Screen name="ajustes" options={{ ...pushedHeader, title: 'Ajustes' }} />
-              <Stack.Screen name="personalizar" options={{ ...pushedHeader, title: 'Personalizar o Baiu' }} />
               <Stack.Screen name="baiu" />
               <Stack.Screen name="assistente-dados" options={sheet} />
               <Stack.Screen name="conectar" options={modal} />

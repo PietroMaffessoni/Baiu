@@ -52,9 +52,6 @@ Cadastre boletos, aluguel e contas fixas. O Baiu avisa um dia antes e no dia, e 
 ACOMPANHE SEUS INVESTIMENTOS
 Registre suas aplicações, atualize os valores e veja quanto renderam no mês e quantos meses seguidos você investiu.
 
-DO SEU JEITO
-Escolha a cor do Baiu e veja ele se vestir sozinho no Natal, na Páscoa, no Halloween e em outras datas.
-
 GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
@@ -134,7 +131,6 @@ As capturas já estão prontas em `store/imagens/app-store/`, no tamanho de iPho
 | 5 | `05-extrato.jpg` | Veja para onde foi |
 | 6 | `06-vencimentos.jpg` | Nenhum vencimento esquecido |
 | 7 | `07-investir.jpg` | Investimentos em dia |
-| 8 | `08-personalizar.jpg` | Do seu jeito |
 
 Elas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer todas, por exemplo depois de mudar uma tela: `npm run store:images`.
 

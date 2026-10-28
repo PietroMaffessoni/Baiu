@@ -20,7 +20,6 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 | Fôlego | Nota de 0 a 100 em quatro pilares, com o próximo passo em reais |
 | Selos | Carimbos por hábitos saudáveis |
 | Assistente | Conversa com o Baiu: avisos de gastos fora do normal, contas que se repetem e respostas calculadas no aparelho. A conversa com IA (Anthropic) está pronta no código, mas desligada nesta versão (`AI_ENABLED`) |
-| Personalização | Oito cores para o Baiu e enfeites automáticos em oito datas comemorativas, que dá para desligar |
 | Segurança | Dados cifrados, bloqueio por Face ID ou biometria, ocultar valores, cortina no seletor de apps |
 | Lembretes | Notificação local um dia antes e no dia do vencimento, e aviso quando um gasto foge do normal, sem valores no texto |
 | Seus dados | Exportação em CSV e exclusão total |
@@ -102,7 +101,7 @@ npm test            # testes de lógica (saldos, fôlego, vencimentos, investime
 npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA, dos bancos e da assinatura, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
-npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura, personalização e telas pequenas
+npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura e telas pequenas
 npm run store:images   # refaz as capturas das lojas e a captura da assinatura para a revisão da Apple
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
 ```

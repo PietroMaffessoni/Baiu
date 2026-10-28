@@ -54,9 +54,6 @@ Cadastre boletos, aluguel e contas fixas. O Baiu avisa um dia antes e no dia, e 
 ACOMPANHE SEUS INVESTIMENTOS
 Registre suas aplicações, atualize os valores e veja quanto renderam no mês e quantos meses seguidos você investiu.
 
-DO SEU JEITO
-Escolha a cor do Baiu e veja ele se vestir sozinho no Natal, na Páscoa, no Halloween e em outras datas.
-
 GANHE SELOS
 Cada hábito saudável vira um carimbo: primeiro mês no azul, reserva de três meses, um ano investindo.
 
@@ -77,9 +74,9 @@ O Baiu é uma ferramenta de organização. Ele não movimenta dinheiro e não in
 | --- | --- | --- |
 | Ícone | `icone-512.png` | 512 × 512, PNG |
 | Gráfico de destaque | `banner-1024x500.jpg` | 1024 × 500, JPEG ou PNG sem transparência |
-| Capturas de celular | `01-inicio.jpg` a `08-personalizar.jpg` | de 2 a 8, proporção 9:16 |
+| Capturas de celular | `01-inicio.jpg` a `07-investir.jpg` | de 2 a 8, proporção 9:16 |
 
-Ordem e legendas: início ("Seu dinheiro com fôlego"), bancos conectados, o Baiu assistente, fôlego, extrato, vencimentos, investimentos e personalização. As capturas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer: `npm run store:images`.
+Ordem e legendas: início ("Seu dinheiro com fôlego"), bancos conectados, o Baiu assistente, fôlego, extrato, vencimentos e investimentos. As capturas usam os dados de exemplo do próprio app; a de bancos usa o banco de teste. Para refazer: `npm run store:images`.
 
 ## Conteúdo do app
 

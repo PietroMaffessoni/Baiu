@@ -1,8 +1,8 @@
 import type { Mood } from '@/lib/folego';
 
 /**
- * Caixa de desenho do Baiu. O centro do corpo fica sempre no mesmo lugar;
- * acima da cabeça sobra espaço para os chapéus das datas comemorativas.
+ * Caixa de desenho do Baiu. O centro do corpo fica sempre no mesmo lugar,
+ * com folga acima da cabeça.
  */
 export const VB_W = 200;
 export const VB_H = 200;
