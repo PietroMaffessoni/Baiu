@@ -1,7 +1,8 @@
 /**
  * Dados da apresentação do primeiro uso. Cada número tem fonte, mês e
  * pesquisa: as lojas e as pessoas cobram que não seja inventado. Ao trocar um
- * número, troque a fonte junto e confira na publicação original.
+ * número, troque a fonte junto e confira na publicação original. Troque também
+ * a INTRO_VERSION (src/lib/intro.ts), para quem já viu ver a versão nova.
  */
 export type Stat = {
   /** Número que sobe na tela. */

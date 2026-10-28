@@ -86,7 +86,7 @@ cp .env.example .env.local   # preencha com a URL e a chave pública do Supabase
 npx expo start
 ```
 
-O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista e a assinatura usa uma loja de teste.
+O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento (Expo Go) e na web; o código de confirmação é sempre 246810, a conta de teste fica guardada no aparelho, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista e a assinatura usa uma loja de teste.
 
 O Face ID, as notificações e o cofre no Keychain precisam de um build de desenvolvimento ou de teste. No Expo Go parte disso não funciona.
 

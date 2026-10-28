@@ -1,9 +1,11 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
+
 import { checkName, checkPassword, checkPhone } from './validation';
 import { AuthFailure, type AuthBackend, type Profile } from './types';
 
 /**
- * Servidor de contas de mentira, só para testes automatizados e para a versão
- * web de desenvolvimento (EXPO_PUBLIC_AUTH_FAKE=1). Imita as respostas do
+ * Servidor de contas de mentira, só para testes automatizados e para o app em
+ * desenvolvimento (EXPO_PUBLIC_AUTH_FAKE=1), na web ou no Expo Go. Imita as respostas do
  * Supabase, inclusive o silêncio para e-mails já cadastrados. Nunca é usado
  * nos builds das lojas.
  */
@@ -14,13 +16,34 @@ type Db = { users: Record<string, Row>; session: string | null };
 
 const KEY = 'baiu:fake-auth';
 
-function memoryStore() {
+type Store = { ready: Promise<void>; load: () => Db; save: (d: Db) => void };
+
+function memoryStore(): Store {
   let db: Db = { users: {}, session: null };
-  return { load: () => db, save: (d: Db) => void (db = d) };
+  return { ready: Promise.resolve(), load: () => db, save: (d: Db) => void (db = d) };
 }
 
-function browserStore() {
+/** No celular: em memória, copiado no aparelho para a conta de teste sobreviver ao fechar o app. */
+function deviceStore(): Store {
+  let db: Db = { users: {}, session: null };
+  const ready = AsyncStorage.getItem(KEY)
+    .then((raw) => {
+      if (raw) db = JSON.parse(raw) as Db;
+    })
+    .catch(() => {});
   return {
+    ready,
+    load: () => db,
+    save: (d: Db) => {
+      db = d;
+      AsyncStorage.setItem(KEY, JSON.stringify(d)).catch(() => {});
+    },
+  };
+}
+
+function browserStore(): Store {
+  return {
+    ready: Promise.resolve(),
     load: (): Db => {
       try {
         return JSON.parse(localStorage.getItem(KEY) ?? '') as Db;
@@ -32,15 +55,19 @@ function browserStore() {
   };
 }
 
-export function createFakeBackend(opts: { latencyMs?: number; offline?: () => boolean } = {}): AuthBackend & {
+export function createFakeBackend(
+  opts: { latencyMs?: number; offline?: () => boolean; persist?: boolean } = {},
+): AuthBackend & {
   _db: () => Db;
 } {
-  const store = typeof localStorage !== 'undefined' ? browserStore() : memoryStore();
+  const store =
+    typeof localStorage !== 'undefined' ? browserStore() : opts.persist ? deviceStore() : memoryStore();
   const listeners = new Set<(p: Profile | null) => void>();
   const lastSend: Record<string, number> = {};
   let resetFor: string | null = null;
 
   const wait = async () => {
+    await store.ready;
     if (opts.offline?.()) throw new AuthFailure('network');
     if (opts.latencyMs) await new Promise((r) => setTimeout(r, opts.latencyMs));
   };
@@ -69,6 +96,7 @@ export function createFakeBackend(opts: { latencyMs?: number; offline?: () => bo
     _db: db,
 
     async restore() {
+      await store.ready;
       return current()?.profile ?? null;
     },
 

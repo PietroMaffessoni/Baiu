@@ -145,7 +145,8 @@ function tools(page, suite, pace = {}) {
  */
 async function newPhone(browser, { intro, ...extra } = {}) {
   const ctx = await browser.newContext({ ...phone, ...extra });
-  if (!intro) await ctx.addInitScript(() => localStorage.setItem('baiu:apresentacao-vista', '1'));
+  // o valor é a INTRO_VERSION de src/lib/intro.ts
+  if (!intro) await ctx.addInitScript(() => localStorage.setItem('baiu:apresentacao-vista', '2026-10-28'));
   const page = await ctx.newPage();
   const errors = [];
   page.on('pageerror', (e) => errors.push('PAGEERROR ' + e.message));
