@@ -9,7 +9,7 @@ import { EmptyPlate } from '@/components/form';
 import { Icon } from '@/components/icon';
 import { Plate } from '@/components/layout';
 import type { BankItem } from '@/data/types';
-import { BANK_MESSAGES, BankFailure, bankBackend } from '@/lib/bank/client';
+import { BANK_MESSAGES, BankFailure, bankBackend, MAX_BANKS } from '@/lib/bank/client';
 import { CONSENT_STATUS } from '@/lib/bank/consent-text';
 import type { ConsentRecord } from '@/lib/bank/types';
 import { agoLabel, shortDate } from '@/lib/dates';
@@ -56,7 +56,7 @@ export default function Bancos() {
       contentContainerStyle={{ padding: gutter, paddingBottom: insets.bottom + 40, gap: 14 }}
       refreshControl={
         items.length ? (
-          <RefreshControl refreshing={status.running} onRefresh={syncNow} tintColor={color.lantern} />
+          <RefreshControl refreshing={status.running} onRefresh={() => void syncNow()} tintColor={color.lantern} />
         ) : undefined
       }>
       <T variant="callout" tone="ink2">
@@ -68,6 +68,11 @@ export default function Bancos() {
           {BANK_MESSAGES[status.error]}
         </T>
       ) : null}
+      {status.ended?.length ? (
+        <T variant="callout" tone="lantern">
+          {`A autorização de ${status.ended.join(', ')} terminou. O que já tinha vindo continua no Baiu, como contas manuais. Para voltar a receber os dados, conecte de novo.`}
+        </T>
+      ) : null}
 
       {items.length === 0 ? (
         <EmptyPlate text="Nenhum banco conectado ainda. Conecte o banco onde seu dinheiro entra e o Baiu faz o resto." />
@@ -75,11 +80,17 @@ export default function Bancos() {
         items.map((i) => <ItemCard key={i.id} item={i} onUnlinked={loadHistory} />)
       )}
 
-      <Button
-        label={items.length ? 'Conectar outro banco' : 'Conectar banco'}
-        icon="plus"
-        onPress={() => router.push('/conectar')}
-      />
+      {items.length >= MAX_BANKS ? (
+        <T variant="caption" tone="ink3" align="center">
+          {`A assinatura inclui até ${MAX_BANKS} bancos. Para conectar outro, desconecte um destes.`}
+        </T>
+      ) : (
+        <Button
+          label={items.length ? 'Conectar outro banco' : 'Conectar banco'}
+          icon="plus"
+          onPress={() => router.push('/conectar')}
+        />
+      )}
 
       {history && history.length ? (
         <View style={{ gap: 8, marginTop: 12 }}>

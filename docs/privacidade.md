@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 23 de outubro de 2026.
+Atualizada em 27 de outubro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni, que é o controlador dos dados tratados pelo app. Esta política explica, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), quais dados usamos, por quê e como você controla cada um deles.
 
@@ -11,8 +11,6 @@ Seus registros financeiros ficam no seu aparelho, criptografados. Se você conec
 O Baiu avisa quando um gasto foge do normal e reconhece contas que se repetem. Esses avisos são calculados no próprio aparelho, sem internet e sem inteligência artificial.
 
 Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos.
-
-A conversa com inteligência artificial é opcional. Se você ligar, cada pergunta vai para a Anthropic com um resumo dos seus números, sem nome, e-mail, celular ou bancos. Dá para desligar quando quiser.
 
 O Baiu é uma assinatura, com o primeiro mês grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.
 
@@ -26,17 +24,13 @@ Senha: guardada só em forma de hash, um código que não permite recuperar a se
 
 Registros de aceite: a versão dos Termos de uso e da Política de privacidade aceitos, a confirmação de maioridade e a data.
 
-Aceite da conversa com IA: a versão do texto aceito, a data do aceite e, se você desligar, a data em que desligou.
-
-Contador de uso da IA: quantas perguntas você fez em cada dia, para aplicar o limite diário. O conteúdo das conversas não é guardado no servidor.
-
 Bancos conectados: o identificador de cada conexão no provedor, o nome da instituição, a data e o registro da sua autorização. Saldos e movimentos não ficam no servidor.
 
 Dados técnicos de segurança: data, hora e endereço IP dos acessos à conta, registrados pelo serviço de autenticação para proteger sua conta e prevenir fraudes.
 
 ## Dados financeiros, no aparelho
 
-As contas, saldos, movimentos, vencimentos, investimentos e preferências, digitados por você ou trazidos dos seus bancos, ficam guardados apenas no seu aparelho. Nada disso fica no servidor. Com a conversa com IA ligada, um resumo acompanha cada pergunta, como explicado abaixo.
+As contas, saldos, movimentos, vencimentos, investimentos e preferências, digitados por você ou trazidos dos seus bancos, ficam guardados apenas no seu aparelho. Nada disso fica no servidor.
 
 Esses dados são cifrados com XChaCha20-Poly1305. A chave fica no Keychain do iPhone ou no Keystore do Android, presa a este aparelho e separada por conta: quem entra com outra conta no mesmo aparelho não consegue ler os seus registros.
 
@@ -58,25 +52,13 @@ Os dados passam pelo nosso servidor apenas para chegar ao seu celular. Não fica
 
 A autorização vale por prazo indeterminado, até você cancelar. Você pode cancelar a qualquer momento em Bancos conectados, no próprio Baiu, ou no app do seu banco. Ali também ficam todas as autorizações que você já deu, inclusive as canceladas. Ao cancelar, o Baiu encerra a autorização no Open Finance e você escolhe se mantém ou apaga do aparelho os dados que já vieram.
 
-## Conversa com o Baiu (inteligência artificial)
-
-A conversa com inteligência artificial é opcional e só funciona depois que você a ativa, com um aceite próprio. Sem ela, o Baiu responde com respostas prontas, calculadas no aparelho.
-
-Com ela ligada, a cada pergunta enviamos à Anthropic, PBC, empresa dos Estados Unidos que fornece a inteligência artificial: a pergunta, as mensagens recentes da conversa e um resumo dos seus números. O resumo traz entradas, gastos e investimentos dos últimos três meses, gastos por categoria, gastos que se repetem, saldos somados por tipo de conta, investimentos por tipo, vencimentos dos próximos 30 dias e o fôlego.
-
-Não enviamos nome, e-mail, celular, nomes de bancos, apelidos de contas, nomes de quem recebeu ou enviou Pix, datas exatas nem os movimentos um a um. Em Ajustes, O que o Baiu envia, você vê o resumo exato. Também dá para desligar o envio dos números e mandar só a pergunta.
-
-As mensagens passam pelo nosso servidor só para conferir seu login, seu aceite e o limite diário, e não são guardadas nem registradas. A Anthropic atua como operadora: não usa as conversas para treinar a inteligência artificial e pode guardá-las por um período limitado para segurança e prevenção de abuso, conforme o contrato dela.
-
-Não escreva na conversa dados que você não quer compartilhar, como CPF, senhas ou números de cartão. O Baiu nunca pede esses dados.
-
 ## Assinatura
 
 O Baiu é cobrado por assinatura, com o primeiro mês grátis. A compra, a cobrança, a forma de pagamento e os reembolsos ficam com a App Store (Apple) ou com o Google Play (Google), conforme as regras e a política de privacidade de cada loja. O Baiu não recebe o número do seu cartão nem outros dados de pagamento.
 
 Para saber se a sua assinatura está ativa, usamos o RevenueCat, empresa dos Estados Unidos que confere os recibos das lojas, como operadora. Ele recebe o código aleatório que identifica sua conta no Baiu (nunca o nome, o e-mail ou o celular), os recibos da loja (plano, preço, datas de compra, de renovação e de cancelamento) e dados técnicos do aparelho, como modelo, sistema, versão do app, país da loja e endereço IP.
 
-O nosso servidor consulta o RevenueCat só para liberar as funções que dependem da assinatura, como os bancos conectados e a conversa com IA. Não guardamos seu histórico de compras no nosso servidor.
+O nosso servidor consulta o RevenueCat só para liberar as funções que dependem da assinatura, como os bancos conectados. Não guardamos seu histórico de compras no nosso servidor.
 
 Ao excluir sua conta, apagamos seu cadastro no RevenueCat. As lojas mantêm o registro das compras conforme as regras delas e as obrigações fiscais.
 
@@ -90,25 +72,19 @@ Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas se
 
 Conectar seus bancos, buscar e organizar seus dados financeiros: seu consentimento (art. 7º, I), dado no Baiu e confirmado no seu banco pelo Open Finance. Você pode revogar quando quiser.
 
-Conversa com IA, incluindo o envio da pergunta e do resumo dos seus números à Anthropic, nos Estados Unidos: seu consentimento (art. 7º, I), específico e em destaque para a transferência internacional (art. 33, VIII). Você pode revogar quando quiser em Ajustes, sem perder o uso do resto do app.
-
-Contar as perguntas feitas à IA para aplicar o limite diário: execução do contrato e legítimo interesse em manter o serviço funcionando para todos (art. 7º, V e IX).
-
 Assinatura: conferir se ela está ativa, liberar as funções que dependem dela e avisar antes do fim do mês grátis: execução do contrato (art. 7º, V). O envio ao RevenueCat, nos Estados Unidos, é necessário para executar esse contrato (art. 33, IX).
 
 O celular só é usado para falar com você sobre a sua conta. Não enviamos propaganda.
 
 ## Com quem os dados são compartilhados
 
-Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda as funções que encaminham as perguntas à inteligência artificial e os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
+Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda a função que encaminha os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.
 
-Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco enquanto a autorização existir, para entregá-los ao Baiu.
+Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco, com criptografia e controle de acesso, para entregá-los ao Baiu. Se o contrato entre o Baiu e a Polp terminar, ela apaga ou anonimiza os dados em até 60 dias, e as cópias de segurança em até 90 dias, salvo obrigação legal.
 
 Celcoin Instituição de Pagamento: instituição autorizada pelo Banco Central que recebe os dados dos bancos pelo Open Finance, só se você conectar algum banco, conforme os Termos de Uso e a Norma de Privacidade Externa dela.
 
 Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha.
-
-Anthropic, PBC: fornece a inteligência artificial da conversa com o Baiu, como operadora, só se você ativar essa função. Fica nos Estados Unidos, o que configura transferência internacional, autorizada pelo seu consentimento específico (art. 33, VIII).
 
 Apple e Google: as lojas processam a compra e a cobrança da assinatura, conforme as políticas delas. O Baiu recebe delas apenas o recibo da compra, sem dados de pagamento.
 
@@ -122,8 +98,6 @@ Enquanto sua conta existir. Ao excluir a conta, os dados dela saem do nosso serv
 
 Conexões com bancos: enquanto estiverem ativas. Ao cancelar uma autorização, ou ao excluir sua conta, o Baiu a encerra no Open Finance. O histórico das autorizações (banco, categorias de dados e datas) fica guardado enquanto sua conta existir, como prova do consentimento e para você consultar em Bancos conectados.
 
-O registro do aceite da conversa com IA fica guardado enquanto a conta existir, como prova do consentimento, mesmo depois de você desligar. O contador de uso da IA é apagado depois de 30 dias.
-
 Cadastro da assinatura no RevenueCat: enquanto sua conta existir. É apagado quando você exclui a conta.
 
 Os registros financeiros do aparelho são apagados quando você exclui a conta, apaga os dados em Ajustes ou desinstala o app.
@@ -132,7 +106,7 @@ Os registros financeiros do aparelho são apagados quando você exclui a conta, 
 
 Pela LGPD (art. 18), você pode confirmar se tratamos seus dados, acessá-los, corrigi-los, pedir anonimização, bloqueio ou eliminação, pedir a portabilidade, saber com quem foram compartilhados, revogar consentimentos e reclamar à Autoridade Nacional de Proteção de Dados (ANPD).
 
-No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; ligue, desligue e veja o que a conversa com IA envia em Ajustes, Assistente; desconecte bancos em Ajustes, Bancos conectados; veja, cancele ou peça reembolso da assinatura em Ajustes, Assinatura; e exclua a conta em Minha conta, Excluir conta.
+No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; desconecte bancos em Ajustes, Bancos conectados; veja, cancele ou peça reembolso da assinatura em Ajustes, Assinatura; e exclua a conta em Minha conta, Excluir conta.
 
 Para qualquer outro pedido, escreva para suporte.baiu@gmail.com. Respondemos no prazo da LGPD, de até 15 dias.
 

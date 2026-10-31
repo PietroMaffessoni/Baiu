@@ -277,14 +277,6 @@ export default function Ajustes() {
       </Group>
 
       <Group title="Baiu">
-        <ListRow
-          icon="sparkle"
-          label="Personalizar o Baiu"
-          hint="Cor e enfeites de datas comemorativas."
-          onPress={() => router.push('/personalizar')}
-          chevron
-        />
-        <Rule inset={33} />
         <ListRow icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
         <Rule inset={33} />
         <ListRow icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />

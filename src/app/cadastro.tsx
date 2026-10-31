@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useRef, useState } from 'react';
-import { Pressable, StyleSheet, View, type TextInput } from 'react-native';
+import { Pressable, StyleSheet, View, type TextInputInstance } from 'react-native';
 
 import { AuthScreen, Check, Field, FormError, FormNote, PasswordChecklist, PasswordField } from '@/components/auth-form';
 import { Button } from '@/components/button';
@@ -35,9 +35,9 @@ export default function Cadastro() {
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState<string | null>(null);
 
-  const emailRef = useRef<TextInput>(null);
-  const phoneRef = useRef<TextInput>(null);
-  const passRef = useRef<TextInput>(null);
+  const emailRef = useRef<TextInputInstance>(null);
+  const phoneRef = useRef<TextInputInstance>(null);
+  const passRef = useRef<TextInputInstance>(null);
 
   const nameC = checkName(name);
   const emailC = checkEmail(email);

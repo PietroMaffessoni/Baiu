@@ -10,6 +10,7 @@ import { answerLocally } from './local';
 import { cancelDigest, scheduleDigest } from './notify';
 import {
   AI_CONSENT_VERSION,
+  AI_ENABLED,
   assistantBackend,
   AssistantFailure,
   MAX_QUESTION,
@@ -45,6 +46,8 @@ const msg = (role: ChatMsg['role'], text: string, extra: Partial<ChatMsg> = {}):
 });
 
 export type AiMode =
+  /** IA desligada no app (AI_ENABLED): só respostas prontas, sem falar em IA. */
+  | 'local'
   /** Dados de exemplo: só respostas prontas. */
   | 'demo'
   /** Servidor não configurado neste build. */
@@ -60,13 +63,15 @@ export function useAssistant(backend: AssistantBackend = assistantBackend) {
   const [busy, setBusy] = useState(false);
   const busyRef = useRef(false);
 
-  const mode: AiMode = state.demo
-    ? 'demo'
-    : !backend.available
-      ? 'indisponivel'
-      : a.consent?.version === AI_CONSENT_VERSION && !a.pendingRevoke
-        ? 'ligada'
-        : 'desligada';
+  const mode: AiMode = !AI_ENABLED
+    ? 'local'
+    : state.demo
+      ? 'demo'
+      : !backend.available
+        ? 'indisponivel'
+        : a.consent?.version === AI_CONSENT_VERSION && !a.pendingRevoke
+          ? 'ligada'
+          : 'desligada';
   const firstName = profile?.fullName.split(' ')[0] || undefined;
 
   const send = useCallback(

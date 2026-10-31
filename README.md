@@ -8,6 +8,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 
 | Área | O que dá para fazer |
 | --- | --- |
+| Apresentação | No primeiro uso do aparelho, antes das boas-vindas: os números do dinheiro no Brasil (dívidas, nome negativado, reserva, assinaturas), cada um com fonte, a conta "E no seu bolso?" e o que o Baiu faz. Dados e fontes em `src/content/apresentacao.ts` |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
 | Bancos conectados | Open Finance pela Polp (dados recebidos pela Celcoin): contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
 | Assinatura | Primeiro mês grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |
@@ -18,8 +19,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 | Investimentos | Aplicações, aportes de outra conta, atualização de valor, resgates e constância mensal |
 | Fôlego | Nota de 0 a 100 em quatro pilares, com o próximo passo em reais |
 | Selos | Carimbos por hábitos saudáveis |
-| Assistente | Conversa com o Baiu: avisos de gastos fora do normal, contas que se repetem, respostas prontas no aparelho e, com consentimento, respostas de IA (Anthropic) com um resumo sem dados pessoais |
-| Personalização | Oito cores para o Baiu e enfeites automáticos em oito datas comemorativas, que dá para desligar |
+| Assistente | Conversa com o Baiu: avisos de gastos fora do normal, contas que se repetem e respostas calculadas no aparelho. A conversa com IA (Anthropic) está pronta no código, mas desligada nesta versão (`AI_ENABLED`) |
 | Segurança | Dados cifrados, bloqueio por Face ID ou biometria, ocultar valores, cortina no seletor de apps |
 | Lembretes | Notificação local um dia antes e no dia do vencimento, e aviso quando um gasto foge do normal, sem valores no texto |
 | Seus dados | Exportação em CSV e exclusão total |
@@ -57,7 +57,7 @@ A regra está em `src/lib/folego.ts`.
 
 1. **Assinar:** depois do cadastro, a tela `src/app/assinatura.tsx` mostra o que está incluso, o preço e as condições. A compra acontece na loja do celular; o Baiu nunca vê dados de pagamento.
 2. **Conferir:** o RevenueCat (`src/lib/subscription/revenuecat.ts`) confere os recibos e conhece a pessoa só pelo id da conta. Sem assinatura ativa, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os registros.
-3. **No servidor:** as funções `bank` e `baiu-chat` perguntam ao RevenueCat se a pessoa assina antes de gastar com a Polp ou com a IA. Desconectar bancos e excluir a conta funcionam sempre.
+3. **No servidor:** a função `bank` (e a `baiu-chat`, quando a IA voltar) pergunta ao RevenueCat se a pessoa assina antes de gastar com a Polp. Desconectar bancos e excluir a conta funcionam sempre. Uma tarefa diária (pg_cron chamando a função `bank`) cancela na Polp as autorizações de quem está sem assinatura há mais de 7 dias, para o Baiu não pagar por bancos que ninguém usa.
 4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim do mês grátis, uma notificação avisa.
 5. **Excluir a conta:** a função `supabase/functions/subscription` apaga o cadastro no RevenueCat.
 
@@ -68,6 +68,8 @@ Sem as chaves do RevenueCat no build, a cobrança fica desligada e o app, libera
 Os avisos e as contas que se repetem são calculados no aparelho (`src/lib/assistant/insights.ts`): o Baiu agrupa gastos parecidos ("Açaí do Zé" e "Açaí Concept" viram açaí; Enel e Cemig viram conta de luz) e compara com o mês passado. Um aviso por vez vira notificação, entre 10h e 20h, sem valores.
 
 A conversa responde de três jeitos:
+
+A conversa com IA está desligada nesta versão: `AI_ENABLED = false` em `src/lib/assistant/remote.ts`. Assim o app só usa o passo 1. Para religar, troque para `true`, publique a função `baiu-chat`, cadastre `ANTHROPIC_API_KEY` e devolva aos textos legais e às lojas as partes da IA.
 
 1. **Modo exemplo, IA desligada ou sem internet:** respostas prontas com os números da pessoa (`src/lib/assistant/local.ts`).
 2. **Conta com IA ligada:** a função `supabase/functions/baiu-chat` confere login, consentimento e limite diário e pergunta à IA. Vão só a pergunta, a conversa recente e o resumo de `src/lib/assistant/context.ts`.
@@ -83,7 +85,7 @@ cp .env.example .env.local   # preencha com a URL e a chave pública do Supabase
 npx expo start
 ```
 
-O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento e na web; o código de confirmação é sempre 246810, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista e a assinatura usa uma loja de teste.
+O servidor de contas é configurado uma vez, seguindo `supabase/LEIA-ME.md`. Para testar sem servidor, `EXPO_PUBLIC_AUTH_FAKE=1` liga um servidor falso em desenvolvimento (Expo Go) e na web; o código de confirmação é sempre 246810, a conta de teste fica guardada no aparelho, a IA responde com um texto de teste e a conexão de contas usa um banco de teste com histórico realista e a assinatura usa uma loja de teste.
 
 O Face ID, as notificações e o cofre no Keychain precisam de um build de desenvolvimento ou de teste. No Expo Go parte disso não funciona.
 
@@ -99,7 +101,7 @@ npm test            # testes de lógica (saldos, fôlego, vencimentos, investime
 npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA, dos bancos e da assinatura, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
-npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura, personalização e telas pequenas
+npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura e telas pequenas
 npm run store:images   # refaz as capturas das lojas e a captura da assinatura para a revisão da Apple
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
 ```

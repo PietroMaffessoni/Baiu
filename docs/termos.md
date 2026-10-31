@@ -1,6 +1,6 @@
 # Termos de Uso do Baiu
 
-Atualizada em 23 de outubro de 2026.
+Atualizada em 27 de outubro de 2026.
 
 Ao criar uma conta ou usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
 
@@ -32,13 +32,13 @@ Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Ass
 
 Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.
 
-Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes.
+Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar.
 
 ## Sugestões e conversas não são recomendação
 
-O fôlego, os selos, os próximos passos, os avisos e as respostas do Baiu, inclusive as da inteligência artificial, são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.
+O fôlego, os selos, os próximos passos, os avisos e as respostas do Baiu são sugestões educativas e gerais, calculadas a partir do que você registra. Eles não são recomendação de investimento, consultoria financeira, contábil, tributária ou jurídica, e não consideram seu perfil completo.
 
-O Baiu não indica ativos específicos, como ações, fundos ou criptomoedas, e não promete rentabilidade. A inteligência artificial pode errar ou trazer informações incompletas: confira números e condições antes de decidir.
+O Baiu não indica ativos específicos, como ações, fundos ou criptomoedas, e não promete rentabilidade. Confira números e condições antes de decidir.
 
 Antes de decisões financeiras importantes, procure um profissional habilitado.
 
@@ -55,12 +55,6 @@ A conexão com bancos é opcional e depende da sua autorização no Baiu e no se
 As categorias são escolhidas automaticamente e podem errar: confira e corrija quando precisar. Para valores oficiais, vale o extrato do seu banco.
 
 A conexão pode ficar indisponível por falhas, manutenção ou mudanças nos bancos, no Open Finance, na Celcoin ou na Polp. Você pode desconectar quando quiser.
-
-## Conversa com IA
-
-A conversa com inteligência artificial é opcional, depende do seu aceite e pode ser desligada a qualquer momento em Ajustes.
-
-Ela tem um limite diário de perguntas. Podemos mudar esse limite ou suspender a função para manter o serviço funcionando. Não use a conversa para fins ilegais nem para tentar burlar as regras do assistente.
 
 ## Uso do aplicativo
 

@@ -1,6 +1,6 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, StyleSheet, type TextInput } from 'react-native';
+import { Pressable, StyleSheet, type TextInputInstance } from 'react-native';
 
 import { AuthScreen, Field, FormError, FormNote, PasswordField } from '@/components/auth-form';
 import { Button } from '@/components/button';
@@ -23,7 +23,7 @@ export default function Entrar() {
   const [error, setError] = useState<string | null>(null);
   const [fails, setFails] = useState(0);
   const [wait, setWait] = useState(0);
-  const passRef = useRef<TextInput>(null);
+  const passRef = useRef<TextInputInstance>(null);
 
   useEffect(() => {
     if (wait <= 0) return;

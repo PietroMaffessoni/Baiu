@@ -56,14 +56,6 @@
             ]
           },
           {
-            "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypeOtherUserContent",
-            "NSPrivacyCollectedDataTypeLinked": false,
-            "NSPrivacyCollectedDataTypeTracking": false,
-            "NSPrivacyCollectedDataTypePurposes": [
-              "NSPrivacyCollectedDataTypePurposeAppFunctionality"
-            ]
-          },
-          {
             "NSPrivacyCollectedDataType": "NSPrivacyCollectedDataTypePurchaseHistory",
             "NSPrivacyCollectedDataTypeLinked": true,
             "NSPrivacyCollectedDataTypeTracking": false,
@@ -172,7 +164,8 @@
       ],
       "expo-sharing",
       "@react-native-community/datetimepicker",
-      "./plugins/with-recents-privacy"
+      "./plugins/with-recents-privacy",
+      "expo-status-bar"
     ],
     "experiments": {
       "typedRoutes": true,

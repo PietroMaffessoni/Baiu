@@ -139,11 +139,6 @@ export function useStore() {
   return ctx;
 }
 
-/** Como useStore, mas devolve null fora do provedor (telas antes de carregar). */
-export function useOptionalStore() {
-  return useContext(StoreContext);
-}
-
 export function useFolego() {
   const { state } = useStore();
   return useMemo(() => computeFolego(state), [state]);

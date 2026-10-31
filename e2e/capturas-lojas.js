@@ -15,6 +15,8 @@ const { BASE, PORT, launch, newPhone, tools } = require('./lib');
 const ROOT = path.resolve(__dirname, '..');
 const WEB = path.join(__dirname, '.web');
 const RAW = path.join(__dirname, 'capturas', 'lojas');
+// Data fixa: as imagens não mudam com o dia.
+const DIA = new Date('2026-11-10T12:00:00-03:00');
 const OUT = path.join(ROOT, 'store', 'imagens');
 const url = (p) => 'file:///' + p.replace(/\\/g, '/');
 
@@ -27,7 +29,6 @@ const SHOTS = [
   ['extrato', 'Veja para onde foi', 'O extrato do mês, dia a dia.'],
   ['vencimentos', 'Nenhum vencimento esquecido', 'Lembrete um dia antes e no dia.'],
   ['investir', 'Investimentos em dia', 'Rendimento do mês e constância de aportes.'],
-  ['personalizar', 'Do seu jeito', 'Escolha a cor e veja o Baiu nas datas comemorativas.'],
 ];
 
 function build() {
@@ -63,6 +64,7 @@ async function captureRaw(browser) {
   // Dados de exemplo, navegando por dentro do app (o modo exemplo não sobrevive a recarregar a página).
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     const shot = async (name) => {
       await t.W(1800);
@@ -77,11 +79,6 @@ async function captureRaw(browser) {
     // a conversa abre pelo aviso do Baiu, que some da tela inicial depois de visto
     await t.btn('Conversar sobre isso', { wait: 1500 });
     await t.btn('Onde posso economizar?', { wait: 2000 });
-    // no modo exemplo o subtítulo diz "do modo exemplo"; numa conta com a IA desligada, só "Respostas prontas"
-    await page.evaluate(() => {
-      const walk = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
-      for (let n = walk.nextNode(); n; n = walk.nextNode()) if (n.nodeValue === 'Respostas prontas do modo exemplo') n.nodeValue = 'Respostas prontas';
-    });
     await shot('assistente');
     await back();
     await shot('inicio');
@@ -96,18 +93,13 @@ async function captureRaw(browser) {
     await t.btn('Ajustes', { wait: 900 });
     await t.tap('Vencimentos', { nth: -1, wait: 900 });
     await shot('vencimentos');
-    await back();
-    await t.tap('Personalizar o Baiu', { wait: 900 });
-    await page.getByRole('radio', { name: 'Turquesa', exact: true }).click();
-    await t.W(400);
-    await page.getByRole('button', { name: /^Natal,/ }).click();
-    await shot('personalizar');
     await ctx.close();
   }
 
   // Conta com o banco de teste conectado.
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     await t.signup('Helena Prado', 'helena.prado@gmail.com', '11996421873');
     await t.btn('Conecte seu banco', { wait: 1200 });
@@ -122,6 +114,7 @@ async function captureRaw(browser) {
   // Tela de assinatura, como aparece no iPhone para quem acabou de criar a conta, só com o plano mensal.
   {
     const { ctx, page } = await newPhone(browser, hd);
+    await page.clock.setFixedTime(DIA);
     const t = tools(page, 'lojas');
     await t.go('/');
     await page.evaluate(() => localStorage.setItem('baiu:fake-store', JSON.stringify({ subs: {}, trialUsed: {}, offered: ['mensal'] })));

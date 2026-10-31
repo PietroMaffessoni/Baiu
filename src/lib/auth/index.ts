@@ -10,6 +10,6 @@ import type { AuthBackend } from './types';
  */
 const useFake = process.env.EXPO_PUBLIC_AUTH_FAKE === '1' && (__DEV__ || Platform.OS === 'web');
 
-export const auth: AuthBackend = useFake ? createFakeBackend({ latencyMs: 250 }) : createSupabaseBackend();
+export const auth: AuthBackend = useFake ? createFakeBackend({ latencyMs: 250, persist: true }) : createSupabaseBackend();
 
 export * from './types';

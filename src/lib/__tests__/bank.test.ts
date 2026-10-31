@@ -492,10 +492,18 @@ describe('banco de teste', () => {
     expect(p.accounts).toHaveLength(2);
     expect(p.transactions.every((t) => new Date(t.date) <= NOW)).toBe(true);
     await b.unlink(c.id);
-    expect((await b.sync({})).items).toHaveLength(0);
+    const after = await b.sync({ [c.id]: NOW.toISOString() });
+    expect(after.items).toHaveLength(0);
+    expect(after.revoked).toEqual([c.id]);
     const [h] = await b.history();
     expect(h).toMatchObject({ id: c.id, status: 'cancelada', products: ['ACCOUNT', 'CREDIT_CARD_ACCOUNT', 'INVESTMENTS'] });
     expect(h.revokedAt).toBe(NOW.toISOString());
+  });
+
+  it('no máximo 3 bancos', async () => {
+    const b = createFakeBank();
+    for (let i = 0; i < 3; i++) await b.start('exemplo', '529.982.247-25');
+    await expect(b.start('digital', '529.982.247-25')).rejects.toEqual(new BankFailure('limit'));
   });
 
   it('CPF inválido e banco fora do ar', async () => {

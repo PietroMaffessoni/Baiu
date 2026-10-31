@@ -13,7 +13,14 @@ import { mergeBankSync, type SyncSummary } from './merge';
  */
 const AUTO_EVERY = 60 * 60_000;
 
-type Status = { running: boolean; error?: BankErrorCode; last?: SyncSummary; at?: number };
+type Status = {
+  running: boolean;
+  error?: BankErrorCode;
+  last?: SyncSummary;
+  at?: number;
+  /** Bancos que saíram do app porque a autorização acabou. */
+  ended?: string[];
+};
 
 let status: Status = { running: false };
 const listeners = new Set<() => void>();
@@ -53,7 +60,15 @@ export function useBank(backend: BankBackend = bankBackend) {
       const at = new Date();
       const summary = mergeBankSync(latest.current, payload, at).summary;
       dispatch({ type: 'bankSync', payload, at: at.toISOString() });
-      set({ running: false, last: summary, at: at.getTime() });
+      // autorização encerrada: o banco sai, e o que já veio fica como contas manuais
+      const gone = latest.current.bank.items.filter((i) => payload.revoked?.includes(i.id));
+      for (const i of gone) dispatch({ type: 'bankUnlink', itemId: i.id, keep: true });
+      set({
+        running: false,
+        last: summary,
+        at: at.getTime(),
+        ...(gone.length ? { ended: [...(status.ended ?? []), ...gone.map((i) => i.name)] } : {}),
+      });
       return summary;
     } catch (e) {
       set({ running: false, error: e instanceof BankFailure ? e.code : 'unknown' });

@@ -5,7 +5,6 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BaiuSays } from '@/components/baiu-says';
 import { Baiu, baiuHeight } from '@/components/baiu/baiu';
-import { useBaiuLook } from '@/components/baiu/use-look';
 import { BankMark } from '@/components/bank-mark';
 import { Button, IconButton } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
@@ -22,7 +21,7 @@ import type { Account } from '@/data/types';
 import { useAlerts } from '@/lib/assistant/use-assistant';
 import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { dueItems, dueLabel } from '@/lib/bills';
-import { paletteFor } from '@/lib/look';
+import { paletteFor } from '@/lib/palette';
 import { greeting, longToday } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
@@ -61,12 +60,11 @@ export default function Home() {
   const trialLeft = sub.ent ? trialDaysLeft(sub.ent) : null;
   const broken = state.bank.items.filter((i) => i.status === 'reconectar');
 
-  const look = useBaiuLook();
   const fishW = Math.min(230, Math.round(width * 0.58));
   const fishTop = insets.top + 26;
   const fishH = baiuHeight(fishW);
   const stage = fishTop + fishH * 0.96;
-  const pal = paletteFor(look.color, folego.mood.mood);
+  const pal = paletteFor(folego.mood.mood);
   const hide = state.settings.hideValues;
   const hasAccounts = state.accounts.length > 0;
 
@@ -88,7 +86,7 @@ export default function Home() {
         linked ? (
           <RefreshControl
             refreshing={bankStatus.running}
-            onRefresh={syncNow}
+            onRefresh={() => void syncNow()}
             tintColor={color.lantern}
             progressViewOffset={insets.top}
           />

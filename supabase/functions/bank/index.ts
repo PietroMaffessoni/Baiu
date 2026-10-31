@@ -35,6 +35,8 @@ const OVERLAP_DAYS = 7;
 /** A Polp atualiza investimentos no máximo a cada 6 horas: não adianta pedir antes. */
 const INVESTMENTS_EVERY = 6 * 3_600_000;
 const MAX_PAGES = 20;
+/** Bancos por pessoa na assinatura. O app usa o mesmo número (src/lib/bank/client.ts). */
+const BANK_LIMIT = 3;
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ID_RE = /^[\w-]{1,100}$/;
 
@@ -137,6 +139,127 @@ export function validCpf(raw: string) {
   return digit(9) === Number(d[9]) && digit(10) === Number(d[10]);
 }
 
+/** Compara segredos sem revelar, pelo tempo de resposta, quantos caracteres bateram. */
+function same(a: string, b: string) {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+/** Chave secreta do Supabase (a nova, `sb_secret_...`, ou a antiga service_role), só para a tarefa diária. */
+function serviceKey(env: Env) {
+  try {
+    const keys = JSON.parse(env('SUPABASE_SECRET_KEYS') ?? '{}') as Record<string, unknown>;
+    if (typeof keys.default === 'string' && keys.default) return keys.default;
+  } catch {}
+  return env('SUPABASE_SERVICE_ROLE_KEY') || null;
+}
+
+/**
+ * Quando a assinatura terminou, já contado o prazo de acerto do pagamento da
+ * loja. `null`: ativa, vitalícia ou sem como saber agora (na dúvida, nada é
+ * cancelado). `0`: nunca assinou.
+ */
+async function subscriptionEnd(uid: string, env: Env, http: typeof fetch): Promise<number | null> {
+  const key = env('REVENUECAT_SECRET_KEY');
+  if (!key) return null;
+  let r: Response;
+  try {
+    r = await http(`${REVENUECAT}/subscribers/${encodeURIComponent(uid)}`, {
+      method: 'GET',
+      headers: { Authorization: `Bearer ${key}` },
+      signal: AbortSignal.timeout(8_000),
+    });
+  } catch {
+    return null;
+  }
+  if (r.status === 401 || r.status === 403) {
+    console.error('bank: RevenueCat recusou a chave', r.status);
+    throw new Stop(503, 'not_configured');
+  }
+  if (!r.ok) return null;
+  let ent: RevenueCatEntitlement | undefined;
+  try {
+    const data = (await r.json()) as { subscriber?: { entitlements?: Record<string, RevenueCatEntitlement> } };
+    ent = data.subscriber?.entitlements?.[env('REVENUECAT_ENTITLEMENT') || 'assinatura'];
+  } catch {
+    return null;
+  }
+  if (!ent) return 0;
+  if (!ent.expires_date) return null;
+  const until = Math.max(Date.parse(ent.expires_date) || 0, Date.parse(ent.grace_period_expires_date ?? '') || 0);
+  return until > Date.now() ? null : until;
+}
+
+/** Dias depois do fim da assinatura até o Baiu cancelar as autorizações dos bancos. */
+const LAPSE_DAYS = 7;
+/** Pessoas conferidas por execução; o resto fica para o dia seguinte. */
+const CLEANUP_MAX_USERS = 300;
+
+/**
+ * Cada banco conectado custa ao Baiu uma mensalidade na Polp enquanto a
+ * autorização estiver ativa. Quem sai da assinatura deixa de usar, mas a
+ * autorização continuaria cobrada: passados LAPSE_DAYS do fim, o Baiu a
+ * cancela na Polp e marca aqui. Os dados que já estão no aparelho ficam.
+ */
+async function cleanup(
+  env: Env,
+  http: typeof fetch,
+  base: string,
+  polp: (path: string, init?: RequestInit) => Promise<Json | null>,
+  one: (r: Json | null) => Json | null,
+) {
+  if (!env('REVENUECAT_SECRET_KEY')) return { checked: 0, revoked: 0 };
+  const key = serviceKey(env);
+  if (!key) {
+    console.error('bank: limpeza sem a chave secreta do Supabase');
+    throw new Stop(503, 'not_configured');
+  }
+  // a chave nova vai só em apikey; a antiga (um JWT) também em Authorization
+  const headers: Record<string, string> = {
+    apikey: key,
+    'Content-Type': 'application/json',
+    ...(key.startsWith('eyJ') ? { Authorization: `Bearer ${key}` } : {}),
+  };
+  const rpc = async (fn: string, args: Json) => {
+    const r = await http(`${base}/rest/v1/rpc/${fn}`, { method: 'POST', headers, body: JSON.stringify(args) });
+    if (!r.ok) {
+      console.error('bank: limpeza, o banco de dados respondeu', r.status);
+      throw new Stop(r.status === 404 ? 503 : 502, r.status === 404 ? 'not_configured' : 'unknown');
+    }
+    return r;
+  };
+
+  type Active = { user_id: string; item_id: string; created_at: string };
+  const rows = (await (await rpc('bank_active_connections', {})).json()) as Active[];
+  const byUser = new Map<string, Active[]>();
+  for (const r of rows) byUser.set(r.user_id, [...(byUser.get(r.user_id) ?? []), r]);
+
+  const days = Number(env('BANK_LAPSE_DAYS'));
+  const lapse = (Number.isFinite(days) && days >= 0 ? days : LAPSE_DAYS) * DAY;
+  let checked = 0;
+  let revoked = 0;
+  for (const [uid, list] of byUser) {
+    if (checked >= CLEANUP_MAX_USERS) break;
+    checked++;
+    const ended = await subscriptionEnd(uid, env, http);
+    if (ended === null) continue;
+    // nunca assinou: conta a partir da conexão mais recente
+    const since = ended || Math.max(...list.map((r) => Date.parse(r.created_at) || 0));
+    if (Date.now() - since < lapse) continue;
+    for (const r of list) {
+      if (!ID_RE.test(r.item_id)) continue;
+      const c = one(await polp(`/consents/${r.item_id}`, { method: 'GET' }));
+      if (c && c.cliente_user_id === uid) await polp(`/consents/${r.item_id}`, { method: 'DELETE' });
+      await rpc('bank_lapse', { p_user: uid, p_item: r.item_id });
+      revoked++;
+    }
+  }
+  console.log('bank: limpeza', checked, revoked);
+  return { checked, revoked };
+}
+
 export async function handle(req: Request, env: Env, http: typeof fetch = fetch): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return fail(405, 'method');
@@ -149,35 +272,6 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   const sandbox = env('POLP_SANDBOX') === '1';
   const api = sandbox ? `${POLP}/sandbox` : POLP;
   const redirect = /^https:\/\/\S+$/.test(env('POLP_REDIRECT_URL') ?? '') ? env('POLP_REDIRECT_URL') : undefined;
-
-  const auth = req.headers.get('Authorization') ?? '';
-  if (!/^Bearer\s+\S+$/i.test(auth)) return fail(401, 'session');
-
-  let body: Json;
-  try {
-    const raw = await req.text();
-    if (raw.length > 20_000) return fail(413, 'invalid');
-    body = JSON.parse(raw);
-  } catch {
-    return fail(400, 'invalid');
-  }
-
-  const supa = async (path: string, init: RequestInit = {}) => {
-    const r = await http(`${base}${path}`, {
-      ...init,
-      headers: { Authorization: auth, apikey: anon, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
-    });
-    if (r.status === 401) throw new Stop(401, 'session');
-    if (r.status === 404) {
-      console.error('bank: tabela ou função ausente; aplique as migrações dos bancos');
-      throw new Stop(503, 'not_configured');
-    }
-    if (!r.ok) {
-      console.error('bank: banco de dados respondeu', r.status);
-      throw new Stop(502, 'unknown');
-    }
-    return r;
-  };
 
   /** Chamada à Polp. 404 vira null (autorização ou recurso que não existe mais). */
   const polp = async (path: string, init: RequestInit = {}, root = api): Promise<Json | null> => {
@@ -215,6 +309,48 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   };
   // respostas de um item vêm em { data: {...} }; listas em { data: [...], meta: { next_cursor } }
   const one = (r: Json | null) => (r && typeof r.data === 'object' && !Array.isArray(r.data) ? (r.data as Json) : r);
+
+  // tarefa diária (pg_cron, sem login de pessoa): cancela as autorizações de quem ficou sem assinatura
+  if (req.headers.has('x-cleanup-secret')) {
+    const expected = env('BANK_CLEANUP_SECRET') ?? '';
+    if (expected.length < 16 || !same(req.headers.get('x-cleanup-secret') ?? '', expected)) return fail(401, 'session');
+    try {
+      return json(200, await cleanup(env, http, base, polp, one));
+    } catch (e) {
+      if (e instanceof Stop) return fail(e.status, e.code);
+      console.error('bank: limpeza falhou');
+      return fail(502, 'unknown');
+    }
+  }
+
+  const auth = req.headers.get('Authorization') ?? '';
+  if (!/^Bearer\s+\S+$/i.test(auth)) return fail(401, 'session');
+
+  let body: Json;
+  try {
+    const raw = await req.text();
+    if (raw.length > 20_000) return fail(413, 'invalid');
+    body = JSON.parse(raw);
+  } catch {
+    return fail(400, 'invalid');
+  }
+
+  const supa = async (path: string, init: RequestInit = {}) => {
+    const r = await http(`${base}${path}`, {
+      ...init,
+      headers: { Authorization: auth, apikey: anon, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+    });
+    if (r.status === 401) throw new Stop(401, 'session');
+    if (r.status === 404) {
+      console.error('bank: tabela ou função ausente; aplique as migrações dos bancos');
+      throw new Stop(503, 'not_configured');
+    }
+    if (!r.ok) {
+      console.error('bank: banco de dados respondeu', r.status);
+      throw new Stop(502, 'unknown');
+    }
+    return r;
+  };
 
   /** Todas as páginas de uma lista, até MAX_PAGES. */
   const all = async (path: string) => {
@@ -314,6 +450,23 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
         if (!inst) throw new Stop(404, 'not_found');
         if (!sandbox && inst.status === 'MAJOR_OUTAGE') throw new Stop(409, 'bank_down');
 
+        // no máximo BANK_LIMIT bancos por pessoa; o mesmo banco de novo não conta
+        const active = await rows(true);
+        if (active.length >= BANK_LIMIT && !active.some((r) => r.institution === inst.name)) {
+          let count = 0;
+          for (const r of active) {
+            const c = await consent(r.item_id);
+            const stale =
+              !c ||
+              c.status === 'REJECTED' ||
+              (c.status === 'AWAITING_AUTHORIZATION' && expiresSoon(c.url_to_authenticate_expires_at));
+            // autorização abandonada no meio ou recusada: não custa nada e só ocupa lugar
+            if (stale) await revoke(r.item_id);
+            else count++;
+          }
+          if (count >= BANK_LIMIT) throw new Stop(409, 'limit');
+        }
+
         const payload = {
           institution_id: inst.id,
           cpf,
@@ -364,13 +517,17 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
 
       case 'sync': {
         const since = body.since && typeof body.since === 'object' ? (body.since as Record<string, unknown>) : {};
+        const active = await rows(true);
+        const ids = new Set(active.map((r) => r.item_id));
         const out = {
           items: [] as Json[],
           accounts: [] as Json[],
           transactions: [] as Json[],
           investments: [] as Json[],
+          // bancos do aparelho cuja autorização acabou (cancelada em outro aparelho ou por falta de assinatura)
+          revoked: Object.keys(since).filter((id) => ID_RE.test(id) && !ids.has(id)),
         };
-        for (const row of await rows(true)) {
+        for (const row of active) {
           const id = row.item_id;
           const c = await consent(id);
           // autorização cancelada no banco, ou que a pessoa nunca terminou: não aparece como banco conectado

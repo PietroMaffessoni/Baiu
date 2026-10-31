@@ -5,6 +5,7 @@ import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'rea
 import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { Apresentacao } from '@/components/apresentacao';
 import { Baiu, baiuHeight } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { GroundLight } from '@/components/ground-light';
@@ -12,6 +13,7 @@ import { Mark } from '@/components/mark';
 import { Wordmark } from '@/components/wordmark';
 import { createDemo } from '@/data/demo';
 import { computeFolego } from '@/lib/folego';
+import { introSeen, markIntroSeen } from '@/lib/intro';
 import { useAuth } from '@/store/auth';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
@@ -20,6 +22,8 @@ import { color, gutter } from '@/theme/tokens';
  * Primeiro contato: o Baiu começa murcho. Daqui a pessoa cria a conta, entra
  * na que já tem ou explora os dados de exemplo, a única parte do app sem conta.
  * Ao explorar, o Baiu enche até o fôlego do exemplo antes de o app abrir.
+ * No primeiro uso do aparelho, antes disso, vem a apresentação com os números
+ * do dinheiro no Brasil.
  */
 export default function BoasVindas() {
   const { enterDemo } = useAuth();
@@ -30,6 +34,16 @@ export default function BoasVindas() {
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
+
+  // null: ainda lendo se a apresentação já foi vista neste aparelho
+  const [intro, setIntro] = useState<boolean | null>(null);
+  useEffect(() => {
+    let alive = true;
+    introSeen().then((seen) => alive && setIntro(!seen));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const explore = () => {
     if (filling) return;
@@ -58,6 +72,17 @@ export default function BoasVindas() {
   const fishW = Math.min(270, Math.round(width * 0.66), Math.round(avail * 0.3));
   const fishTop = insets.top + 6;
   const fishH = baiuHeight(fishW);
+
+  if (intro === null) return <View style={styles.screen} />;
+  if (intro)
+    return (
+      <Apresentacao
+        onDone={() => {
+          markIntroSeen();
+          setIntro(false);
+        }}
+      />
+    );
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>

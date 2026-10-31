@@ -4,7 +4,6 @@ import type { Account, Assistant, Bill, Category, ChatMsg, Holding, Settings, St
 import { ruleKey } from '@/lib/bank/categorize';
 import { mergeBankSync } from '@/lib/bank/merge';
 import type { SyncPayload } from '@/lib/bank/types';
-import { isBaiuColor, type BaiuLook } from '@/lib/look';
 import { computeFolego } from '@/lib/folego';
 import { addMonth } from '@/lib/dates';
 import { applyTx, newId, round2, validateTx } from '@/lib/ledger';
@@ -25,7 +24,6 @@ export type Action =
   | { type: 'exitDemo' }
   | { type: 'wipe' }
   | { type: 'setSetting'; key: keyof Settings; value: boolean }
-  | { type: 'setBaiu'; patch: Partial<BaiuLook> }
   | { type: 'bankSync'; payload: SyncPayload; at: string }
   /** Desconecta um banco. `keep` mantém contas e movimentos como manuais. */
   | { type: 'bankUnlink'; itemId: string; keep: boolean }
@@ -139,7 +137,6 @@ function core(s: State, action: Action): State {
         ...createDemo(),
         onboarded: true,
         settings: s.settings,
-        baiu: s.baiu,
         assistant: createAssistant(),
         bank: createBank(),
       };
@@ -148,7 +145,6 @@ function core(s: State, action: Action): State {
         ...createEmpty(),
         onboarded: true,
         settings: { ...s.settings },
-        baiu: { ...s.baiu },
         assistant: createAssistant(),
         bank: createBank(),
       };
@@ -156,17 +152,6 @@ function core(s: State, action: Action): State {
       return createEmpty();
     case 'setSetting':
       return { ...s, settings: { ...s.settings, [action.key]: action.value } };
-    case 'setBaiu': {
-      const { color, seasonal } = action.patch;
-      if (color !== undefined && !isBaiuColor(color)) return s;
-      return {
-        ...s,
-        baiu: {
-          color: color ?? s.baiu.color,
-          seasonal: typeof seasonal === 'boolean' ? seasonal : s.baiu.seasonal,
-        },
-      };
-    }
 
     case 'bankSync':
       return mergeBankSync(s, action.payload, new Date(action.at)).state;

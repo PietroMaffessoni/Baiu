@@ -62,6 +62,17 @@ describe('cadastro e confirmação', () => {
     expect(await code(b.signIn('maria.silva@gmail.com', 'Lanterna#42'))).toBe('ok');
   });
 
+  it('no celular, a conta de teste continua lá depois de fechar o app', async () => {
+    const b = createFakeBackend({ persist: true });
+    await b.signUp(input());
+    await b.verifySignUp('maria.silva@gmail.com', FAKE_CODE);
+    await new Promise((r) => setTimeout(r, 0)); // a cópia no aparelho não bloqueia
+    const reopened = createFakeBackend({ persist: true });
+    expect(await reopened.restore()).toMatchObject({ email: 'maria.silva@gmail.com' });
+    await reopened.signOut();
+    expect(await code(reopened.signIn('maria.silva@gmail.com', 'Lanterna#42'))).toBe('ok');
+  });
+
   it('limita o reenvio do código a um por minuto', async () => {
     const b = createFakeBackend();
     await b.signUp(input());

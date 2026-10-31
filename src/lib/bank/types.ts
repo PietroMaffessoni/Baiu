@@ -60,6 +60,8 @@ export type SyncPayload = {
   accounts: RemoteAccount[];
   transactions: RemoteTx[];
   investments: RemoteInvestment[];
+  /** Bancos do aparelho cuja autorização acabou (cancelada em outro aparelho ou por falta de assinatura). */
+  revoked?: string[];
 };
 
 /** Banco que a pessoa pode escolher para conectar. */

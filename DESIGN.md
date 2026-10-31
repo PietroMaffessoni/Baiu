@@ -292,7 +292,7 @@ Uma barra fina por dia (até 6px, gap 3px), altura pela raiz do gasto; dias com 
 ### O Baiu (mascote)
 Baiacu em SVG, de frente: corpo redondo, barriga clara, pintas no dorso, nadadeiras peitorais, dorsal pequena e rabo saindo atrás do corpo. Quatro humores (estufado, cheio, meio, murcho) mudam silhueta, rosto e pele: o murcho cede para baixo e fica apagado, com dobras na barriga; o estufado vira bola com espinhos. A escala vai de 0.8 a 1.0 com o fôlego. Boia devagar (3s), bate as nadadeiras mais rápido quanto melhor o humor e pisca. Tocar estufa em mola, mostra os espinhos, intensifica o halo e vibra; soltar volta ao fôlego real. Com Reduzir Movimento ativo, fica parado. O estado sempre acompanha texto (linha de humor e "Fôlego N de 100").
 
-**Personalização.** Oito cores (Âmbar, padrão, Coral, Rosa, Lilás, Azul, Turquesa, Verde, Grafite). A paleta do corpo sai do tom base em HSL; o humor mexe na saturação e na luz, então o murcho de qualquer cor continua apagado. Enfeites automáticos, que a pessoa pode desligar, em oito datas: Ano Novo (chapéu de festa e confete), Carnaval (penas e confete), Páscoa (orelhas de coelho), Dia dos Namorados (corações), Festa Junina (chapéu de palha e sardas), Dia das Crianças (boné de hélice), Halloween (chapéu de bruxa) e Natal (gorro). Cores e enfeites nunca mudam o tamanho nem o humor, que continuam lendo só o fôlego.
+**Cor.** Sempre âmbar, sem escolha de cor nem enfeites de data. A paleta do corpo sai do tom base em HSL; o humor mexe na saturação e na luz, então o murcho fica apagado.
 
 ## Do's and Don'ts
 

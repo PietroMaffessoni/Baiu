@@ -8,6 +8,7 @@ import {
   StyleSheet,
   TextInput,
   View,
+  type TextInputInstance,
   type TextInputProps,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -75,7 +76,7 @@ type FieldProps = TextInputProps & {
 };
 
 /** Campo com rótulo, borda vermelha e mensagem quando há erro. */
-export const Field = forwardRef<TextInput, FieldProps>(function Field(
+export const Field = forwardRef<TextInputInstance, FieldProps>(function Field(
   { label, error, hint, right, style, ...props },
   ref,
 ) {
@@ -121,7 +122,7 @@ export const Field = forwardRef<TextInput, FieldProps>(function Field(
 });
 
 /** Campo de senha com o olho para mostrar o que foi digitado. */
-export const PasswordField = forwardRef<TextInput, FieldProps & { isNew?: boolean }>(function PasswordField(
+export const PasswordField = forwardRef<TextInputInstance, FieldProps & { isNew?: boolean }>(function PasswordField(
   { isNew, ...props },
   ref,
 ) {
