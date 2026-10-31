@@ -88,7 +88,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
 
   O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000` e `20261027120000`.
 
-  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os três arquivos podem rodar de novo sem estragar nada.
+  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os quatro arquivos podem rodar de novo sem estragar nada.
 
 - [ ] As tabelas existem e estão com RLS ligado:
 
@@ -99,7 +99,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   order by 1;
   ```
 
-  Resultado esperado: `assistant_usage`, `bank_connections` e `consents`, todas com `rls = true`.
+  Resultado esperado: `assistant_usage`, `baiu_config`, `bank_connections` e `consents`, todas com `rls = true`.
 
 - [ ] As permissões estão fechadas:
 
@@ -109,7 +109,7 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
          has_table_privilege(r, 'public.' || t, 'insert')
            or has_table_privilege(r, 'public.' || t, 'update')
            or has_table_privilege(r, 'public.' || t, 'delete') as grava
-  from unnest(array['consents', 'assistant_usage', 'bank_connections']) t,
+  from unnest(array['consents', 'assistant_usage', 'bank_connections', 'baiu_config']) t,
        unnest(array['anon', 'authenticated']) r
   order by 1, 2;
   ```
@@ -131,8 +131,8 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   from unnest(array[
     'public.delete_account()',
     'public.assistant_consent(boolean, text)',
-    'public.assistant_take(text, integer)',
-    'public.bank_link(text, text, text)',
+    'public.assistant_take()',
+    'public.bank_link(text, text, text, text[])',
     'public.bank_unlink(text)'
   ]) f;
   ```
@@ -218,24 +218,32 @@ Em **Edge Functions, Secrets**:
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | Adiado (IA desligada) | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
 | `BAIU_AI_MODEL` | Não | Modelo da IA. Padrão `claude-opus-5-5`; para gastar menos, `claude-sonnet-5-5` ou `claude-haiku-5-5` | Decisão do Pietro e do sócio |
-| `BAIU_AI_DAILY_LIMIT` | Não | Perguntas por pessoa por dia. Padrão 30 | Decisão do Pietro e do sócio |
 | `POLP_CLIENT_ID` | Para os bancos | `x-api-client` da Polp (um UUID) | Pietro (apêndice C) |
 | `POLP_CLIENT_SECRET` | Para os bancos | `x-api-secret` da Polp. Aparece uma vez só | Pietro (apêndice C) |
 | `POLP_SANDBOX` | Só em teste | `1` usa o ambiente de teste da Polp: dados fictícios, sem banco de verdade e sem cobrança. **Apagar antes de publicar** | — |
 | `POLP_REDIRECT_URL` | Sim (plano Pro) | Página que devolve a pessoa ao app depois do banco: `https://pietromaffessoni.github.io/Baiu/open-finance/` | Pietro (apêndice C) |
-| `REVENUECAT_SECRET_KEY` | Para cobrar | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
+| `REVENUECAT_SECRET_KEY` | Sim | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
 | `BANK_CLEANUP_SECRET` | Para cobrar | Senha da tarefa diária que desconecta os bancos de quem saiu da assinatura (passo 7.1). Invente uma com pelo menos 32 letras e números, por exemplo num gerenciador de senhas | Sócio |
 | `BANK_LAPSE_DAYS` | Não | Dias depois do fim da assinatura até desconectar os bancos. Padrão 7 | Decisão do Pietro e do sócio |
+| `BAIU_SUBSCRIPTION_OFF` | Só em teste | `1` libera a IA e os bancos sem conferir a assinatura. **Apagar antes de publicar** | — |
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
 
 - [ ] `POLP_CLIENT_ID` e `POLP_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
-- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, as funções atendem qualquer pessoa logada, mesmo sem assinatura.
+- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, os bancos (e a IA, quando voltar) ficam indisponíveis para todos (ver e cancelar autorizações continua funcionando). Para testar antes de o RevenueCat existir, use `BAIU_SUBSCRIPTION_OFF=1`.
 - [ ] `POLP_REDIRECT_URL` cadastrada (o plano escolhido é o Pro).
 - [ ] `BANK_CLEANUP_SECRET` cadastrada e a tarefa diária agendada (passo 7.1).
-- [ ] Antes de publicar nas lojas: `POLP_SANDBOX` **apagado**.
+- [ ] Antes de publicar nas lojas: `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` **apagados**.
 
-Sem os segredos da IA ou da Polp, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível.
+Sem os segredos da IA ou da Polp, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível. Se o RevenueCat sair do ar, as funções não liberam ninguém às cegas: pedem para tentar de novo, e só quem foi conferido nos últimos 10 minutos segue usando.
+
+**Limite de perguntas por dia e versão dos termos.** Ficam no banco, na tabela `baiu_config`, e não com quem chama a função. O limite começa em 30 e muda no SQL Editor:
+
+```sql
+update public.baiu_config set assistant_daily_limit = 50;
+```
+
+As versões dos termos da IA e da conexão com banco (`assistant_consent_version` e `bank_consent_version`) mudam só por migração nova, junto com o texto e as constantes `AI_CONSENT_VERSION` e `BANK_CONSENT_VERSION` no app. Quem aceitou uma versão antiga precisa aceitar de novo.
 
 ### 7.1 Tarefa diária: desconectar os bancos de quem saiu da assinatura
 
@@ -255,7 +263,7 @@ Cada banco conectado custa R$ 3,60 por mês na Polp enquanto a autorização est
    select cron.schedule(
      'baiu-bancos-sem-assinatura',
      '0 6 * * *',
-     $
+     $$
      select net.http_post(
        url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/bank',
        headers := jsonb_build_object(
@@ -265,7 +273,7 @@ Cada banco conectado custa R$ 3,60 por mês na Polp enquanto a autorização est
        body := '{"action":"cleanup"}'::jsonb,
        timeout_milliseconds := 120000
      );
-     $
+     $$
    );
    ```
 
@@ -351,7 +359,7 @@ Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a 
 - [ ] **Advisors, Security Advisor** sem erros (os avisos amarelos podem ser lidos e avaliados).
 - [ ] **Advisors, Performance Advisor** sem erros.
 - [ ] A chave `secret`/`service_role` não aparece em lugar nenhum fora do painel. Para conferir, procure no repositório e no `.env.local`.
-- [ ] `POLP_SANDBOX` apagado (passo 7).
+- [ ] `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` apagados (passo 7).
 - [ ] Nenhuma tabela nova foi criada pelo painel sem migração (veja as regras abaixo).
 - [ ] Backups diários ativos (**Database, Backups**, no plano Pro).
 

@@ -13,6 +13,9 @@ alter table public.bank_connections drop constraint if exists bank_connections_p
 alter table public.bank_connections add constraint bank_connections_products_check
   check (products <@ array['ACCOUNT', 'CREDIT_CARD_ACCOUNT', 'CREDIT_OPERATIONS', 'INVESTMENTS', 'EXCHANGE']::text[]);
 
+-- termo novo da conexão (BANK_CONSENT_VERSION no app): os aceites antigos não valem para conexões novas
+update public.baiu_config set bank_consent_version = '2026-10-23';
+
 -- Registra a autorização no momento em que a pessoa confirma, antes de ir
 -- ao banco: a lista de autorizações mostra também as pendentes e recusadas.
 -- Reconectar a mesma autorização reativa a linha.
@@ -29,8 +32,8 @@ begin
   if uid is null then
     raise exception 'baiu: não autenticado' using errcode = '42501';
   end if;
-  if bank_link.version is null or bank_link.version !~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}$' then
-    raise exception 'baiu: versão inválida' using errcode = '22023';
+  if bank_link.version is distinct from (select c.bank_consent_version from public.baiu_config c) then
+    raise exception 'baiu: versão do termo desatualizada' using errcode = '22023';
   end if;
   insert into public.bank_connections as b (user_id, item_id, institution, products)
     values (uid, bank_link.item_id, left(coalesce(bank_link.institution, ''), 120), coalesce(bank_link.products, '{}'))

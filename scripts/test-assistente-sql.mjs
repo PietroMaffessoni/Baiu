@@ -43,37 +43,60 @@ const as = async (uid) => {
   await db.exec(`set role authenticated`);
   await db.exec(`select set_config('request.jwt.claim.sub', '${uid ?? ''}', false)`);
 };
-const take = (limit = 3, version = '2026-10-15') => one(`select public.assistant_take($1, $2) as r`, [version, limit]).then((x) => x.r);
+const take = () => one(`select public.assistant_take() as r`).then((x) => x.r);
+const setLimit = async (n) => {
+  await db.exec(`reset role`);
+  await db.query(`update public.baiu_config set assistant_daily_limit = $1`, [n]);
+};
+const setVersion = async (v) => {
+  await db.exec(`reset role`);
+  await db.query(`update public.baiu_config set assistant_consent_version = $1`, [v]);
+};
+
+await setLimit(3);
+const cfg = await one(`select * from public.baiu_config`);
+ok('configuração: versão do termo e limite no banco', cfg.assistant_consent_version === '2026-10-15' && cfg.assistant_daily_limit === 3, JSON.stringify(cfg));
+await db.exec(assistente);
+ok('rodar a migração de novo mantém o limite escolhido', (await one(`select assistant_daily_limit as n from public.baiu_config`)).n === 3);
+ok('a função antiga, que recebia o limite de quem chama, não existe', (await fails(`select public.assistant_take('2026-10-15', 1000)`)) !== null);
 
 await as(ana);
 ok('sem consentimento, a IA é recusada', (await take()).reason === 'consent');
 ok('aceite com versão inválida é recusado', (await fails(`select public.assistant_consent(true, 'qualquer')`)) !== null);
+ok('aceite de versão que não é a atual é recusado', (await fails(`select public.assistant_consent(true, '1999-01-01')`)) !== null);
+ok('aceite sem versão é recusado', (await fails(`select public.assistant_consent(true, null)`)) !== null);
 ok('aceitar funciona', (await fails(`select public.assistant_consent(true, '2026-10-15')`)) === null);
 const c = await one(`select count(*)::int as n from public.consents where document = 'assistente' and revoked_at is null`);
 ok('aceite registrado, visível para a própria pessoa', c.n === 1, JSON.stringify(c));
-ok('aceite de versão antiga não vale para a versão nova', (await take(3, '2026-11-01')).reason === 'consent');
+await setVersion('2026-11-01');
+await as(ana);
+ok('termo novo: o aceite antigo deixa de valer', (await take()).reason === 'consent');
+await setVersion('2026-10-15');
+await as(ana);
 
-const r1 = await take(3);
-const r2 = await take(3);
-const r3 = await take(3);
-const r4 = await take(3);
+const r1 = await take();
+const r2 = await take();
+const r3 = await take();
+const r4 = await take();
 ok('conta as perguntas do dia', r1.ok && r1.remaining === 2 && r2.remaining === 1 && r3.remaining === 0, JSON.stringify([r1, r2, r3]));
 ok('passa do limite: recusa por cota', r4.ok === false && r4.reason === 'quota', JSON.stringify(r4));
 
 ok('pessoa logada não lê o contador', (await fails(`select * from public.assistant_usage`)) !== null);
 ok('pessoa logada não zera o contador', (await fails(`delete from public.assistant_usage`)) !== null);
+ok('pessoa logada não lê a configuração', (await fails(`select * from public.baiu_config`)) !== null);
+ok('pessoa logada não muda o limite', (await fails(`update public.baiu_config set assistant_daily_limit = 1000`)) !== null);
 ok('pessoa logada não grava aceite direto', (await fails(`insert into public.consents (user_id, document, version) values ($1, 'assistente', '2026-10-15')`, [ana])) !== null);
 
 await as(bia);
-ok('o limite é de cada pessoa', (await take(3)).reason === 'consent');
+ok('o limite é de cada pessoa', (await take()).reason === 'consent');
 await fails(`select public.assistant_consent(true, '2026-10-15')`);
-ok('outra pessoa tem a própria cota', (await take(3)).remaining === 2);
+ok('outra pessoa tem a própria cota', (await take()).remaining === 2);
 const seen = await one(`select count(*)::int as n from public.consents where document = 'assistente'`);
 ok('cada pessoa só vê os próprios aceites', seen.n === 1, JSON.stringify(seen));
 
 await as(ana);
 ok('revogar funciona', (await fails(`select public.assistant_consent(false, null)`)) === null);
-ok('depois de revogar, a IA é recusada', (await take(100)).reason === 'consent');
+ok('depois de revogar, a IA é recusada', (await take()).reason === 'consent');
 await fails(`select public.assistant_consent(true, '2026-10-15')`);
 const hist = await one(`select count(*)::int as total, count(revoked_at)::int as revogados from public.consents where document = 'assistente'`);
 ok('o histórico de aceites e revogações fica guardado', hist.total === 2 && hist.revogados === 1, JSON.stringify(hist));
@@ -84,13 +107,15 @@ ok('sem login: não registra aceite', (await fails(`select public.assistant_cons
 
 await db.exec(`reset role`);
 await db.exec(`set role anon`);
-ok('visitante anônimo não chama a cota', /permission denied/.test((await fails(`select public.assistant_take('2026-10-15', 3)`)) ?? ''));
+ok('visitante anônimo não chama a cota', /permission denied/.test((await fails(`select public.assistant_take()`)) ?? ''));
+ok('visitante anônimo não lê a configuração', /permission denied/.test((await fails(`select * from public.baiu_config`)) ?? ''));
 ok('visitante anônimo não chama o aceite', /permission denied/.test((await fails(`select public.assistant_consent(true, '2026-10-15')`)) ?? ''));
 
 await db.exec(`reset role`);
 await db.exec(`insert into public.assistant_usage (user_id, day, count) values ($1, current_date - 40, 9)`.replace('$1', `'${ana}'`));
+await setLimit(100);
 await as(ana);
-await take(100);
+await take();
 await db.exec(`reset role`);
 const old = await one(`select count(*)::int as n from public.assistant_usage where user_id = $1 and day < current_date - 30`, [ana]);
 ok('contadores com mais de 30 dias são apagados', old.n === 0, JSON.stringify(old));
