@@ -4,6 +4,21 @@ Este guia é para quem cuida do banco de dados e do servidor do Baiu. Ele lista 
 
 Marque cada caixa só depois de conferir no painel ou com a consulta indicada. Siga a ordem: as partes do fim dependem das do começo.
 
+## Conferência rápida
+
+Duas conferências automáticas mostram o que está pronto e o que falta. Nenhuma muda nada nem mostra segredos.
+
+1. **Por dentro (banco de dados):** no **SQL Editor**, cole o arquivo `conferencia.sql` inteiro e clique em **Run**. Cada linha é um item: ✅ está certo, ❌ precisa de ajuste (a coluna `o_que_fazer` diz como). Ele confere tabelas, RLS, permissões, funções, gatilhos e a tarefa diária (passos 2 e 7.1).
+2. **Por fora (como o app enxerga):** com a URL e a chave publishable no `.env.local` (passo 8), rode no computador:
+
+   ```bash
+   npm run conferir
+   ```
+
+   Ele confere o login (passo 3), o banco pelo lado de fora, se as funções `bank` e `subscription` estão publicadas com o Verify JWT desligado (passo 6) e se as chaves da Polp e do RevenueCat estão cadastradas (passo 7).
+
+O que nenhuma das duas enxerga: região, plano, modelos de e-mail, SMTP e os segredos `POLP_SANDBOX`, `POLP_REDIRECT_URL` e `BANK_CLEANUP_SECRET`. Esses ficam na lista abaixo.
+
 ## O que o Supabase faz no Baiu
 
 O Supabase cuida de quatro coisas:
@@ -31,6 +46,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | `migrations/20261015130000_bancos.sql` | Tabela `bank_connections` e aceite de cada banco |
 | `migrations/20261023120000_polp.sql` | Histórico das autorizações dos bancos (desconectar marca a data em vez de apagar) e categorias autorizadas |
 | `migrations/20261027120000_bancos_sem_assinatura.sql` | Funções da tarefa diária que cancela os bancos de quem ficou sem assinatura |
+| `conferencia.sql` | Consulta que confere o banco de dados inteiro (veja "Conferência rápida") |
 | `functions/baiu-chat/index.ts` | Função da conversa com IA |
 | `functions/bank/index.ts` | Função dos bancos conectados |
 | `functions/subscription/index.ts` | Função que apaga a pessoa do RevenueCat |
@@ -88,66 +104,9 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
 
   O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000` e `20261027120000`.
 
-  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os três arquivos podem rodar de novo sem estragar nada.
+  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os cinco arquivos podem rodar de novo sem estragar nada, desde que sempre na ordem da data.
 
-- [ ] As tabelas existem e estão com RLS ligado:
-
-  ```sql
-  select relname as tabela, relrowsecurity as rls
-  from pg_class
-  where relnamespace = 'public'::regnamespace and relkind = 'r'
-  order by 1;
-  ```
-
-  Resultado esperado: `assistant_usage`, `bank_connections` e `consents`, todas com `rls = true`.
-
-- [ ] As permissões estão fechadas:
-
-  ```sql
-  select t as tabela, r as papel,
-         has_table_privilege(r, 'public.' || t, 'select') as le,
-         has_table_privilege(r, 'public.' || t, 'insert')
-           or has_table_privilege(r, 'public.' || t, 'update')
-           or has_table_privilege(r, 'public.' || t, 'delete') as grava
-  from unnest(array['consents', 'assistant_usage', 'bank_connections']) t,
-       unnest(array['anon', 'authenticated']) r
-  order by 1, 2;
-  ```
-
-  Resultado esperado:
-
-  - `grava` é `false` em todas as linhas;
-  - `le` é `true` só para `authenticated` em `consents` e em `bank_connections`;
-  - o resto é `false`.
-
-  Ninguém grava nas tabelas pela API. As gravações passam só pelas funções do banco.
-
-- [ ] As funções do banco existem e só quem está logado pode chamá-las:
-
-  ```sql
-  select f,
-         has_function_privilege('anon', f, 'execute') as anon,
-         has_function_privilege('authenticated', f, 'execute') as logado
-  from unnest(array[
-    'public.delete_account()',
-    'public.assistant_consent(boolean, text)',
-    'public.assistant_take(text, integer)',
-    'public.bank_link(text, text, text)',
-    'public.bank_unlink(text)'
-  ]) f;
-  ```
-
-  Resultado esperado: `anon = false` e `logado = true` nas cinco.
-
-- [ ] Os dois gatilhos estão na tabela de usuários:
-
-  ```sql
-  select tgname from pg_trigger
-  where tgrelid = 'auth.users'::regclass and not tgisinternal;
-  ```
-
-  O resultado deve ter `baiu_check_user` e `baiu_record_consents`.
-
+- [ ] Tabelas, RLS, permissões, funções e gatilhos estão certos: rode `conferencia.sql` no **SQL Editor** e confira que os itens de 10 a 30 estão com ✅. Ninguém grava nas tabelas pela API; as gravações passam só pelas funções do banco.
 - [ ] A validação funciona. Em **Authentication, Users**, tente criar um usuário pelo botão **Add user**. **Tem que dar erro**, porque faltam nome, celular e aceites. Daqui em diante, contas só nascem pelo app.
 
 ## 3. Autenticação
@@ -255,7 +214,7 @@ Cada banco conectado custa R$ 3,60 por mês na Polp enquanto a autorização est
    select cron.schedule(
      'baiu-bancos-sem-assinatura',
      '0 6 * * *',
-     $
+     $$
      select net.http_post(
        url := (select decrypted_secret from vault.decrypted_secrets where name = 'project_url') || '/functions/v1/bank',
        headers := jsonb_build_object(
@@ -265,11 +224,11 @@ Cada banco conectado custa R$ 3,60 por mês na Polp enquanto a autorização est
        body := '{"action":"cleanup"}'::jsonb,
        timeout_milliseconds := 120000
      );
-     $
+     $$
    );
    ```
 
-- [ ] A tarefa aparece em `select * from cron.job;`.
+- [ ] Em `conferencia.sql`, os itens 40 a 43 estão com ✅.
 - [ ] No dia seguinte, `select status, return_message from cron.job_run_details order by start_time desc limit 1;` mostra `succeeded`, e o log da função `bank` mostra uma linha `bank: limpeza` com dois números (pessoas conferidas e autorizações canceladas). Nenhum nome ou valor aparece.
 - [ ] A senha das duas pontas é a mesma. Se a função responder 401, confira `BANK_CLEANUP_SECRET` e o segredo `bank_cleanup_secret` do Vault.
 
@@ -291,7 +250,9 @@ Em **Project Settings, API Keys**, pegue a URL do projeto e a chave **publishabl
 
 ## 9. Teste completo num celular
 
-Use um build de desenvolvimento ou de teste instalado no celular. O Expo Go e a web não servem para bancos nem para compras.
+Use um build de desenvolvimento ou de teste instalado no celular. Compras não funcionam no Expo Go nem na web.
+
+Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBOX=1`), desde que `REVENUECAT_SECRET_KEY` ainda não esteja cadastrada: com ela, a função `bank` exige assinatura, e o Expo Go não assina. Enquanto o SMTP próprio não estiver pronto (passo 5), o código de confirmação só chega para e-mails de quem é membro da equipe no Supabase.
 
 **Contas**
 

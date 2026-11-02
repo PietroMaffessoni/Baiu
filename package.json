@@ -55,7 +55,8 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node scripts/test-bancos-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-bank.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-subscription.mjs",
+    "test:sql": "node scripts/test-contas-sql.mjs && node scripts/test-assistente-sql.mjs && node scripts/test-bancos-sql.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-baiu-chat.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-bank.mjs && node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/test-subscription.mjs && node scripts/test-conferencia-sql.mjs",
+    "conferir": "node scripts/conferir-servidor.mjs",
     "test:e2e": "node e2e/run.js",
     "store:images": "node e2e/capturas-lojas.js"
   },
