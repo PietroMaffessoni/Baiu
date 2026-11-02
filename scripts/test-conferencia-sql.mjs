@@ -34,6 +34,12 @@ for (const f of [
   await db.exec(read(`migrations/${f}`));
 rows = await check();
 ok('com as cinco migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
+ok('sem funções estranhas depois das migrações', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
+await db.exec(`create function public.assistant_take() returns int language sql as 'select 1';`);
+rows = await check();
+ok('acha função criada à mão com o mesmo nome', bad(rows, 23, 23).length === 1 && rows.some((r) => r.o_que_fazer.includes('drop function public.assistant_take();')), bad(rows, 23, 23).join('; '));
+await db.exec(`drop function public.assistant_take();`);
+rows = await check();
 ok('sem pg_cron e Vault, a tarefa diária aparece como faltando', bad(rows, 40, 43).length === 6, bad(rows, 40, 43).length);
 
 await db.exec(`

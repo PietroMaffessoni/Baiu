@@ -72,6 +72,21 @@ itens(ordem, item, ok, o_que_fazer) as (
          to_regprocedure('public.bank_link(text, text, text)') is null,
          'Rode a migração 20261023120000_polp.sql.'
 
+  union all
+  -- funções criadas à mão no painel: ninguém revisou quem pode chamar
+  select 23, 'Função public.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ') não vem das migrações do Baiu', false,
+         'Pergunte a quem criou. Se ninguém usa, apague: drop function public.' || p.proname || '(' || pg_get_function_identity_arguments(p.oid) || ');'
+  from pg_proc p
+  where p.pronamespace = 'public'::regnamespace
+    and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+    and p.oid not in (
+      select to_regprocedure(sig) from fn where to_regprocedure(sig) is not null
+      union all
+      select to_regprocedure(x) from unnest(array[
+        'public.baiu_valid_name(text)', 'public.baiu_valid_phone(text)', 'public.baiu_check_user()',
+        'public.baiu_record_consents()', 'public.bank_link(text, text, text)']) x
+      where to_regprocedure(x) is not null)
+
   -- 3. gatilhos do cadastro
   union all
   select 30, 'Gatilho ' || t || ' na tabela de usuários',
