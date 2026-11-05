@@ -46,6 +46,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | `migrations/20261015130000_bancos.sql` | Tabela `bank_connections` e aceite de cada banco |
 | `migrations/20261023120000_polp.sql` | Histórico das autorizações dos bancos (desconectar marca a data em vez de apagar) e categorias autorizadas |
 | `migrations/20261027120000_bancos_sem_assinatura.sql` | Funções da tarefa diária que cancela os bancos de quem ficou sem assinatura |
+| `migrations/20261105120000_config.sql` | Tabela `baiu_config` (versões dos termos e limite de perguntas por dia) e funções que só aceitam a versão atual do termo |
 | `conferencia.sql` | Consulta que confere o banco de dados inteiro (veja "Conferência rápida") |
 | `functions/baiu-chat/index.ts` | Função da conversa com IA |
 | `functions/bank/index.ts` | Função dos bancos conectados |
@@ -73,7 +74,7 @@ Em 15/10/2026 o Pietro deixou isto pronto. Ninguém conferiu ainda se funcionou:
 - RLS automático ligado;
 - integração com o GitHub conectada.
 
-O passo 2 confere se as cinco migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
+O passo 2 confere se as seis migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
 
 ---
 
@@ -96,15 +97,15 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   | Production branch | `main` |
   | Deploy to production | Ligado |
 
-- [ ] As cinco migrações rodaram. Confira no **SQL Editor**:
+- [ ] As seis migrações rodaram. Confira no **SQL Editor**:
 
   ```sql
   select version, name from supabase_migrations.schema_migrations order by version;
   ```
 
-  O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000` e `20261027120000`.
+  O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000`, `20261027120000` e `20261105120000`.
 
-  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os cinco arquivos podem rodar de novo sem estragar nada, desde que sempre na ordem da data.
+  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os seis arquivos podem rodar de novo sem estragar nada, desde que sempre na ordem da data.
 
 - [ ] Tabelas, RLS, permissões, funções e gatilhos estão certos: rode `conferencia.sql` no **SQL Editor** e confira que os itens de 10 a 30 estão com ✅. Ninguém grava nas tabelas pela API; as gravações passam só pelas funções do banco.
 - [ ] A validação funciona. Em **Authentication, Users**, tente criar um usuário pelo botão **Add user**. **Tem que dar erro**, porque faltam nome, celular e aceites. Daqui em diante, contas só nascem pelo app.

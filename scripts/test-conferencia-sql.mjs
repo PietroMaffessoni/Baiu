@@ -30,10 +30,11 @@ for (const f of [
   '20261015130000_bancos.sql',
   '20261023120000_polp.sql',
   '20261027120000_bancos_sem_assinatura.sql',
+  '20261105120000_config.sql',
 ])
   await db.exec(read(`migrations/${f}`));
 rows = await check();
-ok('com as cinco migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
+ok('com as seis migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
 ok('sem funções estranhas depois das migrações', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
 await db.exec(`create function public.assistant_take(n integer) returns int language sql as 'select 1';`);
 rows = await check();

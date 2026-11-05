@@ -33,11 +33,11 @@ for (const f of [
   '20261015130000_bancos.sql',
   '20261023120000_polp.sql',
   '20261027120000_bancos_sem_assinatura.sql',
+  '20261105120000_config.sql',
 ])
   await db.exec(read(f));
-await db.exec(read('20261015130000_bancos.sql'));
-await db.exec(read('20261023120000_polp.sql'));
 await db.exec(read('20261027120000_bancos_sem_assinatura.sql'));
+await db.exec(read('20261105120000_config.sql'));
 ok('migrações dos bancos rodam duas vezes sem erro', true);
 
 const meta = JSON.stringify({ full_name: 'Maria Silva', phone: '+5511996421873', terms_version: '2026-10-15', privacy_version: '2026-10-15', adult: true });

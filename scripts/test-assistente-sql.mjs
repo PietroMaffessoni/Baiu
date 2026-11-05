@@ -2,11 +2,13 @@ import { PGlite } from '@electric-sql/pglite';
 import fs from 'node:fs';
 
 // Testa a migração do assistente (consentimento da IA e limite diário) num
-// Postgres embutido (PGlite), por cima da migração das contas.
+// Postgres embutido (PGlite), por cima da migração das contas, com a versão
+// do termo e o limite vindos de baiu_config (20261105120000_config.sql).
 // Rodar: npm run test:sql
 const read = (f) => fs.readFileSync(new URL(`../supabase/migrations/${f}`, import.meta.url), 'utf8');
 const contas = read('20261014120000_contas.sql');
 const assistente = read('20261015120000_assistente.sql');
+const config = read('20261105120000_config.sql');
 const db = new PGlite();
 const results = [];
 const ok = (name, cond, extra = '') => results.push(`${cond ? 'OK   ' : 'FALHA'} ${name}${cond ? '' : ' ' + extra}`);
@@ -32,8 +34,9 @@ await db.exec(`
 `);
 await db.exec(contas);
 await db.exec(assistente);
-await db.exec(assistente);
-ok('migração do assistente roda duas vezes sem erro', true);
+await db.exec(config);
+await db.exec(config);
+ok('migração da configuração roda duas vezes sem erro', true);
 
 const meta = JSON.stringify({ full_name: 'Maria Silva', phone: '+5511996421873', terms_version: '2026-10-14', privacy_version: '2026-10-14', adult: true });
 await db.query(`insert into auth.users (email, raw_user_meta_data) values ('a@b.com', $1::jsonb), ('c@d.com', $1::jsonb)`, [meta]);
@@ -56,7 +59,7 @@ const setVersion = async (v) => {
 await setLimit(3);
 const cfg = await one(`select * from public.baiu_config`);
 ok('configuração: versão do termo e limite no banco', cfg.assistant_consent_version === '2026-10-15' && cfg.assistant_daily_limit === 3, JSON.stringify(cfg));
-await db.exec(assistente);
+await db.exec(config);
 ok('rodar a migração de novo mantém o limite escolhido', (await one(`select assistant_daily_limit as n from public.baiu_config`)).n === 3);
 ok('a função antiga, que recebia o limite de quem chama, não existe', (await fails(`select public.assistant_take('2026-10-15', 1000)`)) !== null);
 

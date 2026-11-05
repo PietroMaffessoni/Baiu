@@ -59,7 +59,7 @@ itens(ordem, item, ok, o_que_fazer) as (
            (xpath('/row/n/text()', query_to_xml($q$select count(*) as n from public.baiu_config
              where assistant_consent_version is not null and bank_consent_version is not null$q$, false, true, '')))[1]::text::int = 1
          end, false),
-         'Rode de novo, na ordem da data, as migrações 20261015120000_assistente.sql, 20261015130000_bancos.sql e 20261023120000_polp.sql.'
+         'Rode a migração 20261105120000_config.sql.'
 
   -- 2. funções do banco
   union all
@@ -82,7 +82,7 @@ itens(ordem, item, ok, o_que_fazer) as (
   union all
   select 22, 'A versão antiga de assistant_take (versão e limite vindos de quem chama) foi apagada',
          to_regprocedure('public.assistant_take(text, integer)') is null,
-         'Rode a migração 20261015120000_assistente.sql.'
+         'Rode a migração 20261105120000_config.sql.'
 
   union all
   -- funções criadas à mão no painel: ninguém revisou quem pode chamar
@@ -145,9 +145,9 @@ union all
 select 50, 'Histórico de migrações (' || coalesce(
          case when to_regclass('supabase_migrations.schema_migrations') is not null then
            (xpath('/row/n/text()', query_to_xml($q$select count(*) as n from supabase_migrations.schema_migrations
-             where version in ('20261014120000', '20261015120000', '20261015130000', '20261023120000', '20261027120000')$q$,
+             where version in ('20261014120000', '20261015120000', '20261015130000', '20261023120000', '20261027120000', '20261105120000')$q$,
              false, true, '')))[1]::text
-         end, '0') || ' de 5 registradas)',
+         end, '0') || ' de 6 registradas)',
        '⚠️',
        'Só informativo: migrações coladas à mão no SQL Editor não entram nesse histórico. Valem os itens acima.'
 union all
