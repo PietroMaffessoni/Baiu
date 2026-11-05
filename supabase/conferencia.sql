@@ -91,6 +91,8 @@ itens(ordem, item, ok, o_que_fazer) as (
   from pg_proc p
   where p.pronamespace = 'public'::regnamespace
     and not exists (select 1 from pg_depend d where d.objid = p.oid and d.deptype = 'e')
+    -- gatilhos de eventos, como o rls_auto_enable do RLS automático do Supabase
+    and p.oid not in (select evtfoid from pg_event_trigger)
     and p.oid not in (
       select to_regprocedure(sig) from fn where to_regprocedure(sig) is not null
       union all

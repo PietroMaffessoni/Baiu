@@ -40,7 +40,12 @@ await db.exec(`create function public.assistant_take(n integer) returns int lang
 rows = await check();
 ok('acha função criada à mão com o mesmo nome', bad(rows, 23, 23).length === 1 && rows.some((r) => r.o_que_fazer.includes('drop function public.assistant_take(n integer);')), bad(rows, 23, 23).join('; '));
 await db.exec(`drop function public.assistant_take(integer);`);
+await db.exec(`
+  create function public.rls_auto_enable() returns event_trigger language plpgsql as 'begin end';
+  create event trigger ensure_rls on ddl_command_end when tag in ('CREATE TABLE') execute function public.rls_auto_enable();
+`);
 rows = await check();
+ok('a função do RLS automático do Supabase não é acusada', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
 ok('sem pg_cron e Vault, a tarefa diária aparece como faltando', bad(rows, 40, 43).length === 6, bad(rows, 40, 43).length);
 
 await db.exec(`
