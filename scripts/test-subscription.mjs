@@ -156,14 +156,28 @@ ok(
   'bancos: excluir a conta desconecta tudo mesmo sem assinatura',
   (await callBank({ action: 'unlink_all' }, world({ ent: null }))).status === 200,
 );
+{
+  const r = await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 'cai' }));
+  ok(
+    'bancos: RevenueCat fora do ar não libera, pede para tentar de novo',
+    r.status === 503 && r.body.error === 'busy' && !r.calls.some((c) => c.url.includes('polp')),
+  );
+}
 ok(
-  'bancos: RevenueCat fora do ar não bloqueia quem paga',
-  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 'cai' }))).status === 200,
+  'bancos: RevenueCat com erro 500 não libera',
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 500 }))).body.error === 'busy',
 );
 ok(
-  'bancos: RevenueCat com erro 500 também libera',
-  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 500 }))).status === 200,
+  'bancos: RevenueCat com limite de chamadas (429) não libera',
+  (await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 429 }))).body.error === 'busy',
 );
+{
+  _resetCache();
+  resetBank();
+  const first = await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), world().http);
+  const r = await bank(req('bank', { action: 'status', itemId: 'item-1' }), env(), world({ rc: 'cai' }).http);
+  ok('bancos: quem foi conferido há pouco segue liberado se o RevenueCat cair', first.status === 200 && r.status === 200);
+}
 {
   const r = await callBank({ action: 'status', itemId: 'item-1' }, world({ rc: 401 }));
   ok('bancos: chave do RevenueCat recusada bloqueia e avisa', r.status === 503 && r.body.error === 'not_configured');
@@ -175,10 +189,22 @@ ok(
     env({ REVENUECAT_SECRET_KEY: undefined }),
   );
   ok(
-    'bancos: sem a chave do RevenueCat no servidor, não há cobrança',
-    r.status === 200 && rcCalls(r.calls).length === 0,
+    'bancos: sem a chave do RevenueCat no servidor, indisponível',
+    r.status === 503 && r.body.error === 'not_configured' && !r.calls.some((c) => c.url.includes('polp')),
   );
 }
+{
+  const r = await callBank(
+    { action: 'sync', since: {} },
+    world({ ent: null }),
+    env({ REVENUECAT_SECRET_KEY: undefined, BAIU_SUBSCRIPTION_OFF: '1' }),
+  );
+  ok('bancos: BAIU_SUBSCRIPTION_OFF=1 libera sem conferir (só testes)', r.status === 200 && rcCalls(r.calls).length === 0);
+}
+ok(
+  'bancos: desconectar funciona mesmo sem a chave do RevenueCat',
+  (await callBank({ action: 'unlink', itemId: 'item-1' }, world(), env({ REVENUECAT_SECRET_KEY: undefined }))).status === 200,
+);
 {
   _resetCache();
   resetBank();
@@ -206,11 +232,25 @@ ok('IA: login vencido, 401', (await callChat(world({ user: null }))).status === 
 {
   const r = await callChat(world({ ent: null }), env({ REVENUECAT_SECRET_KEY: undefined }));
   ok(
-    'IA: sem a chave do RevenueCat, segue como antes',
-    r.status === 200 && rcCalls(r.calls).length === 0 && !r.calls.some((c) => c.url.endsWith('/auth/v1/user')),
+    'IA: sem a chave do RevenueCat, indisponível e não gasta cota nem IA',
+    r.status === 503 &&
+      r.body.error === 'not_configured' &&
+      !r.calls.some((c) => c.url.includes('assistant_take') || c.url.includes('/v1/messages')),
   );
 }
-ok('IA: RevenueCat fora do ar não bloqueia', (await callChat(world({ rc: 'cai' }))).status === 200);
+{
+  const r = await callChat(world({ ent: null }), env({ REVENUECAT_SECRET_KEY: undefined, BAIU_SUBSCRIPTION_OFF: '1' }));
+  ok('IA: BAIU_SUBSCRIPTION_OFF=1 libera sem conferir (só testes)', r.status === 200 && rcCalls(r.calls).length === 0);
+}
+{
+  const r = await callChat(world({ rc: 'cai' }));
+  ok(
+    'IA: RevenueCat fora do ar não libera, pede para tentar de novo',
+    r.status === 503 && r.body.error === 'busy' && !r.calls.some((c) => c.url.includes('/v1/messages')),
+  );
+}
+ok('IA: RevenueCat com erro 500 não libera', (await callChat(world({ rc: 500 }))).body.error === 'busy');
+ok('IA: chave do RevenueCat recusada, indisponível', (await callChat(world({ rc: 401 }))).body.error === 'not_configured');
 
 // ---------- exclusão da conta ----------
 const forget = (w = world(), e = env(), headers = {}, body = { action: 'forget' }) =>

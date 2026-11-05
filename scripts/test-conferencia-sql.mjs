@@ -21,7 +21,7 @@ await db.exec(`
 `);
 
 let rows = await check();
-ok('banco vazio: tabelas, funções e gatilhos aparecem como faltando', bad(rows, 10, 30).length === 30, bad(rows, 10, 30).length);
+ok('banco vazio: tabelas, funções e gatilhos aparecem como faltando', bad(rows, 10, 30).length === 35, bad(rows, 10, 30).length);
 ok('itens com ❌ dizem o que fazer', rows.every((r) => r.ok !== '❌' || r.o_que_fazer.length > 10));
 
 for (const f of [
@@ -35,10 +35,10 @@ for (const f of [
 rows = await check();
 ok('com as cinco migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
 ok('sem funções estranhas depois das migrações', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
-await db.exec(`create function public.assistant_take() returns int language sql as 'select 1';`);
+await db.exec(`create function public.assistant_take(n integer) returns int language sql as 'select 1';`);
 rows = await check();
-ok('acha função criada à mão com o mesmo nome', bad(rows, 23, 23).length === 1 && rows.some((r) => r.o_que_fazer.includes('drop function public.assistant_take();')), bad(rows, 23, 23).join('; '));
-await db.exec(`drop function public.assistant_take();`);
+ok('acha função criada à mão com o mesmo nome', bad(rows, 23, 23).length === 1 && rows.some((r) => r.o_que_fazer.includes('drop function public.assistant_take(n integer);')), bad(rows, 23, 23).join('; '));
+await db.exec(`drop function public.assistant_take(integer);`);
 rows = await check();
 ok('sem pg_cron e Vault, a tarefa diária aparece como faltando', bad(rows, 40, 43).length === 6, bad(rows, 40, 43).length);
 
@@ -47,6 +47,7 @@ await db.exec(`
   grant execute on function public.bank_lapse(uuid, text) to authenticated;
   alter table public.assistant_usage disable row level security;
   create function public.bank_link(a text, b text, c text) returns void language sql as '';
+  create function public.assistant_take(v text, l integer) returns json language sql as 'select null::json';
 `);
 rows = await check();
 const wrong = bad(rows, 10, 30);
@@ -54,7 +55,8 @@ ok('acha permissão de gravar a mais', wrong.some((i) => i.includes('consents: p
 ok('acha função do servidor aberta ao app', wrong.some((i) => i.includes('bank_lapse(uuid, text): só o servidor')));
 ok('acha RLS desligado', wrong.some((i) => i.includes('assistant_usage com RLS')));
 ok('acha a versão antiga de bank_link', wrong.some((i) => i.includes('versão antiga de bank_link')));
-ok('não acusa o que está certo', wrong.length === 4, wrong.join('; '));
+ok('acha a versão antiga de assistant_take', wrong.some((i) => i.includes('versão antiga de assistant_take')));
+ok('não acusa o que está certo', wrong.length === 5, wrong.join('; '));
 
 await db.exec(`
   create schema vault; create table vault.secrets (name text, value text);

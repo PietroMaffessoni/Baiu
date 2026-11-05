@@ -17,7 +17,7 @@ Duas conferências automáticas mostram o que está pronto e o que falta. Nenhum
 
    Ele confere o login (passo 3), o banco pelo lado de fora, se as funções `bank` e `subscription` estão publicadas com o Verify JWT desligado (passo 6) e se as chaves da Polp e do RevenueCat estão cadastradas (passo 7).
 
-O que nenhuma das duas enxerga: região, plano, modelos de e-mail, SMTP e os segredos `POLP_SANDBOX`, `POLP_REDIRECT_URL` e `BANK_CLEANUP_SECRET`. Esses ficam na lista abaixo.
+O que nenhuma das duas enxerga: região, plano, modelos de e-mail, SMTP e os segredos `POLP_SANDBOX`, `POLP_REDIRECT_URL`, `BANK_CLEANUP_SECRET` e `BAIU_SUBSCRIPTION_OFF`. Esses ficam na lista abaixo.
 
 ## O que o Supabase faz no Baiu
 
@@ -177,24 +177,32 @@ Em **Edge Functions, Secrets**:
 | --- | --- | --- | --- |
 | `ANTHROPIC_API_KEY` | Adiado (IA desligada) | Chave da API da Anthropic | console.anthropic.com, **API Keys** (apêndice A) |
 | `BAIU_AI_MODEL` | Não | Modelo da IA. Padrão `claude-opus-5-5`; para gastar menos, `claude-sonnet-5-5` ou `claude-haiku-5-5` | Decisão do Pietro e do sócio |
-| `BAIU_AI_DAILY_LIMIT` | Não | Perguntas por pessoa por dia. Padrão 30 | Decisão do Pietro e do sócio |
 | `POLP_CLIENT_ID` | Para os bancos | `x-api-client` da Polp (um UUID) | Pietro (apêndice C) |
 | `POLP_CLIENT_SECRET` | Para os bancos | `x-api-secret` da Polp. Aparece uma vez só | Pietro (apêndice C) |
 | `POLP_SANDBOX` | Só em teste | `1` usa o ambiente de teste da Polp: dados fictícios, sem banco de verdade e sem cobrança. **Apagar antes de publicar** | — |
 | `POLP_REDIRECT_URL` | Sim (plano Pro) | Página que devolve a pessoa ao app depois do banco: `https://pietromaffessoni.github.io/Baiu/open-finance/` | Pietro (apêndice C) |
-| `REVENUECAT_SECRET_KEY` | Para cobrar | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
+| `REVENUECAT_SECRET_KEY` | Sim | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
 | `BANK_CLEANUP_SECRET` | Para cobrar | Senha da tarefa diária que desconecta os bancos de quem saiu da assinatura (passo 7.1). Invente uma com pelo menos 32 letras e números, por exemplo num gerenciador de senhas | Sócio |
 | `BANK_LAPSE_DAYS` | Não | Dias depois do fim da assinatura até desconectar os bancos. Padrão 7 | Decisão do Pietro e do sócio |
+| `BAIU_SUBSCRIPTION_OFF` | Só em teste | `1` libera a IA e os bancos sem conferir a assinatura. **Apagar antes de publicar** | — |
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
 
 - [ ] `POLP_CLIENT_ID` e `POLP_CLIENT_SECRET` cadastrados. Isso depende do Pietro.
-- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, as funções atendem qualquer pessoa logada, mesmo sem assinatura.
+- [ ] `REVENUECAT_SECRET_KEY` cadastrada. Sem ela, os bancos (e a IA, quando voltar) ficam indisponíveis para todos (ver e cancelar autorizações continua funcionando). Para testar antes de o RevenueCat existir, use `BAIU_SUBSCRIPTION_OFF=1`.
 - [ ] `POLP_REDIRECT_URL` cadastrada (o plano escolhido é o Pro).
 - [ ] `BANK_CLEANUP_SECRET` cadastrada e a tarefa diária agendada (passo 7.1).
-- [ ] Antes de publicar nas lojas: `POLP_SANDBOX` **apagado**.
+- [ ] Antes de publicar nas lojas: `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` **apagados**.
 
-Sem os segredos da IA ou da Polp, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível.
+Sem os segredos da IA ou da Polp, o app não quebra. A conversa usa respostas prontas e "Conectar banco" avisa que ainda não está disponível. Se o RevenueCat sair do ar, as funções não liberam ninguém às cegas: pedem para tentar de novo, e só quem foi conferido nos últimos 10 minutos segue usando.
+
+**Limite de perguntas por dia e versão dos termos.** Ficam no banco, na tabela `baiu_config`, e não com quem chama a função. O limite começa em 30 e muda no SQL Editor:
+
+```sql
+update public.baiu_config set assistant_daily_limit = 50;
+```
+
+As versões dos termos da IA e da conexão com banco (`assistant_consent_version` e `bank_consent_version`) mudam só por migração nova, junto com o texto e as constantes `AI_CONSENT_VERSION` e `BANK_CONSENT_VERSION` no app. Quem aceitou uma versão antiga precisa aceitar de novo.
 
 ### 7.1 Tarefa diária: desconectar os bancos de quem saiu da assinatura
 
@@ -252,7 +260,7 @@ Em **Project Settings, API Keys**, pegue a URL do projeto e a chave **publishabl
 
 Use um build de desenvolvimento ou de teste instalado no celular. Compras não funcionam no Expo Go nem na web.
 
-Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBOX=1`), desde que `REVENUECAT_SECRET_KEY` ainda não esteja cadastrada: com ela, a função `bank` exige assinatura, e o Expo Go não assina. Enquanto o SMTP próprio não estiver pronto (passo 5), o código de confirmação só chega para e-mails de quem é membro da equipe no Supabase.
+Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBOX=1`), com `BAIU_SUBSCRIPTION_OFF=1`: sem ele, a função `bank` exige assinatura, e o Expo Go não assina. Enquanto o SMTP próprio não estiver pronto (passo 5), o código de confirmação só chega para e-mails de quem é membro da equipe no Supabase.
 
 **Contas**
 
@@ -312,7 +320,7 @@ Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBO
 - [ ] **Advisors, Security Advisor** sem erros (os avisos amarelos podem ser lidos e avaliados).
 - [ ] **Advisors, Performance Advisor** sem erros.
 - [ ] A chave `secret`/`service_role` não aparece em lugar nenhum fora do painel. Para conferir, procure no repositório e no `.env.local`.
-- [ ] `POLP_SANDBOX` apagado (passo 7).
+- [ ] `POLP_SANDBOX` e `BAIU_SUBSCRIPTION_OFF` apagados (passo 7).
 - [ ] Nenhuma tabela nova foi criada pelo painel sem migração (veja as regras abaixo).
 - [ ] Backups diários ativos (**Database, Backups**, no plano Pro).
 

@@ -49,13 +49,15 @@ const as = async (uid) => {
 };
 
 await as(ana);
-ok('ligar conexão funciona', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-15', array['ACCOUNT', 'INVESTMENTS'])`)) === null);
+ok('ligar conexão funciona', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-23', array['ACCOUNT', 'INVESTMENTS'])`)) === null);
 ok('guarda as categorias autorizadas', (await one(`select products from public.bank_connections where item_id = 'item-1'`)).products.join() === 'ACCOUNT,INVESTMENTS');
-ok('categoria desconhecida é recusada', (await fails(`select public.bank_link('item-3', 'Itaú', '2026-10-15', array['TUDO'])`)) !== null);
-ok('ligar de novo não duplica', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-15')`)) === null);
+ok('categoria desconhecida é recusada', (await fails(`select public.bank_link('item-3', 'Itaú', '2026-10-23', array['TUDO'])`)) !== null);
+ok('ligar de novo não duplica', (await fails(`select public.bank_link('item-1', 'Nubank', '2026-10-23')`)) === null);
 ok('versão inválida é recusada', (await fails(`select public.bank_link('item-2', 'Itaú', 'x')`)) !== null);
-ok('identificador vazio é recusado', (await fails(`select public.bank_link('', 'Itaú', '2026-10-15')`)) !== null);
-await fails(`select public.bank_link('item-2', 'Itaú', '2026-10-15')`);
+ok('versão que não é a atual é recusada', (await fails(`select public.bank_link('item-2', 'Itaú', '1999-01-01')`)) !== null);
+ok('termo anterior à Polp é recusado', (await fails(`select public.bank_link('item-2', 'Itaú', '2026-10-15')`)) !== null);
+ok('identificador vazio é recusado', (await fails(`select public.bank_link('', 'Itaú', '2026-10-23')`)) !== null);
+await fails(`select public.bank_link('item-2', 'Itaú', '2026-10-23')`);
 const mine = await one(`select count(*)::int as n from public.bank_connections`);
 ok('a pessoa vê as próprias conexões', mine.n === 2, JSON.stringify(mine));
 const cons = await one(`select count(*)::int as n from public.consents where document = 'conexao_bancaria' and revoked_at is null`);
@@ -81,10 +83,10 @@ ok('reconectar reativa a conexão e registra novo aceite', (await fails(`select 
   (await one(`select count(*)::int as n from public.consents where reference = 'item-1' and revoked_at is null`)).n === 1);
 
 await as(null);
-ok('sem login não liga conexão', (await fails(`select public.bank_link('item-9', 'X', '2026-10-15')`)) !== null);
+ok('sem login não liga conexão', (await fails(`select public.bank_link('item-9', 'X', '2026-10-23')`)) !== null);
 await db.exec(`reset role`);
 await db.exec(`set role anon`);
-ok('visitante anônimo não chama as funções', /permission denied/.test((await fails(`select public.bank_link('i', 'X', '2026-10-15')`)) ?? ''));
+ok('visitante anônimo não chama as funções', /permission denied/.test((await fails(`select public.bank_link('i', 'X', '2026-10-23')`)) ?? ''));
 ok('visitante anônimo não lê conexões', (await fails(`select * from public.bank_connections`)) !== null);
 ok('visitante anônimo não lista as conexões de todos', (await fails(`select * from public.bank_active_connections()`)) !== null);
 

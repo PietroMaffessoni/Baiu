@@ -100,9 +100,9 @@ const fn = async (nome, chaves, semChave) => {
 await fn('bank', 'as chaves da Polp', ['❌', 'Edge Functions, Secrets: POLP_CLIENT_ID e POLP_CLIENT_SECRET (Pietro).']);
 await fn('subscription', 'a chave do RevenueCat', [
   '⚠️',
-  'Para testar pode ficar assim; antes de publicar, cadastre REVENUECAT_SECRET_KEY. Sem ela, os bancos atendem qualquer conta, mesmo sem assinatura.',
+  'Sem REVENUECAT_SECRET_KEY, os bancos ficam indisponíveis para todos. Para testar antes do RevenueCat, use BAIU_SUBSCRIPTION_OFF=1.',
 ]);
-console.log('⚠️  POLP_SANDBOX, POLP_REDIRECT_URL e BANK_CLEANUP_SECRET não aparecem de fora: confira os nomes em Edge Functions, Secrets.');
+console.log('⚠️  POLP_SANDBOX, POLP_REDIRECT_URL, BANK_CLEANUP_SECRET e BAIU_SUBSCRIPTION_OFF não aparecem de fora: confira os nomes em Edge Functions, Secrets.');
 
 titulo('Polp');
 try {

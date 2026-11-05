@@ -6,7 +6,8 @@ import { _resetCache, handle, validCpf } from '../supabase/functions/bank/index.
 const results = [];
 const ok = (name, cond, extra = '') => results.push(`${cond ? 'OK   ' : 'FALHA'} ${name}${cond ? '' : ' ' + extra}`);
 
-const ENV = { SUPABASE_URL: 'https://proj.supabase.co', SUPABASE_ANON_KEY: 'anon', POLP_CLIENT_ID: 'cid', POLP_CLIENT_SECRET: 'segredo' };
+// a assinatura é testada em test-subscription.mjs
+const ENV = { SUPABASE_URL: 'https://proj.supabase.co', SUPABASE_ANON_KEY: 'anon', POLP_CLIENT_ID: 'cid', POLP_CLIENT_SECRET: 'segredo', BAIU_SUBSCRIPTION_OFF: '1' };
 const env = (over = {}) => (k) => ({ ...ENV, ...over })[k];
 const UID = 'user-ana';
 const CPF = '529.982.247-25';

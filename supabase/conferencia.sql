@@ -9,14 +9,14 @@ fn(sig, quem) as (
   values
     ('public.delete_account()', 'app'),
     ('public.assistant_consent(boolean, text)', 'app'),
-    ('public.assistant_take(text, integer)', 'app'),
+    ('public.assistant_take()', 'app'),
     ('public.bank_link(text, text, text, text[])', 'app'),
     ('public.bank_unlink(text)', 'app'),
     ('public.bank_active_connections()', 'servidor'),
     ('public.bank_lapse(uuid, text)', 'servidor')
 ),
 tb(nome, app_le) as (
-  values ('consents', true), ('assistant_usage', false), ('bank_connections', true)
+  values ('consents', true), ('assistant_usage', false), ('bank_connections', true), ('baiu_config', false)
 ),
 itens(ordem, item, ok, o_que_fazer) as (
   -- 1. tabelas
@@ -52,6 +52,14 @@ itens(ordem, item, ok, o_que_fazer) as (
          exists (select 1 from information_schema.columns
                  where table_schema = 'public' and table_name = 'consents' and column_name = 'revoked_at'),
          'Rode a migração 20261015120000_assistente.sql.'
+  union all
+  select 16, 'baiu_config tem as versões dos termos (IA e bancos)',
+         coalesce(case when exists (select 1 from information_schema.columns
+                                    where table_schema = 'public' and table_name = 'baiu_config' and column_name = 'bank_consent_version') then
+           (xpath('/row/n/text()', query_to_xml($q$select count(*) as n from public.baiu_config
+             where assistant_consent_version is not null and bank_consent_version is not null$q$, false, true, '')))[1]::text::int = 1
+         end, false),
+         'Rode de novo, na ordem da data, as migrações 20261015120000_assistente.sql, 20261015130000_bancos.sql e 20261023120000_polp.sql.'
 
   -- 2. funções do banco
   union all
@@ -71,6 +79,10 @@ itens(ordem, item, ok, o_que_fazer) as (
   select 22, 'A versão antiga de bank_link (3 campos) foi apagada',
          to_regprocedure('public.bank_link(text, text, text)') is null,
          'Rode a migração 20261023120000_polp.sql.'
+  union all
+  select 22, 'A versão antiga de assistant_take (versão e limite vindos de quem chama) foi apagada',
+         to_regprocedure('public.assistant_take(text, integer)') is null,
+         'Rode a migração 20261015120000_assistente.sql.'
 
   union all
   -- funções criadas à mão no painel: ninguém revisou quem pode chamar
@@ -84,7 +96,8 @@ itens(ordem, item, ok, o_que_fazer) as (
       union all
       select to_regprocedure(x) from unnest(array[
         'public.baiu_valid_name(text)', 'public.baiu_valid_phone(text)', 'public.baiu_check_user()',
-        'public.baiu_record_consents()', 'public.bank_link(text, text, text)']) x
+        'public.baiu_record_consents()', 'public.bank_link(text, text, text)',
+        'public.assistant_take(text, integer)']) x
       where to_regprocedure(x) is not null)
 
   -- 3. gatilhos do cadastro

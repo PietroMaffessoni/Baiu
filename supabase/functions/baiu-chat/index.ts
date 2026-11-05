@@ -8,9 +8,11 @@
 // Segredos (Edge Functions, Secrets):
 //   ANTHROPIC_API_KEY     obrigatório
 //   BAIU_AI_MODEL         opcional, padrão claude-opus-5-5
-//   BAIU_AI_DAILY_LIMIT   opcional, padrão 30 perguntas por dia
-//   REVENUECAT_SECRET_KEY opcional: com ela, só quem assina conversa com a IA
+//   REVENUECAT_SECRET_KEY obrigatório: só quem assina conversa com a IA
+//   BAIU_SUBSCRIPTION_OFF opcional: 1 libera a IA sem conferir a assinatura.
+//                         Só para testes; apagar antes de publicar
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
+// A versão do termo e o limite do dia ficam no banco (tabela baiu_config).
 //
 // Sem dependências externas: o mesmo arquivo roda no Deno do Supabase e nos
 // testes em Node (scripts/test-assistente.mjs).
@@ -20,12 +22,10 @@ type Role = 'user' | 'assistant';
 type Msg = { role: Role; content: string };
 
 const DEFAULT_MODEL = 'claude-opus-5-5';
-const DEFAULT_LIMIT = 30;
 const MAX_BODY = 48_000;
 const MAX_MESSAGES = 24;
 const MAX_CONTENT = 3_000;
 const MAX_CONTEXT = 16_000;
-const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -96,13 +96,16 @@ export function _resetSubscriptions() {
 type RevenueCatEntitlement = { expires_date?: string | null; grace_period_expires_date?: string | null };
 
 /**
- * A pessoa tem a assinatura ativa no RevenueCat? Sem REVENUECAT_SECRET_KEY, não
- * há cobrança e tudo fica liberado. Com o RevenueCat fora do ar, libera (quem
- * paga não fica sem o serviço); com a chave recusada, bloqueia e avisa no log.
+ * A pessoa tem a assinatura ativa no RevenueCat? Na dúvida, não libera: sem a
+ * chave, a função está mal configurada; com o RevenueCat fora do ar, pede para
+ * tentar de novo. Quem foi conferido há pouco segue liberado pelo cache.
  */
-async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured'> {
+async function subscription(uid: string, env: Env, http: typeof fetch): Promise<'ok' | 'none' | 'misconfigured' | 'busy'> {
   const key = env('REVENUECAT_SECRET_KEY');
-  if (!key) return 'ok';
+  if (!key) {
+    console.error('baiu-chat: falta REVENUECAT_SECRET_KEY');
+    return 'misconfigured';
+  }
   const now = Date.now();
   if ((paid.get(uid) ?? 0) > now) return 'ok';
   let r: Response;
@@ -113,8 +116,8 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
       signal: AbortSignal.timeout(8_000),
     });
   } catch {
-    console.error('baiu-chat: RevenueCat sem resposta; liberado');
-    return 'ok';
+    console.error('baiu-chat: RevenueCat sem resposta');
+    return 'busy';
   }
   if (r.status === 401 || r.status === 403) {
     console.error('baiu-chat: RevenueCat recusou a chave', r.status);
@@ -122,14 +125,15 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
   }
   if (!r.ok) {
     console.error('baiu-chat: RevenueCat respondeu', r.status);
-    return r.status === 429 || r.status >= 500 ? 'ok' : 'none';
+    return 'busy';
   }
   let ent: RevenueCatEntitlement | undefined;
   try {
     const data = (await r.json()) as { subscriber?: { entitlements?: Record<string, RevenueCatEntitlement> } };
     ent = data.subscriber?.entitlements?.[env('REVENUECAT_ENTITLEMENT') || 'assinatura'];
   } catch {
-    return 'ok';
+    console.error('baiu-chat: RevenueCat respondeu em formato inesperado');
+    return 'busy';
   }
   if (!ent) return 'none';
   // sem data de fim: acesso vitalício (ex.: cortesia dada pelo painel)
@@ -158,7 +162,8 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   const auth = bearer(req);
   if (!auth) return fail(401, 'session');
 
-  let body: { messages?: unknown; context?: unknown; consentVersion?: unknown };
+  // consentVersion ainda vem do app, mas quem decide a versão é o banco
+  let body: { messages?: unknown; context?: unknown };
   try {
     const raw = await req.text();
     if (raw.length > MAX_BODY) return fail(413, 'invalid');
@@ -167,13 +172,12 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     return fail(400, 'invalid');
   }
   const messages = cleanMessages(body.messages);
-  const version = body.consentVersion;
-  if (!messages || typeof version !== 'string' || !VERSION_RE.test(version)) return fail(400, 'invalid');
+  if (!messages) return fail(400, 'invalid');
   const context = body.context && typeof body.context === 'object' ? body.context : null;
   if (context && JSON.stringify(context).length > MAX_CONTEXT) return fail(413, 'invalid');
 
   // a IA faz parte da assinatura: confere quem é e se assina
-  if (env('REVENUECAT_SECRET_KEY')) {
+  if (env('BAIU_SUBSCRIPTION_OFF') !== '1') {
     let uid: string | undefined;
     try {
       const who = await http(`${base}/auth/v1/user`, { method: 'GET', headers: { Authorization: auth, apikey } });
@@ -189,17 +193,17 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     if (!uid) return fail(401, 'session');
     const paying = await subscription(uid, env, http);
     if (paying === 'misconfigured') return fail(503, 'not_configured');
+    if (paying === 'busy') return fail(503, 'busy');
     if (paying === 'none') return fail(402, 'subscription');
   }
 
   // login, consentimento e limite do dia, de uma vez, no banco
-  const limit = Math.max(1, Number(env('BAIU_AI_DAILY_LIMIT')) || DEFAULT_LIMIT);
   let quota: { ok?: boolean; reason?: string; remaining?: number };
   try {
     const r = await http(`${base}/rest/v1/rpc/assistant_take`, {
       method: 'POST',
       headers: { Authorization: auth, apikey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ version, daily_limit: limit }),
+      body: '{}',
     });
     if (r.status === 401) return fail(401, 'session');
     if (r.status === 404) {
