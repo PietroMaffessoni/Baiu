@@ -1,8 +1,8 @@
 import { router } from 'expo-router';
 
-import { Apresentacao } from '@/components/apresentacao';
+import { Comecar } from '@/components/comecar';
 
-/** A apresentação do primeiro uso, de novo, aberta pelos Ajustes. */
+/** O caminho do primeiro uso, de novo, aberto pelos Ajustes. Não guarda nada. */
 export default function ReverApresentacao() {
-  return <Apresentacao onDone={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
+  return <Comecar mode="rever" onClose={() => (router.canGoBack() ? router.back() : router.replace('/'))} />;
 }

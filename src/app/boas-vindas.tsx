@@ -1,11 +1,10 @@
 import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Platform, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
-import Animated, { FadeIn, FadeInDown } from 'react-native-reanimated';
+import { Platform, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import Animated, { FadeIn, FadeInDown, useReducedMotion } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { Apresentacao } from '@/components/apresentacao';
 import { Baiu, baiuHeight } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { GroundLight } from '@/components/ground-light';
@@ -13,18 +12,20 @@ import { Mark } from '@/components/mark';
 import { Wordmark } from '@/components/wordmark';
 import { createDemo } from '@/data/demo';
 import { computeFolego } from '@/lib/folego';
-import { introSeen, markIntroSeen } from '@/lib/intro';
 import { useAuth } from '@/store/auth';
 import { T } from '@/theme/text';
 import { color, gutter } from '@/theme/tokens';
 
 /**
- * Primeiro contato: o Baiu começa murcho. Daqui a pessoa cria a conta, entra
- * na que já tem ou explora os dados de exemplo, a única parte do app sem conta.
- * Ao explorar, o Baiu enche até o fôlego do exemplo antes de o app abrir.
- * No primeiro uso do aparelho, antes disso, vem a apresentação com os números
- * do dinheiro no Brasil.
+ * Primeiro contato: o Baiu respira, enchendo e murchando, como faz com o
+ * dinheiro. "Começar" leva ao caminho do primeiro uso, que termina no
+ * cadastro; dá também para entrar na conta que já existe ou explorar os dados
+ * de exemplo, a única parte do app sem conta. Ao explorar, o Baiu enche até o
+ * fôlego do exemplo antes de o app abrir.
  */
+/** Fôlegos por onde o Baiu passa enquanto a pessoa decide. */
+const BREATH = [8, 34, 64, 34];
+
 export default function BoasVindas() {
   const { enterDemo } = useAuth();
   const insets = useSafeAreaInsets();
@@ -33,17 +34,17 @@ export default function BoasVindas() {
   const [filling, setFilling] = useState(false);
   const timers = useRef<ReturnType<typeof setTimeout>[]>([]);
 
+  const reduce = useReducedMotion();
+
   useEffect(() => () => timers.current.forEach(clearTimeout), []);
 
-  // null: ainda lendo se a apresentação já foi vista neste aparelho
-  const [intro, setIntro] = useState<boolean | null>(null);
+  // o Baiu respira até a pessoa escolher; com Reduzir Movimento, fica parado
   useEffect(() => {
-    let alive = true;
-    introSeen().then((seen) => alive && setIntro(!seen));
-    return () => {
-      alive = false;
-    };
-  }, []);
+    if (reduce || filling) return;
+    let i = 0;
+    const id = setInterval(() => setScore(BREATH[++i % BREATH.length]), 1600);
+    return () => clearInterval(id);
+  }, [reduce, filling]);
 
   const explore = () => {
     if (filling) return;
@@ -72,17 +73,6 @@ export default function BoasVindas() {
   const fishW = Math.min(270, Math.round(width * 0.66), Math.round(avail * 0.3));
   const fishTop = insets.top + 6;
   const fishH = baiuHeight(fishW);
-
-  if (intro === null) return <View style={styles.screen} />;
-  if (intro)
-    return (
-      <Apresentacao
-        onDone={() => {
-          markIntroSeen();
-          setIntro(false);
-        }}
-      />
-    );
 
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ flexGrow: 1 }} bounces={false}>
@@ -127,8 +117,20 @@ export default function BoasVindas() {
         ) : null}
         <View style={{ flex: 1, minHeight: 20 }} />
         <Animated.View entering={FadeInDown.delay(260).duration(500)} style={{ gap: 8 }}>
-          <Button label="Criar conta" onPress={() => router.push('/cadastro')} disabled={filling} />
-          <Button label="Já tenho conta" kind="secondary" onPress={() => router.push('/entrar')} disabled={filling} />
+          <Button label="Começar" onPress={() => router.push('/comecar')} disabled={filling} />
+          <Pressable
+            onPress={() => router.push('/entrar')}
+            disabled={filling}
+            accessibilityRole="button"
+            accessibilityLabel="Já tenho conta"
+            style={styles.signIn}>
+            <T variant="callout" tone="ink2">
+              Já tem uma conta?{' '}
+              <T variant="calloutStrong" tone="lantern">
+                Entrar
+              </T>
+            </T>
+          </Pressable>
           <Button
             label={filling ? 'Enchendo o Baiu…' : 'Explorar com dados de exemplo'}
             kind="quiet"
@@ -148,4 +150,5 @@ const styles = StyleSheet.create({
   body: { flex: 1, paddingHorizontal: gutter, paddingTop: 8 },
   points: { marginTop: 20, gap: 10 },
   point: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  signIn: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
 });

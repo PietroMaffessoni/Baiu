@@ -129,6 +129,6 @@ module.exports = async ({ page, step, go, btn, tap, field, text, W, signup, PASS
     await btn('Excluir conta para sempre', { wait: 3000 });
     const fake = await fakeBank();
     if (fake.items.length !== 0) throw new Error('ficaram conexões: ' + fake.items.length);
-  }, ['Criar conta']);
+  }, ['Já tem uma conta?']);
 };
 module.exports.pace = { go: 1500, btn: 700 };

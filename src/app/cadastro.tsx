@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View, type TextInputInstance } from 'react-nativ
 import { AuthScreen, Check, Field, FormError, FormNote, PasswordChecklist, PasswordField } from '@/components/auth-form';
 import { Button } from '@/components/button';
 import { authMessage, PRIVACY_VERSION, TERMS_VERSION } from '@/lib/auth';
+import { clearOrigin, readOrigin } from '@/lib/comecar';
 import {
   checkEmail,
   checkName,
@@ -72,7 +73,9 @@ export default function Cadastro() {
         fullName: nameC.name,
         phone: phoneC.e164,
         consent: { terms: TERMS_VERSION, privacy: PRIVACY_VERSION, adult: true },
+        origin: await readOrigin(),
       });
+      clearOrigin();
       router.push({ pathname: '/verificar-email', params: { email: emailC.email } });
     } catch (e) {
       setFormError(authMessage(e));

@@ -1,6 +1,6 @@
 # Termos de Uso do Baiu
 
-Atualizada em 27 de outubro de 2026.
+Atualizada em 6 de novembro de 2026.
 
 Ao criar uma conta ou usar o Baiu, você concorda com estes termos. Eles são curtos de propósito.
 

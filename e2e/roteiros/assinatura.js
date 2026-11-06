@@ -84,7 +84,7 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
     await btn('Excluir conta para sempre', { wait: 3500 });
     const d = await page.evaluate(() => JSON.parse(localStorage.getItem('baiu:fake-store') || '{}'));
     if (Object.keys(d.subs).length !== 0) throw new Error('ficou cadastro: ' + Object.keys(d.subs).length);
-  }, ['Criar conta']);
+  }, ['Já tem uma conta?']);
   await step('26 só com o plano mensal, a tela não mostra o anual', async () => {
     await page.evaluate(() => {
       const d = JSON.parse(localStorage.getItem('baiu:fake-store') || '{}');

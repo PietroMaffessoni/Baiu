@@ -15,7 +15,7 @@ module.exports = async (browser) => {
     const t = tools(page, `telas-${width}`);
     await t.step(`${width}×${height} boas-vindas mostra os três caminhos sem rolar`, async () => {
       await t.go('/');
-      for (const name of ['Criar conta', 'Já tenho conta', 'Explorar com dados de exemplo']) {
+      for (const name of ['Começar', 'Já tenho conta', 'Explorar com dados de exemplo']) {
         const box = await page.getByRole('button', { name, exact: true }).first().boundingBox();
         if (!box || box.y + box.height > height) throw new Error(`"${name}" fica fora da tela (y=${box && Math.round(box.y + box.height)})`);
       }

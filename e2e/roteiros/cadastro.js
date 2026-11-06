@@ -2,13 +2,17 @@
 module.exports = async ({ page, step, go, btn, tap, field, fill, typeIn, keys, W, passPaywall, CODE }) => {
   // ---------- sem conta ----------
   await go('/');
-  await step('01 boas-vindas tem criar conta, entrar e exemplo', async () => {}, ['Criar conta', 'Já tenho conta', 'Explorar com dados de exemplo']);
-  await step('02 sem conta não abre o extrato', () => go('/extrato'), ['Criar conta'], ['Últimos 30 dias, todas as contas']);
-  await step('03 sem conta não abre minha conta', () => go('/minha-conta'), ['Criar conta'], ['Seus dados']);
+  await step('01 boas-vindas tem começar, entrar e exemplo', async () => {}, ['Começar', 'Já tem uma conta?', 'Explorar com dados de exemplo']);
+  await step('02 sem conta não abre o extrato', () => go('/extrato'), ['Já tem uma conta?'], ['Últimos 30 dias, todas as contas']);
+  await step('03 sem conta não abre minha conta', () => go('/minha-conta'), ['Já tem uma conta?'], ['Seus dados']);
 
   // ---------- cadastro ----------
   await go('/');
-  await step('04 abre o cadastro', () => btn('Criar conta'), ['Criar conta', 'Nome completo', 'Celular com DDD']);
+  await step('04 abre o cadastro pelo Começar', async () => {
+    await btn('Começar', { wait: 1200 });
+    await btn('Pular', { wait: 1200 });
+    await btn('Criar minha conta', { wait: 1200 });
+  }, ['Criar conta', 'Nome completo', 'Celular com DDD']);
   await step('05 enviar vazio mostra os erros', () => btn('Criar conta'), [
     'Confira os campos marcados em vermelho.',
     'Informe seu nome completo.',
@@ -125,8 +129,8 @@ module.exports = async ({ page, step, go, btn, tap, field, fill, typeIn, keys, W
     await fill('Senha atual', 'Lanterna#42baiacu');
     await btn('Salvar senha nova', { wait: 1200 });
   }, ['Senha trocada.']);
-  await step('35 sair da conta volta ao início', () => btn('Sair da conta', { wait: 1500 }), ['Criar conta', 'Já tenho conta']);
-  await step('36 depois de sair, o app fica fechado', () => go('/contas'), ['Criar conta'], ['R$ 2.500,00']);
+  await step('35 sair da conta volta ao início', () => btn('Sair da conta', { wait: 1500 }), ['Começar', 'Já tem uma conta?']);
+  await step('36 depois de sair, o app fica fechado', () => go('/contas'), ['Já tem uma conta?'], ['R$ 2.500,00']);
 
   // ---------- login ----------
   await step('37 senha antiga não entra', async () => {
@@ -199,7 +203,7 @@ module.exports = async ({ page, step, go, btn, tap, field, fill, typeIn, keys, W
   await step('47 excluir conta volta ao início', async () => {
     await fill('Sua senha', 'Sol-Nascente#33', false);
     await btn('Excluir conta para sempre', { wait: 2000 });
-  }, ['Criar conta']);
+  }, ['Já tem uma conta?']);
   await step('48 conta excluída não entra mais', async () => {
     await go('/entrar');
     await fill('E-mail', 'maria.silva@gmail.com');
@@ -219,9 +223,9 @@ module.exports = async ({ page, step, go, btn, tap, field, fill, typeIn, keys, W
     await btn('Explorar com dados de exemplo', { wait: 4500 });
   }, ['Fôlego', 'Saldo nas contas']);
   await step('51 exemplo não tem minha conta', () => btn('Ajustes', { wait: 1200 }), ['Sair do modo exemplo'], ['Minha conta', 'Apagar dados deste aparelho']);
-  await step('52 sair do exemplo volta ao início', () => btn('Sair do modo exemplo', { wait: 1500 }), ['Criar conta']);
+  await step('52 sair do exemplo volta ao início', () => btn('Sair do modo exemplo', { wait: 1500 }), ['Já tem uma conta?']);
   await step('53 exemplo não fica gravado', async () => {
     await page.reload({ waitUntil: 'networkidle' });
     await W(1500);
-  }, ['Criar conta']);
+  }, ['Já tem uma conta?']);
 };

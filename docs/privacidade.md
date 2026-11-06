@@ -1,6 +1,6 @@
 # Política de Privacidade do Baiu
 
-Atualizada em 27 de outubro de 2026.
+Atualizada em 6 de novembro de 2026.
 
 O Baiu é um aplicativo de organização financeira pessoal desenvolvido por Pietro Maffessoni, que é o controlador dos dados tratados pelo app. Esta política explica, conforme a Lei Geral de Proteção de Dados (Lei 13.709/2018), quais dados usamos, por quê e como você controla cada um deles.
 
@@ -10,7 +10,7 @@ Seus registros financeiros ficam no seu aparelho, criptografados. Se você conec
 
 O Baiu avisa quando um gasto foge do normal e reconhece contas que se repetem. Esses avisos são calculados no próprio aparelho, sem internet e sem inteligência artificial.
 
-Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos.
+Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos e, se você responder, como conheceu o Baiu.
 
 O Baiu é uma assinatura, com o primeiro mês grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.
 
@@ -19,6 +19,8 @@ Não vendemos dados, não usamos publicidade e não rastreamos você.
 ## Dados da conta, no servidor
 
 Nome completo, e-mail e celular, informados por você no cadastro.
+
+Como você conheceu o Baiu (Instagram, indicação, loja de apps...), se você responder no começo do app. A resposta é opcional e serve só para sabermos quais canais trazem gente.
 
 Senha: guardada só em forma de hash, um código que não permite recuperar a senha original. Nem nós conseguimos ver sua senha.
 
@@ -37,6 +39,8 @@ Esses dados são cifrados com XChaCha20-Poly1305. A chave fica no Keychain do iP
 A categoria de cada movimento (mercado, salário, transporte...) é escolhida no próprio aparelho. Quando você corrige uma categoria, o Baiu aprende e guarda essa regra só no seu aparelho.
 
 A conversa com o Baiu também fica só no aparelho, cifrada junto com os seus registros. Você pode apagá-la a qualquer momento na própria conversa.
+
+No começo do app, você pode dizer quanto dinheiro escapa por mês e a sua idade, para ver a conta do quanto isso soma. Essas respostas ficam só na tela: não são guardadas nem enviadas.
 
 ## Bancos conectados (Open Finance)
 
@@ -69,6 +73,8 @@ Criar e manter sua conta, permitir o login, confirmar seu e-mail, recuperar a se
 Guardar o registro dos aceites e responder a autoridades quando a lei exigir: cumprimento de obrigação legal e exercício regular de direitos (art. 7º, II e VI).
 
 Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas seguidas: legítimo interesse em manter sua conta segura (art. 7º, IX).
+
+Saber como você conheceu o Baiu, se você responder: legítimo interesse em entender quais canais trazem gente (art. 7º, IX).
 
 Conectar seus bancos, buscar e organizar seus dados financeiros: seu consentimento (art. 7º, I), dado no Baiu e confirmado no seu banco pelo Open Finance. Você pode revogar quando quiser.
 

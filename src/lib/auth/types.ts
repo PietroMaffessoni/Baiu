@@ -1,6 +1,6 @@
 /** Versões dos documentos aceitos no cadastro. Mudou o texto, muda a versão. */
 export const TERMS_VERSION = '2026-10-27';
-export const PRIVACY_VERSION = '2026-10-27';
+export const PRIVACY_VERSION = '2026-11-06';
 
 export type Profile = {
   id: string;
@@ -18,6 +18,8 @@ export type SignUpInput = {
   phone: string;
   /** Aceites do cadastro (LGPD): termos, política e maioridade. */
   consent: { terms: string; privacy: string; adult: true };
+  /** Como a pessoa conheceu o Baiu, se respondeu no "Começar". */
+  origin?: string;
 };
 
 export type AuthErrorCode =

@@ -108,6 +108,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
           <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.night } }}>
             <Stack.Protected guard={!inApp} redirectTo="/">
               <Stack.Screen name="boas-vindas" options={{ animation: 'fade' }} />
+              <Stack.Screen name="comecar" />
               <Stack.Screen name="cadastro" />
               <Stack.Screen name="entrar" />
               <Stack.Screen name="verificar-email" />

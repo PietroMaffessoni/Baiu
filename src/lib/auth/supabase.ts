@@ -134,7 +134,7 @@ export function createSupabaseBackend(): AuthBackend {
       return () => data.subscription.unsubscribe();
     },
 
-    async signUp({ email, password, fullName, phone, consent }) {
+    async signUp({ email, password, fullName, phone, consent, origin }) {
       await run(() =>
         need().auth.signUp({
           email,
@@ -146,6 +146,7 @@ export function createSupabaseBackend(): AuthBackend {
               terms_version: consent.terms,
               privacy_version: consent.privacy,
               adult: consent.adult,
+              ...(origin ? { origem: origin } : {}),
             },
           },
         }),

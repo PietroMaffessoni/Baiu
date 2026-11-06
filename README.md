@@ -2,7 +2,7 @@
 
 Gestão financeira pessoal com um mascote que reage ao seu dinheiro. O Baiu é um baiacu: quanto melhor você cuida das finanças, mais ele enche e mais forte é o brilho dele.
 
-Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o primeiro mês é grátis); sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
+Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o primeiro mês é grátis); sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, como a pessoa conheceu o Baiu (se respondeu), quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
 
 ## O que o app faz
 
