@@ -136,6 +136,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="vencimento/[id]" options={sheet} />
               <Stack.Screen name="investimento/[id]" options={sheet} />
               <Stack.Screen name="folego" options={sheet} />
+              <Stack.Screen name="apresentacao" options={{ animation: 'fade' }} />
             </Stack.Protected>
             <Stack.Protected guard={signedIn} redirectTo={inApp ? '/' : '/boas-vindas'}>
               <Stack.Screen name="assinatura" options={{ ...pushedHeader, title: 'Assinatura' }} />

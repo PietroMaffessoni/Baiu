@@ -280,6 +280,8 @@ export default function Ajustes() {
         <ListRow icon="info" label="Como o fôlego funciona" onPress={() => router.push('/folego')} chevron />
         <Rule inset={33} />
         <ListRow icon="seal" label="Selos" onPress={() => router.push('/selos')} chevron />
+        <Rule inset={33} />
+        <ListRow icon="sparkle" label="Rever a apresentação" onPress={() => router.push('/apresentacao')} chevron />
       </Group>
 
       <Group title="Sobre">
