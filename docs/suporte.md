@@ -1,6 +1,6 @@
 # Suporte do Baiu
 
-O Baiu organiza suas finanças pessoais e mostra, pelo tamanho e pela luz do baiacu, como está o seu fôlego financeiro.
+O Baiu organiza suas finanças pessoais e mostra, pelo tamanho do baiacu, como está o seu fôlego financeiro.
 
 ## Perguntas frequentes
 

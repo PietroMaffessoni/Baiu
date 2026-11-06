@@ -22,7 +22,7 @@ import { Icon, type IconName } from './icon';
 export function BaiuAvatar({ score, size = 34 }: { score: number; size?: number }) {
   return (
     <View style={{ width: size, height: size, alignItems: 'center', justifyContent: 'center' }}>
-      <Baiu score={score} width={size * 1.15} still halo={false} />
+      <Baiu score={score} width={size * 1.15} still />
     </View>
   );
 }

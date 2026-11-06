@@ -16,7 +16,7 @@ import Animated, {
 
 import { moodOf, type Mood } from '@/lib/folego';
 import { paletteFor } from '@/lib/palette';
-import { BaiuBody, BaiuEyes, BaiuFin, Halo } from './art';
+import { BaiuBody, BaiuEyes, BaiuFin } from './art';
 import { CX, geom, VB_H, VB_W } from './geometry';
 
 type Props = {
@@ -29,8 +29,6 @@ type Props = {
   /** Força um humor (legenda da escala). */
   mood?: Mood;
   interactive?: boolean;
-  /** Mostra a luz suave atrás do Baiu. */
-  halo?: boolean;
 };
 
 const FIN_SPEED: Record<Mood, number> = { estufado: 520, cheio: 700, meio: 950, murcho: 1500 };
@@ -43,7 +41,7 @@ export function levelScale(score: number) {
 /** Altura da caixa de desenho para uma largura. */
 export const baiuHeight = (width: number) => (width * VB_H) / VB_W;
 
-export function Baiu({ score, width = 180, still, mood: forced, interactive = false, halo = true }: Props) {
+export function Baiu({ score, width = 180, still, mood: forced, interactive = false }: Props) {
   const mood = forced ?? moodOf(score).mood;
   const reduce = useReducedMotion();
   const animate = !still && !reduce;
@@ -56,7 +54,6 @@ export function Baiu({ score, width = 180, still, mood: forced, interactive = fa
   // id único por Baiu: na web, dois desenhos na mesma página não podem dividir o degradê
   const uid = useId().replace(/[^a-zA-Z0-9]/g, '');
   const id = `baiu-${uid}-${mood}`;
-  const haloSize = width * 2;
   const bodyCenterY = g.cy * f;
 
   const level = useSharedValue(levelScale(score));
@@ -110,11 +107,6 @@ export function Baiu({ score, width = 180, still, mood: forced, interactive = fa
     const p = bodyCenterY - H / 2;
     return { transform: [{ translateY: p }, { scale: s }, { translateY: -p }] };
   });
-
-  const haloStyle = useAnimatedStyle(() => ({
-    opacity: Math.min(1, pal.glow * 0.9 + puff.get() * 0.5),
-    transform: [{ scale: level.get() * (1 + 0.18 * puff.get()) }],
-  }));
 
   const finLStyle = useAnimatedStyle(() => {
     const deg = -10 + finL.get() * 24 + puff.get() * 14;
@@ -182,17 +174,6 @@ export function Baiu({ score, width = 180, still, mood: forced, interactive = fa
 
   return (
     <Animated.View style={[{ width, height: H }, floatStyle]}>
-      {halo && (
-        <Animated.View
-          pointerEvents="none"
-          style={[
-            styles.abs,
-            { width: haloSize, height: haloSize, left: (width - haloSize) / 2, top: bodyCenterY - haloSize / 2 },
-            haloStyle,
-          ]}>
-          <Halo size={haloSize} tint={pal.glowColor} id={id} />
-        </Animated.View>
-      )}
       {interactive ? (
         <Pressable
           onPressIn={onIn}

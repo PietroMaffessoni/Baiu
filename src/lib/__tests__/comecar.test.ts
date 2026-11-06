@@ -1,4 +1,4 @@
-import { JUROS_POR_SEGUNDO, projection, savingsValue, yearsLeft } from '../comecar';
+import { ESCAPE_MEDIO, JUROS_POR_SEGUNDO, projection, savingsValue, yearsLeft } from '../comecar';
 
 jest.mock('@react-native-async-storage/async-storage', () => ({ getItem: jest.fn(), setItem: jest.fn() }));
 
@@ -14,9 +14,19 @@ describe('contas do Começar', () => {
     expect(p.years).toBe(47);
     expect(p.untilAge).toBe(77);
     expect(p.total).toBe(150 * 12 * 47);
-    expect(p.salarios).toBe(Math.floor(84600 / 1621));
-    expect(p.cestas).toBe(Math.floor(84600 / 915.01));
-    expect(p.anosAssinaturas).toBe(Math.floor(84600 / 1416));
+    expect(p.coisas.map((c) => [c.key, c.n])).toEqual([
+      ['iphone', 7],
+      ['carro', 1],
+      ['petrobras', 1841],
+    ]);
+  });
+
+  it('o que não chega a uma unidade fica de fora', () => {
+    expect(projection(10, 70).coisas.map((c) => c.key)).toEqual(['petrobras']);
+  });
+
+  it('a média que escapa só em juros, por brasileiro e por casa', () => {
+    expect(ESCAPE_MEDIO).toEqual({ eu: 423, casa: 1186 });
   });
 
   it('a poupança rende juros compostos sobre os depósitos', () => {

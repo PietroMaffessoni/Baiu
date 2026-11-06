@@ -326,21 +326,3 @@ export function BaiuFin({ mood, width, side, pal }: { mood: Mood; width: number;
     </>,
   );
 }
-
-/** Luz suave atrás do Baiu, na cor dele. Mais forte com mais fôlego. */
-export function Halo({ size, tint, id }: { size: number; tint: string; id: string }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 100 100">
-      <Defs>
-        <RadialGradient id={`${id}-halo`} cx="50%" cy="50%" rx="50%" ry="50%">
-          <Stop offset="0" stopColor={tint} stopOpacity={0.5} />
-          <Stop offset="0.36" stopColor={tint} stopOpacity={0.3} />
-          <Stop offset="0.52" stopColor={tint} stopOpacity={0.1} />
-          <Stop offset="0.7" stopColor={tint} stopOpacity={0.02} />
-          <Stop offset="1" stopColor={tint} stopOpacity={0} />
-        </RadialGradient>
-      </Defs>
-      <Circle cx={50} cy={50} r={50} fill={`url(#${id}-halo)`} />
-    </Svg>
-  );
-}

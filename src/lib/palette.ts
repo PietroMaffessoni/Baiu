@@ -49,17 +49,14 @@ export type BaiuPalette = {
   belly: string;
   fin: string;
   spine: string;
-  glowColor: string;
-  /** 0 a 1: quanto o Baiu brilha. */
-  glow: number;
 };
 
-/** Do apagado (murcho) ao vivo (estufado): o humor mexe na saturação e na luz. */
-const MOOD_SHIFT: Record<MoodKey, { s: number; l: number; glow: number }> = {
-  estufado: { s: 1.08, l: 0.04, glow: 1 },
-  cheio: { s: 1, l: 0, glow: 0.72 },
-  meio: { s: 0.72, l: -0.05, glow: 0.4 },
-  murcho: { s: 0.38, l: -0.12, glow: 0.12 },
+/** Do apagado (murcho) ao vivo (estufado): o humor mexe na saturação e no tom da pele. */
+const MOOD_SHIFT: Record<MoodKey, { s: number; l: number }> = {
+  estufado: { s: 1.08, l: 0.04 },
+  cheio: { s: 1, l: 0 },
+  meio: { s: 0.72, l: -0.05 },
+  murcho: { s: 0.38, l: -0.12 },
 };
 
 export function paletteFor(mood: MoodKey): BaiuPalette {
@@ -76,7 +73,5 @@ export function paletteFor(mood: MoodKey): BaiuPalette {
     belly: hsl(h, s * 0.4, mood === 'murcho' ? 0.8 : 0.93),
     fin: hsl(h, s, l + 0.04),
     spine: hsl(h, s * 0.9, l - 0.16),
-    glowColor: hsl(h, Math.min(1, s * 1.1), Math.min(0.72, l + 0.12)),
-    glow: m.glow,
   };
 }

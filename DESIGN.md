@@ -1,6 +1,6 @@
 ---
 name: Baiu
-description: Finanças pessoais com um baiacu que enche e brilha conforme o fôlego do dinheiro.
+description: Finanças pessoais com um baiacu que enche conforme o fôlego do dinheiro.
 colors:
   night: "#0F1A3D"
   night-deep: "#0A1230"
@@ -149,7 +149,7 @@ components:
 
 **Creative North Star: "O Baiacu na Noite"**
 
-O Baiu acontece numa noite índigo. Um chão aizome cobre cada tela, de ponta a ponta. A luz da interface é âmbar, no tom das ações que a pessoa pode tocar; a luz do mascote é a do próprio Baiu, um baiacu que boia no topo do Início e derrama um brilho suave, na cor que a pessoa escolheu, sobre o chão. Tudo o mais é papel washi sobre índigo, em três tintas (papel, ink2, ink3). A saúde financeira não vira gráfico de rosca nem cartão com gradiente: vira tamanho, brilho e respiração do mascote.
+O Baiu acontece numa noite índigo. Um chão aizome cobre cada tela, de ponta a ponta. O tom da interface é âmbar, nas ações que a pessoa pode tocar; o mascote é o Baiu, um baiacu âmbar que boia no topo do Início e enche ou murcha com o dinheiro. Ele não brilha nem acende: a leitura é só o tamanho. Tudo o mais é papel washi sobre índigo, em três tintas (papel, ink2, ink3). A saúde financeira não vira gráfico de rosca nem cartão com gradiente: vira tamanho e respiração do mascote.
 
 A densidade é de app de banco usado em sessões curtas e muitas vezes à noite: um número grande por tela, listas de linhas compactas em placas, títulos em Zen Maru Gothic pesada e todo o resto na fonte do sistema. A profundidade vem de tom e de fio fino, nunca de sombra. Vermelhão e jade não decoram; aparecem só como estado (selo carimbado, alerta, dinheiro que entrou).
 
@@ -157,20 +157,20 @@ O sistema é adaptativo: a barra de abas é nativa (UITabBar no iPhone, barra Ma
 
 **Key Characteristics:**
 - Chão índigo único (night) em todas as telas, sem modo claro.
-- Uma luz de interface: âmbar para ação e "hoje". O mascote brilha na cor dele.
+- Um tom de ação: âmbar para ação e "hoje". O mascote não brilha.
 - Vermelhão e jade apenas como estado.
 - Placas separadas por fio fino (hairline), sem sombras.
 - Zen Maru Gothic Black/Bold para números grandes e títulos; fonte do sistema para leitura.
 - Todo valor em reais com algarismos tabulares.
-- O mascote é instrumento: tamanho e brilho leem o fôlego, sempre com texto ao lado.
+- O mascote é instrumento: o tamanho lê o fôlego, sempre com texto ao lado.
 
 ## Colors
 
 Uma noite índigo em camadas tonais, papel quente para o texto e uma única luz âmbar; dois tons de estado guardados para quando significam algo.
 
 ### Primary
-- **Âmbar de Lanterna** (lantern): a luz do mundo. Botão primário, links de seção ("Ver tudo"), barra de "hoje" no DayBars, marca cheia, aba selecionada, cursor de texto (selectionColor), glifo do próximo hábito. Também é a cor padrão do Baiu (Âmbar) e, com ela, do halo e do GroundLight.
-- **Miolo da Chama** (lantern-core): o centro quente do gradiente do pingo do i no Wordmark e das luzes do mascote. Não é cor de interface.
+- **Âmbar de Lanterna** (lantern): a luz do mundo. Botão primário, links de seção ("Ver tudo"), barra de "hoje" no DayBars, marca cheia, aba selecionada, cursor de texto (selectionColor), glifo do próximo hábito. Também é a cor do Baiu.
+- **Miolo da Chama** (lantern-core): o centro quente do gradiente do pingo do i no Wordmark e do miolo da pele do mascote. Não é cor de interface.
 - **Véu de Lanterna** (lantern-wash): fundo translúcido de glifos de ação (círculo de "Adicionar conta", glifo de tipo de conta) e ripple das abas no Android.
 
 ### Secondary
@@ -193,7 +193,7 @@ Uma noite índigo em camadas tonais, papel quente para o texto e uma única luz 
 - **Laca** (lacquer): reservada; não usar em interface.
 
 ### Named Rules
-**The One Light Rule.** A única luz de interface é âmbar. Se algo precisa chamar o toque ou marcar "agora", é lantern; nenhuma outra cor cumpre esse papel. A cor escolhida para o Baiu vale só para o mascote, o halo e o GroundLight, nunca para botões ou estados.
+**The One Light Rule.** A única luz de interface é âmbar. Se algo precisa chamar o toque ou marcar "agora", é lantern; nenhuma outra cor cumpre esse papel.
 
 **The State-Only Rule.** Vermelhão e jade só aparecem quando carregam estado: selo conquistado, alerta, ação destrutiva (vermelhão); dinheiro que entrou (jade). Nunca como decoração ou cor de seção.
 
@@ -234,12 +234,12 @@ Ações destrutivas ficam isoladas por espaço vazio (72px acima do "Remover con
 
 ## Elevation & Depth
 
-Não há sombras no sistema: nenhum componente declara shadow ou elevation, e os cabeçalhos desligam a sombra nativa. A profundidade se faz em degraus de tom (night-deep, night, plate, plate-hi) e com fios hairline. A única "elevação" luminosa é o brilho do Baiu: o halo radial atrás dele e o GroundLight, um gradiente radial no chão, os dois na cor escolhida para o mascote e com intensidade que acompanha o fôlego.
+Não há sombras no sistema: nenhum componente declara shadow ou elevation, e os cabeçalhos desligam a sombra nativa. A profundidade se faz em degraus de tom (night-deep, night, plate, plate-hi) e com fios hairline.
 
 ### Named Rules
 **The Thread Not Shadow Rule.** Superfícies se separam por tom e por fio fino (hairline em line), nunca por sombra.
 
-**The Light Is Data Rule.** Brilho âmbar no chão só existe ligado ao fôlego; não é decoração de fundo.
+**The No Glow Rule.** O Baiu não é lanterna: nada de halo, brilho no chão ou luz ligada ao fôlego. O fôlego aparece só no tamanho e no humor do mascote.
 
 ## Shapes
 
@@ -290,9 +290,9 @@ Carimbo circular de anel duplo em vermelhão, texto em Zen Maru Black caixa-alta
 Uma barra fina por dia (até 6px, gap 3px), altura pela raiz do gasto; dias com gasto em papel a 62%, sem gasto em fio; hoje em lantern; ponto jade sob dias com entrada; base hairline.
 
 ### O Baiu (mascote)
-Baiacu em SVG, de frente: corpo redondo, barriga clara, pintas no dorso, nadadeiras peitorais, dorsal pequena e rabo saindo atrás do corpo. Quatro humores (estufado, cheio, meio, murcho) mudam silhueta, rosto e pele: o murcho cede para baixo e fica apagado, com dobras na barriga; o estufado vira bola com espinhos. A escala vai de 0.8 a 1.0 com o fôlego. Boia devagar (3s), bate as nadadeiras mais rápido quanto melhor o humor e pisca. Tocar estufa em mola, mostra os espinhos, intensifica o halo e vibra; soltar volta ao fôlego real. Com Reduzir Movimento ativo, fica parado. O estado sempre acompanha texto (linha de humor e "Fôlego N de 100").
+Baiacu em SVG, de frente: corpo redondo, barriga clara, pintas no dorso, nadadeiras peitorais, dorsal pequena e rabo saindo atrás do corpo. Quatro humores (estufado, cheio, meio, murcho) mudam silhueta, rosto e pele: o murcho cede para baixo e fica apagado, com dobras na barriga; o estufado vira bola com espinhos. A escala vai de 0.8 a 1.0 com o fôlego. Boia devagar (3s), bate as nadadeiras mais rápido quanto melhor o humor e pisca. Tocar estufa em mola, mostra os espinhos e vibra; soltar volta ao fôlego real. Com Reduzir Movimento ativo, fica parado. O estado sempre acompanha texto (linha de humor e "Fôlego N de 100").
 
-**Cor.** Sempre âmbar, sem escolha de cor nem enfeites de data. A paleta do corpo sai do tom base em HSL; o humor mexe na saturação e na luz, então o murcho fica apagado.
+**Cor.** Sempre âmbar, sem escolha de cor nem enfeites de data. A paleta do corpo sai do tom base em HSL; o humor mexe na saturação e no tom da pele, então o murcho fica apagado.
 
 ## Do's and Don'ts
 
@@ -307,7 +307,7 @@ Baiacu em SVG, de frente: corpo redondo, barriga clara, pintas no dorso, nadadei
 - **Do** usar SF Symbols no iOS e Material Symbols no Android pelo componente Icon.
 
 ### Don't:
-- **Don't** usar sombra, elevation ou brilho como profundidade; o único brilho é o do Baiu.
+- **Don't** usar sombra, elevation ou brilho como profundidade, nem no Baiu.
 - **Don't** usar vermelhão ou jade como decoração, cor de seção ou de marca.
 - **Don't** fazer cartão de saldo com gradiente, carrossel de cartões de crédito ou rosca de categorias.
 - **Don't** desenhar a marca real de um banco; BankMark é monograma com iniciais e cor próxima.

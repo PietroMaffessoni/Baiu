@@ -9,7 +9,6 @@ import { BankMark } from '@/components/bank-mark';
 import { Button, IconButton } from '@/components/button';
 import { DayBars } from '@/components/day-bars';
 import { EmptyPlate } from '@/components/form';
-import { GroundLight } from '@/components/ground-light';
 import { Icon } from '@/components/icon';
 import { DemoNote, Plate, Rule, Section } from '@/components/layout';
 import { Mark } from '@/components/mark';
@@ -21,7 +20,6 @@ import type { Account } from '@/data/types';
 import { useAlerts } from '@/lib/assistant/use-assistant';
 import { useBank, useBankStatus } from '@/lib/bank/use-bank';
 import { dueItems, dueLabel } from '@/lib/bills';
-import { paletteFor } from '@/lib/palette';
 import { greeting, longToday } from '@/lib/dates';
 import { accountTotal } from '@/lib/ledger';
 import { brl, HIDDEN } from '@/lib/money';
@@ -64,7 +62,6 @@ export default function Home() {
   const fishTop = insets.top + 26;
   const fishH = baiuHeight(fishW);
   const stage = fishTop + fishH * 0.96;
-  const pal = paletteFor(folego.mood.mood);
   const hide = state.settings.hideValues;
   const hasAccounts = state.accounts.length > 0;
 
@@ -92,15 +89,6 @@ export default function Home() {
           />
         ) : undefined
       }>
-      <GroundLight
-        width={width}
-        height={stage + 260}
-        cx={width / 2}
-        cy={fishTop + fishH * 0.56}
-        intensity={0.35 + pal.glow * 0.65}
-        tint={pal.glowColor}
-      />
-
       {/* palco: o Baiu boiando no topo da tela */}
       <View style={{ height: stage }}>
         <View style={[styles.fish, { left: (width - fishW) / 2, top: fishTop }]}>

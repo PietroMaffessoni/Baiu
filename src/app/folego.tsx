@@ -21,7 +21,7 @@ export default function FolegoSheet() {
   return (
     <ScrollView style={styles.screen} contentContainerStyle={{ paddingTop: 28, paddingBottom: insets.bottom + 40 }}>
       <View style={styles.top}>
-        <Baiu score={folego.score} width={150} halo />
+        <Baiu score={folego.score} width={150} />
         <View style={{ flex: 1 }}>
           <T variant="caption" tone="ink2">
             Fôlego
@@ -51,7 +51,7 @@ export default function FolegoSheet() {
                   <View style={[styles.trackFill, { width: `${fill * 100}%` }]} />
                 </View>
                 <View style={styles.stateCell}>
-                  <Baiu score={m.from + 12} mood={m.mood} width={54} still halo={false} />
+                  <Baiu score={m.from + 12} mood={m.mood} width={54} still />
                   <T variant="micro" tone={active ? 'lantern' : 'ink3'} align="center">
                     {m.label}
                   </T>
@@ -70,7 +70,7 @@ export default function FolegoSheet() {
           Quatro pilares, 25 pontos cada
         </T>
         <T variant="callout" tone="ink2" style={{ marginBottom: 14 }}>
-          O tamanho e a luz do Baiu leem só este número. Nada aqui é sorte: cada pilar tem uma regra.
+          O tamanho do Baiu lê só este número. Nada aqui é sorte: cada pilar tem uma regra.
         </T>
         <Plate style={{ paddingHorizontal: 14 }}>
           {folego.pillars.map((p, i) => {

@@ -4,15 +4,13 @@ import type { IconName } from '@/components/icon';
  * Dados do "Começar", o caminho de quem baixou o Baiu até criar a conta.
  * Cada número tem fonte, mês e pesquisa: as lojas e as pessoas cobram que não
  * seja inventado. Ao trocar um número, troque a fonte junto e confira na
- * publicação original. As contas com as respostas da pessoa são simulações e
- * aparecem como tal: o Baiu não promete economia.
+ * publicação original. As fontes ficam aqui, não na tela; as contas com as
+ * respostas da pessoa são simulações escritas no condicional ("se for assim com
+ * você"), e o Baiu não promete economia.
  */
 
-/** Referências para transformar o dinheiro que escapa em coisas. */
+/** Referências para as contas da vida inteira. */
 export const REF = {
-  salarioMinimo: { value: 1621, source: 'Decreto 12.797/2025, salário mínimo de 2026' },
-  cestaBasica: { value: 915.01, source: 'DIEESE, cesta básica de São Paulo, julho de 2026' },
-  assinaturasAno: { value: 1416, source: 'Bango, pesquisa feita pela 3Gem em abril e maio de 2024' },
   expectativaVida: { value: 76.6, source: 'IBGE, Tábua Completa de Mortalidade de 2024' },
   /** Com a Selic acima de 8,5% ao ano, a poupança rende 0,5% ao mês mais a TR (Lei 12.703/2012). */
   poupancaMes: {
@@ -23,13 +21,51 @@ export const REF = {
 
 /**
  * Juros pagos pelas famílias no 1º semestre de 2026 (1/1 a 30/6, 181 dias),
- * para o contador que corre na tela.
+ * para o contador que corre na tela e para a média que escapa por mês.
  */
 export const JUROS_FAMILIAS = {
   value: 515.4e9,
+  months: 6,
   days: 181,
+  /** Parte da renda das famílias que foi para juros no semestre. */
+  renda: '14,64%',
   source: 'FecomercioSP, com dados do Banco Central e do IBGE, 1º semestre de 2026',
 };
+
+/** Para dividir os juros por pessoa e por casa. */
+export const CENSO = {
+  pessoas: 203_062_512,
+  casas: 72_400_000,
+  source: 'IBGE, Censo 2022: 203,1 milhões de pessoas e 72,4 milhões de domicílios particulares ocupados',
+};
+
+/**
+ * Coisas em que o dinheiro que escapa na vida inteira se transforma. Preços
+ * mudam: confira e atualize a fonte junto (a ação, principalmente).
+ */
+export const COISAS: { key: string; price: number; one: string; many: string; source: string }[] = [
+  {
+    key: 'iphone',
+    price: 11999,
+    one: 'iPhone 18 Pro',
+    many: 'iPhones 18 Pro',
+    source: 'Apple, preço de lançamento no Brasil do iPhone 18 Pro de 256 GB, setembro de 2026',
+  },
+  {
+    key: 'carro',
+    price: 72490,
+    one: 'carro zero',
+    many: 'carros zero',
+    source: 'Fiat Mobi Like, o zero mais barato do Brasil, oferta de novembro de 2026',
+  },
+  {
+    key: 'petrobras',
+    price: 45.95,
+    one: 'ação da Petrobras',
+    many: 'ações da Petrobras',
+    source: 'B3, PETR4, fechamento de 5 de novembro de 2026',
+  },
+];
 
 export type Para = 'eu' | 'casa';
 
@@ -49,12 +85,6 @@ export const ORIGENS: { value: string; label: string; icon: IconName }[] = [
   { value: 'outro', label: 'Outro lugar', icon: 'more' },
 ];
 
-/** Régua de "quanto escapa por mês", por quem a pessoa cuida. */
-export const ESCAPE = {
-  eu: { min: 20, max: 1500, step: 10, start: 150 },
-  casa: { min: 20, max: 3000, step: 20, start: 300 },
-};
-
 export const IDADE = { min: 18, max: 80, start: 30 };
 
 export type Objetivo = 'reserva' | 'viagem' | 'dividas' | 'investir' | 'casa' | 'estudo';
@@ -67,9 +97,6 @@ export const OBJETIVOS: { value: Objetivo; label: string; para: string; icon: Ic
   { value: 'casa', label: 'A casa própria', para: 'a entrada da casa', icon: 'home' },
   { value: 'estudo', label: 'Estudar', para: 'os estudos', icon: 'book' },
 ];
-
-/** Na simulação do objetivo, a pessoa segura só parte do que escapa. */
-export const PARTE_SEGURADA = 0.5;
 
 export type Stat = { value: string; spoken: string; title: string; detail: string; source: string };
 
@@ -111,12 +138,6 @@ export const RICOS: Stat = {
   source:
     'Thomas Stanley e William Danko, "O Milionário Mora ao Lado", pesquisa com milionários dos EUA; Anbima e Datafolha, Raio-X do Investidor, 9ª edição (dados de 2025).',
 };
-
-export const PROMESSAS = [
-  'Conecte até 3 bancos e veja cada entrada e saída organizada sozinha.',
-  'O Baiu reconhece as contas que se repetem e avisa quando um gasto foge do normal.',
-  'Seu fôlego, uma nota de 0 a 100, mostra se o dinheiro está respirando.',
-];
 
 /**
  * Relatos de quem usa o Baiu. Só entram relatos reais, com autorização por

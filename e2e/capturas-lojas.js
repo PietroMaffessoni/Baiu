@@ -82,6 +82,15 @@ async function captureRaw(browser) {
     await shot('assistente');
     await back();
     await shot('inicio');
+    // o Baiu sozinho, para o banner do Google Play
+    const baiu = page.getByRole('button', { name: /^Baiu, / }).first();
+    // esconde o resto da tela, que passa por trás da caixa do desenho
+    await baiu.evaluate((el) => {
+      document.body.style.visibility = 'hidden';
+      el.style.visibility = 'visible';
+    });
+    await baiu.screenshot({ path: path.join(RAW, 'baiu.png'), omitBackground: true });
+    await page.evaluate(() => (document.body.style.visibility = ''));
     await page.getByLabel(/^Fôlego \d+ de 100/).first().click();
     await shot('folego');
     await back();
@@ -153,8 +162,6 @@ const WORDMARK = (w, tint = '#F4F0E6') => `
 function framed({ W, H, phoneW, top, title, sub, titleSize, subSize, padTop, img }) {
   const s = phoneW / 393;
   return `<html><head><style>${FONTS}
-  .glow { position:absolute; left:50%; top:${top + 120 * s}px; width:${W * 1.4}px; height:${W * 1.4}px; transform:translate(-50%,-50%);
-          background: radial-gradient(circle, rgba(255,182,72,0.22) 0%, rgba(255,182,72,0.06) 40%, rgba(15,26,61,0) 70%); }
   .cap { position:absolute; left:0; right:0; top:${padTop}px; text-align:center; padding:0 22px; }
   .t { font-family: ZB; color:#F4F0E6; font-size:${titleSize}px; line-height:1.15; letter-spacing:-0.3px; }
   .s { font-family: ZM; color:#A9B3D6; font-size:${subSize}px; line-height:1.35; margin-top:${subSize * 0.55}px; }
@@ -167,7 +174,6 @@ function framed({ W, H, phoneW, top, title, sub, titleSize, subSize, padTop, img
   .bat i { display:block; height:100%; width:80%; background:#F4F0E6; border-radius:${1.5 * s}px; }
   .screen img { display:block; width:${phoneW}px; }
   </style></head><body style="width:${W}px;height:${H}px;position:relative">
-  <div class="glow"></div>
   <div class="cap"><div class="t">${title}</div><div class="s">${sub}</div></div>
   <div class="phone"><div class="screen"><div class="bar"><span>9:41</span><span class="bat"><i></i></span></div>
   <img src="${url(path.join(RAW, img + '.png'))}"></div></div>
@@ -197,11 +203,10 @@ async function compose(browser) {
     // Google Play, celular 9:16: 1080 × 1920
     await render(framed({ W: 360, H: 640, phoneW: 250, top: 140, title, sub, titleSize: 26, subSize: 14.5, padTop: 40, img }), 360, 640, 3, path.join(OUT, 'google-play', `${n}-${img}.jpg`));
   }
-  // Gráfico de destaque do Google Play: 1024 × 500, com o Baiu e o brilho
-  const fish = 'data:image/png;base64,' + fs.readFileSync(path.join(__dirname, 'arte', 'fish-halo.png')).toString('base64');
-  const fishW = 330;
+  // Gráfico de destaque do Google Play: 1024 × 500, com o Baiu capturado na tela inicial
+  const fish = 'data:image/png;base64,' + fs.readFileSync(path.join(RAW, 'baiu.png')).toString('base64');
   await render(`<html><head><style>${FONTS}
-    .f { position:absolute; left:${770 - fishW}px; top:${262 - fishW}px; width:${fishW * 2}px; height:${fishW * 2}px; }
+    .f { position:absolute; left:770px; top:250px; width:330px; transform:translate(-50%,-50%); }
     .l { position:absolute; left:72px; top:118px; }
     .t { font-family: ZB; color:#F4F0E6; font-size:50px; line-height:1.08; margin-top:34px; letter-spacing:-0.5px; }
     .s { font-family: ZM; color:#A9B3D6; font-size:21px; margin-top:16px; }

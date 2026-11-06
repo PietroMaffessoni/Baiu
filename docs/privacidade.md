@@ -40,7 +40,7 @@ A categoria de cada movimento (mercado, salário, transporte...) é escolhida no
 
 A conversa com o Baiu também fica só no aparelho, cifrada junto com os seus registros. Você pode apagá-la a qualquer momento na própria conversa.
 
-No começo do app, você pode dizer quanto dinheiro escapa por mês e a sua idade, para ver a conta do quanto isso soma. Essas respostas ficam só na tela: não são guardadas nem enviadas.
+No começo do app, você pode dizer para quem é o Baiu, a sua idade e o que faria com o dinheiro, para ver a conta do quanto escapa na vida inteira. Essas respostas ficam só na tela: não são guardadas nem enviadas.
 
 ## Bancos conectados (Open Finance)
 

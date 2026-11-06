@@ -7,15 +7,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import {
   CULPA,
-  ESCAPE,
   IDADE,
   JUROS_FAMILIAS,
   OBJETIVOS,
   ORIGENS,
   PARA,
-  PARTE_SEGURADA,
-  PROMESSAS,
-  REF,
   RELATOS,
   RICOS,
   SOZINHO,
@@ -23,17 +19,15 @@ import {
   type Para,
   type Stat,
 } from '@/content/comecar';
-import { JUROS_POR_SEGUNDO, projection, saveOrigin, savingsValue } from '@/lib/comecar';
+import { ESCAPE_MEDIO, JUROS_POR_SEGUNDO, projection, saveOrigin, savingsValue } from '@/lib/comecar';
 import { brl } from '@/lib/money';
 import { T } from '@/theme/text';
 import { color, gutter, radius } from '@/theme/tokens';
 import { Baiu, baiuHeight } from './baiu/baiu';
 import { BankMark } from './bank-mark';
 import { Button, IconButton } from './button';
-import { GroundLight } from './ground-light';
 import { Icon, type IconName } from './icon';
 import { tick } from './keypad';
-import { Mark } from './mark';
 import { Slider } from './slider';
 
 type StepId =
@@ -51,7 +45,6 @@ type StepId =
   | 'contador'
   | 'relatos'
   | 'ricos'
-  | 'ajuda'
   | 'objetivo'
   | 'fim';
 
@@ -72,7 +65,6 @@ const STEPS = (
     'contador',
     'relatos',
     'ricos',
-    'ajuda',
     'objetivo',
     'fim',
   ] as StepId[]
@@ -84,7 +76,7 @@ const SCORE: Record<StepId, number> = {
   app1: 60,
   app2: 72,
   origem: 50,
-  escape: 40,
+  escape: 30,
   idade: 36,
   conta: 10,
   coisas: 8,
@@ -93,8 +85,7 @@ const SCORE: Record<StepId, number> = {
   culpa: 22,
   contador: 12,
   relatos: 60,
-  ricos: 52,
-  ajuda: 70,
+  ricos: 60,
   objetivo: 80,
   fim: 92,
 };
@@ -107,41 +98,44 @@ const count = (n: number) => n.toLocaleString('pt-BR');
 
 /**
  * O caminho de quem baixou o Baiu até criar a conta. Primeiro a pessoa conta
- * para quem é o app e vê como ele funciona; depois diz quanto escapa por mês e
- * a idade, e vê o tamanho disso na vida inteira, em coisas e na poupança. Aí
- * vêm os dados de que ela não está sozinha e de que não é culpa dela, como o
- * Baiu ajuda e uma simulação com o objetivo dela. No fim, o Baiu enche.
+ * para quem é o app e vê como ele funciona; depois vê quanto escapa por mês do
+ * bolso do brasileiro, diz a idade e vê o tamanho disso na vida inteira, em
+ * coisas e na poupança. Aí vêm os dados de que ela não está sozinha e de que
+ * não é culpa dela, e uma simulação com o objetivo dela. No fim, o Baiu enche.
  *
  * `rever`: aberto pelos Ajustes, termina fechando e não guarda nada.
+ * `onBack`: para onde volta o primeiro passo (sem ele, fecha).
  */
-export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: () => void }) {
+export function Comecar({
+  mode,
+  onClose,
+  onBack,
+}: {
+  mode: 'novo' | 'rever';
+  onClose: () => void;
+  onBack?: () => void;
+}) {
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const [index, setIndex] = useState(0);
   const [para, setPara] = useState<Para | null>(null);
   const [origem, setOrigem] = useState<string | null>(null);
-  const [escape, setEscape] = useState(ESCAPE.eu.start);
   const [idade, setIdade] = useState(IDADE.start);
   const [objetivo, setObjetivo] = useState<Objetivo | null>(null);
 
   const step = STEPS[index];
   const final = step === 'fim';
-  const range = ESCAPE[para ?? 'eu'];
+  const casa = para === 'casa';
+  // a média do brasileiro (ou da casa brasileira) é a base de todas as contas
+  const escape = ESCAPE_MEDIO[para ?? 'eu'];
   const p = projection(escape, idade);
-  const dono = para === 'casa' ? 'da sua casa' : 'do seu bolso';
-
-  // na régua, o Baiu murcha conforme o valor sobe
-  const score =
-    step === 'escape' ? Math.round(60 - (50 * (escape - range.min)) / (range.max - range.min)) : SCORE[step];
+  const dono = casa ? 'da sua casa' : 'do seu bolso';
+  const quem = casa ? 'de cada casa brasileira' : 'do bolso de cada brasileiro';
+  const score = SCORE[step];
 
   useEffect(() => {
     if (final && Platform.OS !== 'web') Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy).catch(() => {});
   }, [final]);
-
-  const choosePara = (v: Para) => {
-    setPara(v);
-    setEscape(ESCAPE[v].start);
-  };
 
   const ready = step === 'para' ? !!para : step === 'origem' ? !!origem : step === 'objetivo' ? !!objetivo : true;
 
@@ -154,7 +148,7 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
     }
     setIndex((i) => i + 1);
   };
-  const back = () => (index === 0 ? onClose() : setIndex((i) => i - 1));
+  const back = () => (index === 0 ? (onBack ?? onClose)() : setIndex((i) => i - 1));
 
   // em telas baixas o Baiu encolhe para o texto caber
   const avail = height - insets.top - insets.bottom;
@@ -165,13 +159,6 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
 
   return (
     <View style={styles.screen}>
-      <GroundLight
-        width={width}
-        height={height * 0.7}
-        cx={width / 2}
-        cy={top + 60 + fishH * 0.56}
-        intensity={fish ? 0.15 + (score / 100) * 0.85 : 0.2}
-      />
       <View style={[styles.bar, { paddingTop: top }]}>
         <IconButton icon="back" label={index === 0 ? 'Fechar' : 'Voltar'} onPress={back} />
         <View
@@ -212,10 +199,7 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
               <T variant="title1" accessibilityRole="header">
                 Para quem é o Baiu?
               </T>
-              <T variant="body" tone="ink2">
-                Assim as contas daqui para a frente ficam do seu tamanho.
-              </T>
-              <Options options={PARA} value={para} onChange={choosePara} />
+              <Options options={PARA} value={para} onChange={setPara} />
             </>
           ) : null}
 
@@ -224,9 +208,6 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
               <T variant="title1" accessibilityRole="header">
                 Todas as suas contas num lugar só
               </T>
-              <T variant="body" tone="ink2">
-                Conecte seus bancos pelo Open Finance e veja saldo, cartão e cada movimento sem abrir cinco apps.
-              </T>
               <MockContas />
             </>
           ) : null}
@@ -234,12 +215,9 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
           {step === 'app2' ? (
             <>
               <T variant="title1" accessibilityRole="header">
-                O Baiu avisa antes de o dinheiro escapar
+                Veja para onde vai cada real
               </T>
-              <T variant="body" tone="ink2">
-                Ele aprende o seu normal e chama quando um gasto passa do ponto ou quando uma conta está para vencer.
-              </T>
-              <MockAvisos />
+              <MockGastos />
             </>
           ) : null}
 
@@ -248,42 +226,19 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
               <T variant="title1" accessibilityRole="header">
                 Como você conheceu o Baiu?
               </T>
-              <T variant="body" tone="ink2">
-                Ajuda a gente a chegar em mais gente como você.
-              </T>
               <Options options={ORIGENS} value={origem} onChange={setOrigem} compact />
             </>
           ) : null}
 
           {step === 'escape' ? (
             <>
-              <T variant="title2" accessibilityRole="header">
-                {`Quanto escapa ${dono} por mês sem você perceber?`}
+              <T variant="body" tone="ink2" accessibilityRole="header">
+                {`Todo mês, escapam em média ${quem}`}
               </T>
+              <CountUp value={escape} format={reais} spoken={reais(escape)} />
+              <T variant="title2">só em juros.</T>
               <T variant="callout" tone="ink2">
-                Assinatura esquecida, delivery por impulso, tarifa do banco, juros do cartão, aquele Pix que você nem
-                lembra.
-              </T>
-              <View style={styles.reading}>
-                <T variant="display" tabular style={styles.number} numberOfLines={1} adjustsFontSizeToFit>
-                  {reais(escape)}
-                </T>
-                <T variant="title3" tone="ink2">
-                  por mês
-                </T>
-              </View>
-              <Slider
-                value={escape}
-                min={range.min}
-                max={range.max}
-                step={range.step}
-                onChange={setEscape}
-                label="Quanto escapa por mês"
-                spoken={(v) => `${reais(v)} por mês`}
-              />
-              <T variant="caption" tone="ink3">
-                Só em assinaturas, a média no Brasil é R$ 118 por mês (Bango, 2024). Chute sem medo: quase ninguém sabe
-                ao certo, e esse é justamente o problema.
+                {`Foi para os juros ${JUROS_FAMILIAS.renda} de tudo o que as famílias brasileiras ganharam no primeiro semestre de 2026. E isso sem contar assinatura esquecida, delivery por impulso, tarifa do banco e aquele Pix que ninguém lembra.`}
               </T>
             </>
           ) : null}
@@ -313,25 +268,19 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
                 label="Sua idade"
                 spoken={(v) => `${v} anos`}
               />
-              <T variant="caption" tone="ink3">
-                Suas respostas não saem deste aparelho.
-              </T>
             </>
           ) : null}
 
           {step === 'conta' ? (
             <>
               <T variant="body" tone="ink2">
-                {`Se nada mudar, até os ${p.untilAge} anos vão escapar ${dono}`}
+                {`Se for assim com você, até os ${p.untilAge} anos vão escapar ${dono}`}
               </T>
               <CountUp value={p.total} format={reais} spoken={reais(p.total)} />
               <T variant="title2">{`São ${reais(escape * 12)} por ano, durante ${p.years} anos.`}</T>
               <T variant="callout" tone="ink2">
                 Dinheiro que sai aos poucos, sem barulho, e que você nunca vê junto.
               </T>
-              <Source>
-                {`A conta vai até a expectativa de vida do brasileiro, 76,6 anos (${REF.expectativaVida.source}), sem juros nem inflação.`}
-              </Source>
             </>
           ) : null}
 
@@ -341,33 +290,17 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
                 {`${reais(p.total)} é o mesmo que…`}
               </T>
               <View style={styles.things}>
-                {(
-                  [
-                    [p.salarios, p.salarios === 1 ? 'salário mínimo inteiro' : 'salários mínimos inteiros'],
-                    [p.cestas, p.cestas === 1 ? 'mês de cesta básica' : 'meses de cesta básica'],
-                    [
-                      p.anosAssinaturas,
-                      p.anosAssinaturas === 1
-                        ? 'ano com todas as assinaturas de uma pessoa'
-                        : 'anos com todas as assinaturas de uma pessoa',
-                    ],
-                  ] as [number, string][]
-                )
-                  .filter(([n]) => n > 0)
-                  .map(([n, label], i) => (
-                    <Animated.View key={label} entering={FadeIn.delay(200 + i * 220).duration(400)} style={styles.thing}>
-                      <T variant="hero" tone="lantern" tabular>
-                        {count(n)}
-                      </T>
-                      <T variant="callout" style={{ flex: 1 }}>
-                        {label}
-                      </T>
-                    </Animated.View>
-                  ))}
+                {p.coisas.map((c, i) => (
+                  <Animated.View key={c.key} entering={FadeIn.delay(200 + i * 220).duration(400)} style={styles.thing}>
+                    <T variant="hero" tone="lantern" tabular>
+                      {count(c.n)}
+                    </T>
+                    <T variant="title3" style={{ flex: 1 }}>
+                      {c.n === 1 ? c.one : c.many}
+                    </T>
+                  </Animated.View>
+                ))}
               </View>
-              <Source>
-                {`Salário mínimo de R$ 1.621 (${REF.salarioMinimo.source}); cesta básica de R$ 915,01 (${REF.cestaBasica.source}); R$ 1.416 por ano em assinaturas (${REF.assinaturasAno.source}).`}
-              </Source>
             </>
           ) : null}
 
@@ -382,7 +315,6 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
                 E isso na poupança, que rende pouco. O problema quase nunca é ganhar pouco: é não ver para onde o
                 dinheiro vai.
               </T>
-              <Source>{`Simulação com ${REF.poupancaMes.source}, e sem inflação.`}</Source>
             </>
           ) : null}
 
@@ -414,9 +346,8 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
               <JurosAoVivo />
               <T variant="title2">em juros.</T>
               <T variant="callout" tone="ink2">
-                {`Foram R$ 515,4 bilhões só no primeiro semestre de 2026. E, pela sua conta, escapam ${brl(escape / 30)} ${dono} por dia.`}
+                {`Foram R$ 515,4 bilhões só no primeiro semestre de 2026, ou ${brl(escape / 30)} por dia ${quem}.`}
               </T>
-              <Source>{`${JUROS_FAMILIAS.source}.`}</Source>
             </>
           ) : null}
 
@@ -443,34 +374,13 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
             </>
           ) : null}
 
-          {step === 'ajuda' ? (
-            <>
-              <T variant="title1" accessibilityRole="header">
-                O Baiu acende a luz
-              </T>
-              <T variant="body" tone="ink2">
-                Para o dinheiro parar de escapar, primeiro você precisa ver para onde ele vai.
-              </T>
-              <View style={styles.promises}>
-                {PROMESSAS.map((t, i) => (
-                  <Animated.View key={t} entering={FadeIn.delay(250 + i * 180).duration(400)} style={styles.promise}>
-                    <Mark state="cheia" size={20} />
-                    <T variant="callout" style={{ flex: 1 }}>
-                      {t}
-                    </T>
-                  </Animated.View>
-                ))}
-              </View>
-            </>
-          ) : null}
-
           {step === 'objetivo' ? (
             <>
               <T variant="title1" accessibilityRole="header">
                 O que você faria com esse dinheiro?
               </T>
               <Options options={OBJETIVOS} value={objetivo} onChange={setObjetivo} grid />
-              {objetivo ? <Plano monthly={escape * PARTE_SEGURADA} objetivo={objetivo} /> : null}
+              {objetivo ? <Plano monthly={escape} objetivo={objetivo} /> : null}
             </>
           ) : null}
 
@@ -484,7 +394,9 @@ export function Comecar({ mode, onClose }: { mode: 'novo' | 'rever'; onClose: ()
                   Crie sua conta e use o Baiu por um mês, de graça. Depois, a assinatura é cobrada pela loja do seu
                   celular, e você cancela quando quiser.
                 </T>
-                <T variant="callout" tone="lantern">{`Cada mês que passa, escapam ${reais(escape)} ${dono}.`}</T>
+                <T variant="callout" tone="lantern">
+                  {`Em média, escapam ${reais(escape)} por mês ${quem}. Com o Baiu, você vê para onde vai ${casa ? 'o da sua' : 'o seu'}.`}
+                </T>
               </>
             ) : (
               <>
@@ -571,7 +483,7 @@ function Options<V extends string>({
   );
 }
 
-/** Um dado com fonte: número grande, frase e de onde veio. */
+/** Um dado: número grande e frase. A fonte fica no conteúdo, não na tela. */
 function StatBlock({ stat }: { stat: Stat }) {
   return (
     <View style={{ gap: 6 }}>
@@ -582,33 +494,23 @@ function StatBlock({ stat }: { stat: Stat }) {
       <T variant="callout" tone="ink2">
         {stat.detail}
       </T>
-      <Source>{`Fonte: ${stat.source}`}</Source>
     </View>
   );
 }
 
-function Source({ children }: { children: string }) {
-  return (
-    <T variant="micro" tone="ink3" style={{ marginTop: 4 }}>
-      {children}
-    </T>
-  );
-}
-
-/** Simulação do objetivo: segurar parte do que escapa, guardado na poupança. */
+/** Simulação do objetivo: guardar na poupança tudo o que escapa por mês. */
 function Plano({ monthly, objetivo }: { monthly: number; objetivo: Objetivo }) {
   const o = OBJETIVOS.find((x) => x.value === objetivo)!;
   const ano = savingsValue(monthly, 12);
   return (
     <Animated.View entering={FadeInDown.duration(400)} style={styles.plan}>
       <T variant="callout" tone="ink2">
-        {`Segurando metade do que escapa, ${reais(monthly)} por mês, em 1 ano você junta`}
+        {`Guardando esses ${reais(monthly)} por mês na poupança, em 1 ano você junta`}
       </T>
       <T variant="hero" tone="lantern" tabular>
         {reais(ano)}
       </T>
       <T variant="callout">{`para ${o.para}. Em 5 anos, ${reais(savingsValue(monthly, 60))}.`}</T>
-      <Source>{`Simulação com ${REF.poupancaMes.source}. Quanto você segura depende de você; o Baiu mostra para onde o dinheiro vai.`}</Source>
     </Animated.View>
   );
 }
@@ -717,54 +619,67 @@ function MockContas() {
           </T>
         </View>
       ))}
-      <T variant="micro" tone="ink3" align="center" style={{ marginTop: 6 }}>
-        Exemplo ilustrativo
-      </T>
     </View>
   );
 }
 
-/** Como chegam os avisos do Baiu, com valores de exemplo. */
-function MockAvisos() {
-  const avisos: { icon: IconName; title: string; text: string; tint: string }[] = [
-    {
-      icon: 'bell',
-      title: 'Delivery fora do normal',
-      text: 'Este mês já foram R$ 412, o dobro do seu normal.',
-      tint: color.vermilion,
-    },
-    { icon: 'calendar', title: 'Conta de luz vence amanhã', text: 'R$ 238,40, no dia 10.', tint: color.lantern },
+/** O mês por categoria, com o aviso do Baiu no gasto que fugiu do normal. Valores de exemplo. */
+function MockGastos() {
+  const rows: { icon: IconName; title: string; value: number; off?: boolean }[] = [
+    { icon: 'basket', title: 'Mercado', value: 1120 },
+    { icon: 'home', title: 'Contas da casa', value: 640 },
+    { icon: 'food', title: 'Delivery', value: 412, off: true },
+    { icon: 'car', title: 'Transporte', value: 286 },
+    { icon: 'repeat', title: 'Assinaturas', value: 118 },
   ];
+  const top = rows[0].value;
   return (
-    <View style={{ gap: 10 }} accessible accessibilityLabel="Exemplo de avisos: um gasto fora do normal e uma conta para vencer">
-      {avisos.map((a, i) => (
-        <Animated.View key={a.title} entering={FadeInDown.delay(300 + i * 260).duration(400)} style={styles.notice}>
-          <View style={[styles.optionIcon, { backgroundColor: color.plateHi }]}>
-            <Icon name={a.icon} size={18} tint={a.tint} />
-          </View>
-          <View style={{ flex: 1, gap: 2 }}>
-            <T variant="captionStrong" tone="ink2">
-              BAIU
-            </T>
-            <T variant="calloutStrong">{a.title}</T>
-            <T variant="caption" tone="ink2">
-              {a.text}
-            </T>
-          </View>
-        </Animated.View>
-      ))}
-      <View style={[styles.notice, { alignItems: 'center' }]}>
-        <Baiu score={72} width={64} still halo={false} />
-        <View style={{ flex: 1 }}>
-          <T variant="calloutStrong">Fôlego 72</T>
-          <T variant="caption" tone="ink2">
-            O dinheiro está respirando.
-          </T>
+    <View
+      style={{ gap: 10 }}
+      accessible
+      accessibilityLabel="Exemplo: os gastos do mês por categoria, e o Baiu avisando que o delivery está no dobro do normal">
+      <View style={styles.mock}>
+        <T variant="caption" tone="ink2">
+          Gastos de outubro
+        </T>
+        <T variant="title1" tabular>
+          {brl(rows.reduce((a, r) => a + r.value, 0))}
+        </T>
+        <View style={styles.mockRows}>
+          {rows.map((r, i) => (
+            <View key={r.title} style={{ gap: 6 }}>
+              <View style={styles.mockRow}>
+                <Icon name={r.icon} size={16} tint={r.off ? color.vermilion : color.ink2} />
+                <T variant="callout" style={{ flex: 1 }}>
+                  {r.title}
+                </T>
+                <T variant="calloutStrong" tabular tone={r.off ? 'vermilion' : 'paper'}>
+                  {brl(r.value, { cents: false })}
+                </T>
+              </View>
+              <View style={styles.track}>
+                <Animated.View
+                  entering={FadeIn.delay(250 + i * 120).duration(500)}
+                  style={[
+                    styles.trackFill,
+                    { width: `${(r.value / top) * 100}%` },
+                    r.off && { backgroundColor: color.vermilion },
+                  ]}
+                />
+              </View>
+            </View>
+          ))}
         </View>
       </View>
-      <T variant="micro" tone="ink3" align="center">
-        Exemplo ilustrativo
-      </T>
+      <Animated.View entering={FadeInDown.delay(900).duration(400)} style={[styles.notice, { alignItems: 'center' }]}>
+        <Baiu score={30} width={52} still />
+        <View style={{ flex: 1, gap: 2 }}>
+          <T variant="calloutStrong">Delivery no dobro do seu normal</T>
+          <T variant="caption" tone="ink2">
+            R$ 412 este mês. Nos últimos três, a média foi R$ 205.
+          </T>
+        </View>
+      </Animated.View>
     </View>
   );
 }
@@ -781,8 +696,6 @@ const styles = StyleSheet.create({
   reading: { flexDirection: 'row', alignItems: 'baseline', gap: 8, marginTop: 4 },
   things: { gap: 14, marginTop: 4 },
   thing: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  promises: { gap: 14, marginTop: 6 },
-  promise: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   options: { gap: 10, marginTop: 4 },
   option: {
     flexDirection: 'row',
@@ -835,6 +748,8 @@ const styles = StyleSheet.create({
   mockRows: { gap: 10, marginTop: 12 },
   mockRow: { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 4 },
   mockLine: { height: 1, backgroundColor: color.line, marginVertical: 8 },
+  track: { height: 4, borderRadius: 2, backgroundColor: color.plateHi, overflow: 'hidden' },
+  trackFill: { height: 4, borderRadius: 2, backgroundColor: color.ink3 },
   notice: {
     flexDirection: 'row',
     gap: 12,
