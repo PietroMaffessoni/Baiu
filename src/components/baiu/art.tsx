@@ -49,10 +49,6 @@ export function BaiuBody({ mood, width, pal, id, puffed }: ArtProps) {
     [0.02, -0.52, 2.6],
   ];
 
-  const gloss0 = rimPoint(mood, 196, 0.8);
-  const gloss1 = rimPoint(mood, 240, 0.8);
-  const glossDot = rimPoint(mood, 252, 0.78);
-
   return box(
     width,
     <>
@@ -155,17 +151,6 @@ export function BaiuBody({ mood, width, pal, id, puffed }: ArtProps) {
           ))}
       </G>
       <Path d={d} fill="none" stroke={pal.rim} strokeOpacity={0.55} strokeWidth={1.6} />
-
-      {/* brilho da pele */}
-      <Path
-        d={`M ${gloss0.x} ${gloss0.y} A ${g.rx * 0.8} ${g.ryT * 0.8} 0 0 1 ${gloss1.x} ${gloss1.y}`}
-        stroke="#FFFFFF"
-        strokeOpacity={0.45}
-        strokeWidth={4}
-        strokeLinecap="round"
-        fill="none"
-      />
-      <Circle cx={glossDot.x} cy={glossDot.y} r={2.2} fill="#FFFFFF" fillOpacity={0.5} />
 
       <Face mood={mood} puffed={puffed} />
     </>,
