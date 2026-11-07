@@ -17,16 +17,16 @@ describe('contas do Começar', () => {
     expect(p.coisas.map((c) => [c.key, c.n])).toEqual([
       ['iphone', 7],
       ['carro', 1],
-      ['petrobras', 1841],
+      ['notas', 131],
     ]);
   });
 
   it('o que não chega a uma unidade fica de fora', () => {
-    expect(projection(10, 70).coisas.map((c) => c.key)).toEqual(['petrobras']);
+    expect(projection(10, 70).coisas.map((c) => c.key)).toEqual(['notas']);
   });
 
-  it('a média que escapa só em juros, por brasileiro e por casa', () => {
-    expect(ESCAPE_MEDIO).toEqual({ eu: 423, casa: 1186 });
+  it('a média que escapa só em juros, por adulto e por casa', () => {
+    expect(ESCAPE_MEDIO).toEqual({ eu: 557, casa: 1186 });
   });
 
   it('a poupança rende juros compostos sobre os depósitos', () => {

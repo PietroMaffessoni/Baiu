@@ -32,16 +32,21 @@ export const JUROS_FAMILIAS = {
   source: 'FecomercioSP, com dados do Banco Central e do IBGE, 1º semestre de 2026',
 };
 
-/** Para dividir os juros por pessoa e por casa. */
+/** Para dividir os juros por adulto e por casa. */
 export const CENSO = {
-  pessoas: 203_062_512,
+  adultos: 154_346_198,
   casas: 72_400_000,
-  source: 'IBGE, Censo 2022: 203,1 milhões de pessoas e 72,4 milhões de domicílios particulares ocupados',
+  source:
+    'IBGE, Censo 2022: 154,3 milhões de pessoas com 18 anos ou mais (SIDRA, tabela 9514) e 72,4 milhões de domicílios particulares ocupados',
 };
 
+/** Comprimento da nota de R$ 100, que não muda com o tempo (Banco Central, segunda família do Real). */
+const NOTA_100_METROS = 0.156;
+
 /**
- * Coisas em que o dinheiro que escapa na vida inteira se transforma. Preços
- * mudam: confira e atualize a fonte junto (a ação, principalmente).
+ * Coisas em que o dinheiro que escapa na vida inteira se transforma. O iPhone
+ * e o carro mudam de preço uma vez por ano: confira e atualize a fonte junto.
+ * As notas de R$ 100 enfileiradas não envelhecem.
  */
 export const COISAS: { key: string; price: number; one: string; many: string; source: string }[] = [
   {
@@ -59,11 +64,12 @@ export const COISAS: { key: string; price: number; one: string; many: string; so
     source: 'Fiat Mobi Like, o zero mais barato do Brasil, oferta de novembro de 2026',
   },
   {
-    key: 'petrobras',
-    price: 45.95,
-    one: 'ação da Petrobras',
-    many: 'ações da Petrobras',
-    source: 'B3, PETR4, fechamento de 5 de novembro de 2026',
+    key: 'notas',
+    // quanto dinheiro cabe em um metro de notas de R$ 100, uma atrás da outra
+    price: 100 / NOTA_100_METROS,
+    one: 'metro de notas de R$ 100, uma atrás da outra',
+    many: 'metros de notas de R$ 100, uma atrás da outra',
+    source: 'Banco Central, cédula de R$ 100 da segunda família do Real: 15,6 cm por 7 cm',
   },
 ];
 

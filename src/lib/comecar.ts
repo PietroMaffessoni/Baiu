@@ -33,11 +33,11 @@ export function projection(monthly: number, age: number) {
 
 /**
  * Quanto escapa por mês, em média, só em juros: o total do semestre dividido
- * pelos brasileiros (só para mim) ou pelas casas (minha casa).
+ * pelos adultos (só para mim) ou pelas casas (minha casa).
  */
 const JUROS_POR_MES = JUROS_FAMILIAS.value / JUROS_FAMILIAS.months;
 export const ESCAPE_MEDIO: Record<Para, number> = {
-  eu: Math.round(JUROS_POR_MES / CENSO.pessoas),
+  eu: Math.round(JUROS_POR_MES / CENSO.adultos),
   casa: Math.round(JUROS_POR_MES / CENSO.casas),
 };
 

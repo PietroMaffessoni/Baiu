@@ -32,8 +32,8 @@ module.exports = async ({ page, step, go, btn, radio, W, signup }) => {
     'Se for assim com você, até os 77 anos vão escapar da sua casa', 'R$ 668.904', 'São R$ 14.232 por ano, durante 47 anos',
   ], ['IBGE']);
   await step('10 em coisas', () => btn('Continuar', { wait: 1800 }), [
-    'R$ 668.904 é o mesmo que', '55', 'iPhones 18 Pro', '9', 'carros zero', '14.557', 'ações da Petrobras',
-  ], ['salários mínimos', 'cesta básica', 'Apple']);
+    'R$ 668.904 é o mesmo que', '55', 'iPhones 18 Pro', '9', 'carros zero', '1.043', 'metros de notas de R$ 100, uma atrás da outra',
+  ], ['salários mínimos', 'cesta básica', 'Petrobras']);
   await step('11 na poupança', () => btn('Continuar', { wait: 1800 }), ['guardado na poupança', 'Só de rendimento'], ['Lei 12.703/2012']);
   await step('12 voltar refaz a conta com outra idade', async () => {
     await btn('Voltar', { wait: 800 });
@@ -70,7 +70,7 @@ module.exports = async ({ page, step, go, btn, radio, W, signup }) => {
   await step('20 pular vai direto ao fim', async () => {
     await go('/comecar');
     await btn('Pular', { wait: 1200 });
-  }, ['Criar minha conta', 'do bolso de cada brasileiro', 'R$ 423'], ['Para quem é o Baiu?']);
+  }, ['Criar minha conta', 'do bolso de cada adulto brasileiro', 'R$ 557'], ['Para quem é o Baiu?']);
   await step('21 o cadastro leva a origem e depois a esquece', async () => {
     await signup('Ana Souza', 'ana.souza@gmail.com', '11996421873');
     if ((await origem()) !== null) return false;

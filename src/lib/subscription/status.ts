@@ -81,6 +81,13 @@ export function trialName(p: Period) {
   return `${periodLabel(p)} grátis`;
 }
 
+/** "minha semana grátis", "meu mês grátis", "meus 7 dias grátis": o possessivo concorda com o período. */
+export function myTrial(p: Period) {
+  const fem = p.unit === 'semana';
+  const my = p.count === 1 && p.unit !== 'dia' ? (fem ? 'minha' : 'meu') : fem ? 'minhas' : 'meus';
+  return `${my} ${trialName(p)}`;
+}
+
 /** "R$ 24,90 por mês". */
 export function priceLabel(plan: Plan) {
   return `${plan.price} por ${plan.period === 'ano' ? 'ano' : 'mês'}`;

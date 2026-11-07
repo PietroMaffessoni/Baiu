@@ -99,7 +99,7 @@ const count = (n: number) => n.toLocaleString('pt-BR');
 /**
  * O caminho de quem baixou o Baiu até criar a conta. Primeiro a pessoa conta
  * para quem é o app e vê como ele funciona; depois vê quanto escapa por mês do
- * bolso do brasileiro, diz a idade e vê o tamanho disso na vida inteira, em
+ * bolso do adulto brasileiro, diz a idade e vê o tamanho disso na vida inteira, em
  * coisas e na poupança. Aí vêm os dados de que ela não está sozinha e de que
  * não é culpa dela, e uma simulação com o objetivo dela. No fim, o Baiu enche.
  *
@@ -126,11 +126,11 @@ export function Comecar({
   const step = STEPS[index];
   const final = step === 'fim';
   const casa = para === 'casa';
-  // a média do brasileiro (ou da casa brasileira) é a base de todas as contas
+  // a média do adulto (ou da casa) brasileiro é a base de todas as contas
   const escape = ESCAPE_MEDIO[para ?? 'eu'];
   const p = projection(escape, idade);
   const dono = casa ? 'da sua casa' : 'do seu bolso';
-  const quem = casa ? 'de cada casa brasileira' : 'do bolso de cada brasileiro';
+  const quem = casa ? 'de cada casa brasileira' : 'do bolso de cada adulto brasileiro';
   const score = SCORE[step];
 
   useEffect(() => {
@@ -391,7 +391,7 @@ export function Comecar({
                   Comece hoje a ver para onde vai o seu dinheiro
                 </T>
                 <T variant="body" tone="ink2">
-                  Crie sua conta e use o Baiu por um mês, de graça. Depois, a assinatura é cobrada pela loja do seu
+                  Crie sua conta e use o Baiu por uma semana, de graça. Depois, a assinatura é cobrada pela loja do seu
                   celular, e você cancela quando quiser.
                 </T>
                 <T variant="callout" tone="lantern">

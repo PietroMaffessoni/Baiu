@@ -4,6 +4,7 @@ import {
   dateLabel,
   describe as describeSub,
   entitlementFrom,
+  myTrial,
   periodLabel,
   priceLabel,
   sortPlans,
@@ -110,6 +111,10 @@ describe('teste grátis do produto', () => {
     expect(trialName({ unit: 'semana', count: 1 })).toBe('semana grátis');
     expect(trialName({ unit: 'mes', count: 1 })).toBe('mês grátis');
     expect(trialName({ unit: 'dia', count: 7 })).toBe('7 dias grátis');
+    expect(myTrial({ unit: 'semana', count: 1 })).toBe('minha semana grátis');
+    expect(myTrial({ unit: 'mes', count: 1 })).toBe('meu mês grátis');
+    expect(myTrial({ unit: 'dia', count: 7 })).toBe('meus 7 dias grátis');
+    expect(myTrial({ unit: 'semana', count: 2 })).toBe('minhas 2 semanas grátis');
     expect(periodLabel({ unit: 'mes', count: 2 })).toBe('2 meses');
     expect(priceLabel(monthly)).toBe('R$ 14,90 por mês');
     expect(priceLabel(annual)).toBe('R$ 149,90 por ano');

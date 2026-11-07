@@ -23,7 +23,7 @@ import { accountsCsv, transactionsCsv } from '@/lib/csv';
 import { remindersAllowed } from '@/lib/reminders';
 import { shareCsv } from '@/lib/share';
 import { subMessage, SubFailure } from '@/lib/subscription/backend';
-import { dateLabel, describe, periodLabel, priceLabel, STORE_NAMES, trialName } from '@/lib/subscription/status';
+import { dateLabel, describe, myTrial, periodLabel, priceLabel, STORE_NAMES, trialName } from '@/lib/subscription/status';
 import type { Entitlement, Plan, SubStore } from '@/lib/subscription/types';
 import { isLocked, useSubscription } from '@/lib/subscription/use-subscription';
 import { useFolego, useStore } from '@/store/store';
@@ -241,7 +241,7 @@ function Paywall({ ent, locked }: { ent: Entitlement | null; locked: boolean }) 
           {plan ? (
             <>
               <Button
-                label={plan.trial ? `Começar meu ${trialName(plan.trial)}` : `Assinar por ${priceLabel(plan)}`}
+                label={plan.trial ? `Começar ${myTrial(plan.trial)}` : `Assinar por ${priceLabel(plan)}`}
                 onPress={buy}
                 loading={busy === 'buy'}
                 disabled={busy !== null}
