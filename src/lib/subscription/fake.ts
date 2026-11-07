@@ -40,6 +40,9 @@ const PLANS = {
   },
 } as const;
 
+/** O teste grátis que as lojas oferecem a quem nunca assinou. */
+const TRIAL_DAYS = 7;
+
 const addPeriod = (d: Date, plan: FakeSub['plan']) => {
   const n = new Date(d);
   if (plan === 'anual') n.setFullYear(n.getFullYear() + 1);
@@ -50,7 +53,7 @@ const addPeriod = (d: Date, plan: FakeSub['plan']) => {
 /**
  * Loja de mentira para testes automatizados e para a web de desenvolvimento
  * (EXPO_PUBLIC_AUTH_FAKE=1). Imita o que App Store e Google Play fazem:
- * primeiro mês grátis uma vez por pessoa, renovação sozinha, cancelamento
+ * primeira semana grátis uma vez por pessoa, renovação sozinha, cancelamento
  * que vale no fim do período.
  */
 export function createFakeStore(opts: { latencyMs?: number; now?: () => Date; offline?: () => boolean } = {}) {
@@ -144,7 +147,7 @@ export function createFakeStore(opts: { latencyMs?: number; now?: () => Date; of
       const used = !!(user && d.trialUsed[user]);
       return (d.offered ?? (['mensal', 'anual'] as const)).map((k): Plan => ({
         ...PLANS[k],
-        trial: used ? null : { unit: 'mes', count: 1 },
+        trial: used ? null : { unit: 'semana', count: 1 },
       }));
     },
     async purchase(planId) {
@@ -156,7 +159,7 @@ export function createFakeStore(opts: { latencyMs?: number; now?: () => Date; of
       // já assinante: a loja só confirma a assinatura que existe
       if (current().active) return emit();
       const trial = !d.trialUsed[uid];
-      const until = trial ? addPeriod(now(), 'mensal') : addPeriod(now(), plan);
+      const until = trial ? new Date(now().getTime() + TRIAL_DAYS * 86_400_000) : addPeriod(now(), plan);
       d.subs[uid] = { plan, until: until.toISOString(), trial, willRenew: true };
       d.trialUsed[uid] = true;
       save(d);

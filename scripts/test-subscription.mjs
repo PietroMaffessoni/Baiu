@@ -120,7 +120,7 @@ const rcCalls = (calls) => calls.filter((c) => c.url.startsWith('https://api.rev
   ok('bancos: a chave do RevenueCat não volta para o app', !JSON.stringify(r.body).includes('sk_rc'));
 }
 ok(
-  'bancos: no mês grátis também funciona',
+  'bancos: na semana grátis também funciona',
   (await callBank({ action: 'status', itemId: 'item-1' }, world({ ent: { expires_date: iso(10 * DAY), period_type: 'trial' } })))
     .status === 200,
 );

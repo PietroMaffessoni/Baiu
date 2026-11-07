@@ -11,7 +11,7 @@
           "Seus registros financeiros ficam no seu aparelho, criptografados. Se você conectar seus bancos pelo Open Finance, os dados vêm do banco e passam pelo nosso servidor só para chegar ao seu celular: não guardamos seus saldos nem seus movimentos.",
           "O Baiu avisa quando um gasto foge do normal e reconhece contas que se repetem. Esses avisos são calculados no próprio aparelho, sem internet e sem inteligência artificial.",
           "Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos e, se você responder, como conheceu o Baiu.",
-          "O Baiu é uma assinatura, com o primeiro mês grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.",
+          "O Baiu é uma assinatura, com a primeira semana grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.",
           "Não vendemos dados, não usamos publicidade e não rastreamos você."
         ]
       },
@@ -50,7 +50,7 @@
       {
         "heading": "Assinatura",
         "body": [
-          "O Baiu é cobrado por assinatura, com o primeiro mês grátis. A compra, a cobrança, a forma de pagamento e os reembolsos ficam com a App Store (Apple) ou com o Google Play (Google), conforme as regras e a política de privacidade de cada loja. O Baiu não recebe o número do seu cartão nem outros dados de pagamento.",
+          "O Baiu é cobrado por assinatura, com a primeira semana grátis. A compra, a cobrança, a forma de pagamento e os reembolsos ficam com a App Store (Apple) ou com o Google Play (Google), conforme as regras e a política de privacidade de cada loja. O Baiu não recebe o número do seu cartão nem outros dados de pagamento.",
           "Para saber se a sua assinatura está ativa, usamos o RevenueCat, empresa dos Estados Unidos que confere os recibos das lojas, como operadora. Ele recebe o código aleatório que identifica sua conta no Baiu (nunca o nome, o e-mail ou o celular), os recibos da loja (plano, preço, datas de compra, de renovação e de cancelamento) e dados técnicos do aparelho, como modelo, sistema, versão do app, país da loja e endereço IP.",
           "O nosso servidor consulta o RevenueCat só para liberar as funções que dependem da assinatura, como os bancos conectados. Não guardamos seu histórico de compras no nosso servidor.",
           "Ao excluir sua conta, apagamos seu cadastro no RevenueCat. As lojas mantêm o registro das compras conforme as regras delas e as obrigações fiscais."
@@ -64,7 +64,7 @@
           "Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas seguidas: legítimo interesse em manter sua conta segura (art. 7º, IX).",
           "Saber como você conheceu o Baiu, se você responder: legítimo interesse em entender quais canais trazem gente (art. 7º, IX).",
           "Conectar seus bancos, buscar e organizar seus dados financeiros: seu consentimento (art. 7º, I), dado no Baiu e confirmado no seu banco pelo Open Finance. Você pode revogar quando quiser.",
-          "Assinatura: conferir se ela está ativa, liberar as funções que dependem dela e avisar antes do fim do mês grátis: execução do contrato (art. 7º, V). O envio ao RevenueCat, nos Estados Unidos, é necessário para executar esse contrato (art. 33, IX).",
+          "Assinatura: conferir se ela está ativa, liberar as funções que dependem dela e avisar antes do fim da semana grátis: execução do contrato (art. 7º, V). O envio ao RevenueCat, nos Estados Unidos, é necessário para executar esse contrato (art. 33, IX).",
           "O celular só é usado para falar com você sobre a sua conta. Não enviamos propaganda."
         ]
       },
@@ -108,7 +108,7 @@
         "heading": "Permissões opcionais",
         "body": [
           "Face ID, Touch ID ou biometria: usados apenas para desbloquear o app, se você ligar essa opção. A verificação é feita pelo sistema do aparelho; o Baiu só recebe a resposta de sucesso ou falha.",
-          "Notificações: usadas para lembrar vencimentos, para avisar quando o Baiu nota um gasto fora do normal e para avisar 2 dias antes de o mês grátis da assinatura acabar. Tudo é agendado no próprio aparelho e o texto não mostra valores. Os avisos de gastos e da assinatura podem ser desligados em Ajustes."
+          "Notificações: usadas para lembrar vencimentos, para avisar quando o Baiu nota um gasto fora do normal e para avisar 2 dias antes de a semana grátis da assinatura acabar. Tudo é agendado no próprio aparelho e o texto não mostra valores. Os avisos de gastos e da assinatura podem ser desligados em Ajustes."
         ]
       },
       {
@@ -163,9 +163,9 @@
         "heading": "Assinatura e pagamento",
         "body": [
           "Para usar o Baiu com a sua conta é preciso ter uma assinatura ativa. O modo exemplo continua gratuito.",
-          "Mês grátis: quem assina pela primeira vez usa o Baiu por 1 mês sem pagar. O período grátis vale uma vez por pessoa, conforme as regras da loja.",
-          "Cobrança: ao fim do mês grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.",
-          "Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim do mês grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de o mês grátis acabar.",
+          "Semana grátis: quem assina pela primeira vez usa o Baiu por 7 dias sem pagar. O período grátis vale uma vez por pessoa, conforme as regras da loja.",
+          "Cobrança: ao fim da semana grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.",
+          "Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim da semana grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de a semana grátis acabar.",
           "Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.",
           "Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar."
         ]

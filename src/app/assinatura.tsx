@@ -84,7 +84,7 @@ function Unavailable() {
         Assinaturas ainda não disponíveis
       </T>
       <T variant="callout" tone="ink2" align="center">
-        Nesta versão do app, o Baiu está liberado. Quando a assinatura chegar, o primeiro mês será grátis.
+        Nesta versão do app, o Baiu está liberado. Quando a assinatura chegar, a primeira semana será grátis.
       </T>
     </View>
   );
@@ -168,7 +168,7 @@ function Paywall({ ent, locked }: { ent: Entitlement | null; locked: boolean }) 
       <View style={styles.center}>
         <Baiu score={Math.max(folego.score, 60)} width={120} />
         <T variant="title1" align="center" accessibilityRole="header">
-          {trial ? 'Seu primeiro mês é por nossa conta' : returning ? 'Que bom te ver de novo' : 'Assine o Baiu'}
+          {trial ? 'Sua primeira semana é por nossa conta' : returning ? 'Que bom te ver de novo' : 'Assine o Baiu'}
         </T>
         <T variant="body" tone="ink2" align="center">
           {returning && locked
@@ -388,7 +388,7 @@ function Manage({ ent }: { ent: Entitlement }) {
           <ListRow
             icon="bell"
             label="Avisar antes da cobrança"
-            hint="Uma notificação 2 dias antes do fim do mês grátis.">
+            hint="Uma notificação 2 dias antes do fim da semana grátis.">
             <Switch
               value={state.settings.trialReminder}
               onValueChange={async (on) => {
@@ -487,7 +487,7 @@ function PlanOption({ plan, selected, onPress }: { plan: Plan; selected: boolean
       {plan.trial ? (
         <View style={styles.badge}>
           <T variant="micro" style={{ color: color.night, fontWeight: '700' }}>
-            {plan.trial.count === 1 && plan.trial.unit === 'mes' ? '1º mês grátis' : trialName(plan.trial)}
+            {plan.trial.count === 1 && plan.trial.unit === 'semana' ? '1ª semana grátis' : trialName(plan.trial)}
           </T>
         </View>
       ) : null}

@@ -108,10 +108,10 @@ function tools(page, suite, pace = {}) {
     }
   };
 
-  /** Depois do cadastro, a conta nova começa o mês grátis na loja de teste. */
+  /** Depois do cadastro, a conta nova começa a semana grátis na loja de teste. */
   const passPaywall = async () => {
     await W(2600);
-    const b = page.getByRole('button', { name: 'Começar meu mês grátis', exact: true });
+    const b = page.getByRole('button', { name: 'Começar minha semana grátis', exact: true });
     if (await b.count()) {
       await b.first().click();
       await W(3000);

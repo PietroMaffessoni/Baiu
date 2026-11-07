@@ -55,7 +55,7 @@ Confira se as notificações do Baiu estão permitidas nos ajustes do aparelho e
 ### Assinatura
 
 **Quanto custa?**
-O primeiro mês é grátis. Depois, a assinatura é cobrada todo mês pela App Store ou pelo Google Play e renova sozinha até você cancelar. O preço aparece na tela de assinatura do app antes de você assinar. Sem conta, dá para conhecer o app com os dados de exemplo, de graça.
+A primeira semana é grátis. Depois, a assinatura é cobrada todo mês pela App Store ou pelo Google Play e renova sozinha até você cancelar. O preço aparece na tela de assinatura do app antes de você assinar. Sem conta, dá para conhecer o app com os dados de exemplo, de graça.
 
 **Como cancelo a assinatura?**
 No app, em Ajustes, Assinatura, toque em "Cancelar assinatura". O app explica e abre a página da loja. Também dá para cancelar direto na loja:
@@ -63,7 +63,7 @@ No app, em Ajustes, Assinatura, toque em "Cancelar assinatura". O app explica e 
 - iPhone: Ajustes, seu nome, Assinaturas, Baiu.
 - Android: Play Store, seu perfil, Pagamentos e assinaturas, Assinaturas, Baiu.
 
-Cancele até 24 horas antes do fim do mês grátis ou da renovação. Você continua usando tudo até o fim do período já pago e não há nova cobrança. Dois dias antes de o mês grátis acabar, o Baiu avisa por notificação, se você permitir.
+Cancele até 24 horas antes do fim da semana grátis ou da renovação. Você continua usando tudo até o fim do período já pago e não há nova cobrança. Dois dias antes de a semana grátis acabar, o Baiu avisa por notificação, se você permitir.
 
 **Como peço reembolso?**
 Você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). Quem cobra e devolve o dinheiro é a loja. No app, em Ajustes, Assinatura, toque em "Pedir reembolso" para abrir a página certa:

@@ -81,7 +81,7 @@ export function createRevenueCat(apiKey: string, forget: () => Promise<void>): S
           (p) => p.packageType === T.MONTHLY || p.packageType === T.ANNUAL,
         );
         packages = new Map(pkgs.map((p) => [p.identifier, p]));
-        // na App Store, o mês grátis só aparece quando a loja confirma que a pessoa tem direito
+        // na App Store, a semana grátis só aparece quando a loja confirma que a pessoa tem direito
         let eligible: Record<string, boolean> | null = null;
         if (Platform.OS === 'ios') {
           const res = await Purchases.checkTrialOrIntroductoryPriceEligibility(

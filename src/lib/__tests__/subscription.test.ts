@@ -40,7 +40,7 @@ const monthly: Plan = {
   price: 'R$ 14,90',
   amount: 14.9,
   perMonth: null,
-  trial: { unit: 'mes', count: 1 },
+  trial: { unit: 'semana', count: 1 },
 };
 const annual: Plan = {
   ...monthly,
@@ -107,6 +107,7 @@ describe('teste grátis do produto', () => {
     expect(trialOf({})).toBeNull();
   });
   test('textos', () => {
+    expect(trialName({ unit: 'semana', count: 1 })).toBe('semana grátis');
     expect(trialName({ unit: 'mes', count: 1 })).toBe('mês grátis');
     expect(trialName({ unit: 'dia', count: 7 })).toBe('7 dias grátis');
     expect(periodLabel({ unit: 'mes', count: 2 })).toBe('2 meses');
@@ -128,9 +129,9 @@ describe('o que a pessoa lê', () => {
     expect(dateLabel('2026-11-14T12:00:00Z', NOW)).toBe('14 de novembro');
     expect(dateLabel('2027-01-14T12:00:00Z', NOW)).toBe('14 de janeiro de 2027');
   });
-  test('mês grátis diz quando cobra, quanto e quem', () => {
+  test('semana grátis diz quando cobra, quanto e quem', () => {
     const d = describeSub(e({ status: 'teste', trial: true, willRenew: true }), monthly, NOW);
-    expect(d.title).toBe('Mês grátis até 14 de novembro');
+    expect(d.title).toBe('Semana grátis até 14 de novembro');
     expect(d.detail).toContain('R$ 14,90 por mês');
     expect(d.detail).toContain('App Store');
     expect(d.detail).toContain('cancele antes de 14 de novembro');
@@ -159,8 +160,8 @@ describe('aviso antes da primeira cobrança', () => {
     willRenew: true,
     until: at(days),
   });
-  test('dois dias antes do fim do mês grátis', () => {
-    expect(trialReminderAt(trial(30), NOW)?.toISOString()).toBe(at(28));
+  test('dois dias antes do fim da semana grátis', () => {
+    expect(trialReminderAt(trial(7), NOW)?.toISOString()).toBe(at(5));
   });
   test('perto do fim, um dia antes', () => {
     expect(trialReminderAt(trial(1.5), NOW)?.toISOString()).toBe(at(0.5));
@@ -179,18 +180,18 @@ describe('loja de teste', () => {
     return { store, travel: (days: number) => (now = new Date(now.getTime() + days * DAY)) };
   };
 
-  test('primeiro mês grátis, depois renova sozinha e cobra', async () => {
+  test('primeira semana grátis, depois renova sozinha e cobra', async () => {
     const { store, travel } = setup();
     expect(await store.identify('ana')).toEqual(NO_SUBSCRIPTION);
     const plans = await store.plans();
-    expect(plans[0]).toMatchObject({ period: 'mes', trial: { unit: 'mes', count: 1 } });
+    expect(plans[0]).toMatchObject({ period: 'mes', trial: { unit: 'semana', count: 1 } });
     const e = await store.purchase(plans[0].id);
     expect(e).toMatchObject({ status: 'teste', active: true, trial: true, store: 'teste' });
-    expect(e.until?.slice(0, 10)).toBe('2026-11-15');
-    travel(31);
+    expect(e.until?.slice(0, 10)).toBe('2026-10-22');
+    travel(8);
     const renewed = await store.refresh();
     expect(renewed).toMatchObject({ status: 'ativa', active: true, trial: false });
-    expect(renewed.until?.slice(0, 10)).toBe('2026-12-15');
+    expect(renewed.until?.slice(0, 10)).toBe('2026-11-22');
   });
 
   test('cancelar vale no fim do período; depois disso, sem acesso', async () => {
@@ -203,7 +204,7 @@ describe('loja de teste', () => {
     expect(await store.refresh()).toMatchObject({ status: 'expirada', active: false });
   });
 
-  test('o mês grátis é um só por pessoa', async () => {
+  test('a semana grátis é uma só por pessoa', async () => {
     const { store, travel } = setup();
     await store.identify('ana');
     await store.purchase('$rc_monthly');

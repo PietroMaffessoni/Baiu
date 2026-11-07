@@ -10,7 +10,7 @@ Ficha pronta para copiar no Play Console e o passo a passo da publicação. As i
 | Nome do pacote | com.pitroibas.baiu |
 | Idioma padrão | Português (Brasil) – pt-BR |
 | App ou jogo | App |
-| Gratuito ou pago | Gratuito, com compras no app (assinatura mensal com primeiro mês grátis) |
+| Gratuito ou pago | Gratuito, com compras no app (assinatura mensal com primeira semana grátis) |
 | Categoria | Finanças |
 | Tags sugeridas | Finanças pessoais, Orçamento |
 | E-mail de contato | suporte.baiu@gmail.com |
@@ -61,7 +61,7 @@ PRIVADO DE VERDADE
 Sem anúncios e sem rastreamento. Seus registros financeiros ficam no seu celular, criptografados com uma chave guardada no próprio aparelho; nem os dados dos bancos conectados ficam no nosso servidor. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com a biometria e esconder os valores com um toque.
 
 ASSINATURA
-O primeiro mês é grátis. Depois, a assinatura do Baiu é cobrada todo mês pela Google Play e renova sozinha até você cancelar. Cancele quando quiser em Ajustes, Assinatura, até 24 horas antes da renovação. O Baiu avisa 2 dias antes de o mês grátis acabar.
+A primeira semana é grátis. Depois, a assinatura do Baiu é cobrada todo mês pela Google Play e renova sozinha até você cancelar. Cancele quando quiser em Ajustes, Assinatura, até 24 horas antes da renovação. O Baiu avisa 2 dias antes de a semana grátis acabar.
 Termos de uso: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/termos.md
 Política de privacidade: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md
 
@@ -132,7 +132,7 @@ Em "Conteúdo do app", Exclusão de conta, informe a URL da tabela acima. A pág
 | ID do produto | `baiu_mensal` |
 | Nome | Baiu mensal |
 | Plano básico | ID `mensal`, renovação automática, a cada 1 mês, preço escolhido (R$ 24,90 por mês) |
-| Oferta | ID `mes-gratis`, teste gratuito de 1 mês, para quem nunca teve esta assinatura |
+| Oferta | ID `semana-gratis`, teste gratuito de 1 semana, para quem nunca teve esta assinatura |
 
 4. Ative o plano básico e a oferta.
 5. Plano anual: crie a assinatura `baiu_anual` (nome Baiu anual) com o plano básico `anual`, renovação automática a cada 1 ano, R$ 229,90, e ative. No RevenueCat, ligue-a ao mesmo direito de uso `assinatura`.

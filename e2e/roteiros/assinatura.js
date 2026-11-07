@@ -1,4 +1,4 @@
-// Assinatura com a loja de teste: mês grátis, bloqueio, cancelamento, fim do período, anual e exclusão.
+// Assinatura com a loja de teste: semana grátis, bloqueio, cancelamento, fim do período, anual e exclusão.
 module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) => {
   /** Mexe na loja de teste como se o tempo tivesse passado. */
   const setSub = (patch) =>
@@ -11,19 +11,19 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
   const inDays = (n) => new Date(Date.now() + n * 86400000).toISOString();
 
   await go('/');
-  await step('01 modo exemplo não pede assinatura', () => btn('Explorar com dados de exemplo', { wait: 4500 }), ['Saldo nas contas'], ['Seu primeiro mês é por nossa conta']);
-  await step('02 ajustes do exemplo sem assinatura', () => btn('Ajustes', { wait: 1200 }), ['Sair do modo exemplo'], ['Planos, cobrança e cancelamento', 'Mês grátis até']);
+  await step('01 modo exemplo não pede assinatura', () => btn('Explorar com dados de exemplo', { wait: 4500 }), ['Saldo nas contas'], ['Sua primeira semana é por nossa conta']);
+  await step('02 ajustes do exemplo sem assinatura', () => btn('Ajustes', { wait: 1200 }), ['Sair do modo exemplo'], ['Planos, cobrança e cancelamento', 'Semana grátis até']);
 
   await signup('Marina Couto', 'marina.couto@gmail.com', '11996421873', { subscribe: false });
-  await step('03 conta nova: tela de assinatura com o mês grátis', async () => {}, [
-    'Seu primeiro mês é por nossa conta', 'Use tudo por 1 mês sem pagar nada. Depois, R$ 24,90 por mês', 'Bancos conectados',
-    'Privado de verdade', 'Mensal', 'Anual', 'R$ 229,90 por ano · R$ 19,16 por mês', '1º mês grátis', 'Começar meu mês grátis',
-    'Grátis por 1 mês. Depois, R$ 24,90 por mês, cobrados na sua conta da loja de teste, com renovação automática até você cancelar',
+  await step('03 conta nova: tela de assinatura com a semana grátis', async () => {}, [
+    'Sua primeira semana é por nossa conta', 'Use tudo por 1 semana sem pagar nada. Depois, R$ 24,90 por mês', 'Bancos conectados',
+    'Privado de verdade', 'Mensal', 'Anual', 'R$ 229,90 por ano · R$ 19,16 por mês', '1ª semana grátis', 'Começar minha semana grátis',
+    'Grátis por 1 semana. Depois, R$ 24,90 por mês, cobrados na sua conta da loja de teste, com renovação automática até você cancelar',
     'cancele até 24 horas antes do fim do período grátis', 'Avisamos 2 dias antes', 'Restaurar compras', 'Termos de uso', 'Privacidade',
     'Seus dados continuam seus', 'Minha conta',
   ], ['Saldo nas contas', 'Exportar movimentos']);
-  await step('04 sem assinatura, o início leva de volta para assinar', () => go('/'), ['Começar meu mês grátis'], ['Saldo nas contas']);
-  await step('05 sem assinatura, o extrato também', () => go('/extrato'), ['Começar meu mês grátis'], ['Movimentos de']);
+  await step('04 sem assinatura, o início leva de volta para assinar', () => go('/'), ['Começar minha semana grátis'], ['Saldo nas contas']);
+  await step('05 sem assinatura, o extrato também', () => go('/extrato'), ['Começar minha semana grátis'], ['Movimentos de']);
   await step('06 sem assinatura, os termos abrem', () => go('/termos'), ['Assinatura e pagamento', 'Arrependimento e reembolso', 'Código de Defesa do Consumidor']);
   await step('07 sem assinatura, minha conta abre (sair e excluir)', async () => {
     await go('/assinatura');
@@ -33,11 +33,11 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
     await go('/assinatura');
     await tap('Restaurar compras', { wait: 1500 });
   }, ['Não encontramos uma assinatura ativa nesta conta da loja de teste']);
-  await step('09 começar o mês grátis abre o app', () => btn('Começar meu mês grátis', { wait: 3000 }), ['Saldo nas contas', 'Conecte seu banco'], ['Começar meu mês grátis']);
+  await step('09 começar a semana grátis abre o app', () => btn('Começar minha semana grátis', { wait: 3000 }), ['Saldo nas contas', 'Conecte seu banco'], ['Começar minha semana grátis']);
   await step('10 continua liberado depois de recarregar', () => go('/'), ['Saldo nas contas']);
-  await step('11 ajustes mostram a assinatura', () => go('/ajustes'), ['Assinatura', 'Mês grátis até']);
+  await step('11 ajustes mostram a assinatura', () => go('/ajustes'), ['Assinatura', 'Semana grátis até']);
   await step('12 tela da assinatura: estado, datas e caminho para cancelar', () => tap('Assinatura', { wait: 1500 }), [
-    'Mês grátis até', 'Depois, são R$ 24,90 por mês, pela loja de teste', 'Plano', 'Mensal', 'Preço', 'Cobrada por', 'Primeira cobrança',
+    'Semana grátis até', 'Depois, são R$ 24,90 por mês, pela loja de teste', 'Plano', 'Mensal', 'Preço', 'Cobrada por', 'Primeira cobrança',
     'Avisar antes da cobrança', 'Cancelar assinatura', 'Pedir reembolso', 'até 7 dias', 'Falar com o suporte',
   ]);
   await step('13 cancelar explica antes de ir para a loja', () => btn('Cancelar assinatura'), [
@@ -48,27 +48,27 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
     await btn('Cancelar assinatura', { wait: 500 });
     await btn('Ir para a loja de teste', { wait: 1500 });
   }, ['Assinatura cancelada', 'Você usa o Baiu até', 'Depois disso, não há cobrança', 'Acesso até', 'Voltar a assinar'], ['Primeira cobrança']);
-  await step('16 cancelada ainda usa o app', () => go('/'), ['Saldo nas contas'], ['Seu mês grátis acaba']);
+  await step('16 cancelada ainda usa o app', () => go('/'), ['Saldo nas contas'], ['Sua semana grátis acaba']);
   await step('17 voltar a assinar', async () => {
     await go('/assinatura');
     await btn('Voltar a assinar', { wait: 1500 });
-  }, ['Mês grátis até', 'Cancelar assinatura']);
-  await step('18 aviso no início quando o mês grátis está acabando', async () => {
+  }, ['Semana grátis até', 'Cancelar assinatura']);
+  await step('18 aviso no início quando a semana grátis está acabando', async () => {
     await setSub({ until: inDays(1.5) });
     await go('/');
-  }, ['Seu mês grátis acaba em 2 dias', 'Toque para ver os detalhes ou cancelar']);
+  }, ['Sua semana grátis acaba em 2 dias', 'Toque para ver os detalhes ou cancelar']);
   await step('19 problema no pagamento aparece no início', async () => {
     await setSub({ until: inDays(20), trial: false, billingIssue: true });
     await go('/');
-  }, ['Problema no pagamento da assinatura'], ['Seu mês grátis acaba']);
+  }, ['Problema no pagamento da assinatura'], ['Sua semana grátis acaba']);
   await step('20 e na assinatura, com o botão certo', () => go('/assinatura'), ['Problema no pagamento', 'Atualizar forma de pagamento', 'Prazo para acertar']);
-  await step('21 fim do período sem renovar: volta para assinar, sem novo mês grátis', async () => {
+  await step('21 fim do período sem renovar: volta para assinar, sem nova semana grátis', async () => {
     await setSub({ until: inDays(-1), willRenew: false, billingIssue: false });
     await go('/');
   }, [
     'Que bom te ver de novo', 'Sua assinatura terminou', 'Seus registros continuam guardados neste aparelho', 'Assinar por R$ 24,90 por mês',
     'Cancele quando quiser, em Ajustes, Assinatura, até 24 horas antes da renovação',
-  ], ['Começar meu mês grátis', '1º mês grátis', 'Saldo nas contas']);
+  ], ['Começar minha semana grátis', '1ª semana grátis', 'Saldo nas contas']);
   await step('22 assinar o anual', async () => {
     await page.getByRole('radio', { name: /^Anual/ }).click();
     await page.waitForTimeout(500);
@@ -91,6 +91,6 @@ module.exports = async ({ page, step, go, btn, tap, field, signup, PASSWORD }) =
       localStorage.setItem('baiu:fake-store', JSON.stringify({ ...d, offered: ['mensal'] }));
     });
     await signup('Otávio Reis', 'otavio.reis@gmail.com', '41998765432', { subscribe: false });
-  }, ['Começar meu mês grátis', 'R$ 24,90 por mês'], ['Anual', 'R$ 229,90']);
+  }, ['Começar minha semana grátis', 'R$ 24,90 por mês'], ['Anual', 'R$ 229,90']);
 };
 module.exports.pace = { go: 1800, btn: 900 };

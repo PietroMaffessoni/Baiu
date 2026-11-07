@@ -283,7 +283,7 @@ Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBO
 
 **Assinatura** (com o RevenueCat configurado)
 
-- [ ] Depois do cadastro aparece "Começar meu mês grátis". Assine com a conta Sandbox da Apple ou com um testador de licença do Google.
+- [ ] Depois do cadastro aparece "Começar minha semana grátis". Assine com a conta Sandbox da Apple ou com um testador de licença do Google.
 - [ ] No RevenueCat, em **Customers**, a pessoa aparece só com o id da conta.
 
 **IA** (adiado: só quando a IA voltar)

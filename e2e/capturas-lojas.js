@@ -135,7 +135,7 @@ async function captureRaw(browser) {
       for (let n = walk.nextNode(); n; n = walk.nextNode()) n.nodeValue = n.nodeValue.replace(/loja de teste/g, 'App Store');
     });
     const text = await t.text();
-    if (!text.includes('Começar meu mês grátis') || text.includes('Anual')) throw new Error('tela de assinatura inesperada: ' + text.slice(0, 300));
+    if (!text.includes('Começar minha semana grátis') || text.includes('Anual')) throw new Error('tela de assinatura inesperada: ' + text.slice(0, 300));
     await page.screenshot({ path: path.join(OUT, 'revisao-assinatura.png') });
     await ctx.close();
   }

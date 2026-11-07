@@ -2,7 +2,7 @@
 
 Gestão financeira pessoal com um mascote que reage ao seu dinheiro. O Baiu é um baiacu: quanto melhor você cuida das finanças, mais ele enche.
 
-Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o primeiro mês é grátis); sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, como a pessoa conheceu o Baiu (se respondeu), quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
+Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (a primeira semana é grátis); sem conta, só o modo de exemplo. Os registros financeiros ficam só no aparelho, criptografados e separados por conta. O servidor (Supabase) guarda apenas nome, e-mail, celular, senha protegida, os aceites, como a pessoa conheceu o Baiu (se respondeu), quais bancos estão conectados e um contador diário de perguntas à IA. Saldos e movimentos dos bancos passam pelo servidor só a caminho do aparelho. Não há anúncios nem analytics.
 
 ## O que o app faz
 
@@ -11,7 +11,7 @@ Versão 1.0. Para usar com dados reais é preciso criar uma conta e assinar (o p
 | Apresentação | No primeiro uso do aparelho, antes das boas-vindas: os números do dinheiro no Brasil (dívidas, nome negativado, reserva, assinaturas), cada um com fonte, a conta "E no seu bolso?" e o que o Baiu faz. Dados e fontes em `src/content/apresentacao.ts` |
 | Conta de usuário | Cadastro com confirmação do e-mail por código, login, recuperação de senha, edição de dados, troca de senha e exclusão da conta |
 | Bancos conectados | Open Finance pela Polp (dados recebidos pela Celcoin): contas, cartões, investimentos e movimentos entram sozinhos, já categorizados; o Baiu junta transferências entre contas próprias, reconhece salário, marca vencimentos pagos e aprende com as correções |
-| Assinatura | Primeiro mês grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |
+| Assinatura | Primeira semana grátis e cobrança mensal pela App Store ou pelo Google Play, com o RevenueCat conferindo os recibos; cancelamento em dois toques, aviso antes da primeira cobrança e reembolso pela loja |
 | Contas | Conta corrente, reserva, cartão de crédito e corretora, conectadas ou com saldo informado pelo usuário |
 | Movimentos | Entradas, saídas e transferências, com categoria, forma de pagamento e data; editar e apagar |
 | Cartão | Fatura como dívida; transferir para o cartão paga a fatura |
@@ -58,7 +58,7 @@ A regra está em `src/lib/folego.ts`.
 1. **Assinar:** depois do cadastro, a tela `src/app/assinatura.tsx` mostra o que está incluso, o preço e as condições. A compra acontece na loja do celular; o Baiu nunca vê dados de pagamento.
 2. **Conferir:** o RevenueCat (`src/lib/subscription/revenuecat.ts`) confere os recibos e conhece a pessoa só pelo id da conta. Sem assinatura ativa, o app só abre a tela de assinatura, Minha conta e os textos legais, e deixa exportar os registros.
 3. **No servidor:** a função `bank` (e a `baiu-chat`, quando a IA voltar) pergunta ao RevenueCat se a pessoa assina antes de gastar com a Polp. Desconectar bancos e excluir a conta funcionam sempre. Uma tarefa diária (pg_cron chamando a função `bank`) cancela na Polp as autorizações de quem está sem assinatura há mais de 7 dias, para o Baiu não pagar por bancos que ninguém usa.
-4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim do mês grátis, uma notificação avisa.
+4. **Cancelar:** em Ajustes, Assinatura, o app explica e abre a página da loja. Dois dias antes do fim da semana grátis, uma notificação avisa.
 5. **Excluir a conta:** a função `supabase/functions/subscription` apaga o cadastro no RevenueCat.
 
 Sem as chaves do RevenueCat no build, a cobrança fica desligada e o app, liberado.

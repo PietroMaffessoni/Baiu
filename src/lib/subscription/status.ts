@@ -75,9 +75,10 @@ export function periodLabel(p: Period) {
   return `${p.count} ${UNIT_NAMES[p.unit][p.count === 1 ? 0 : 1]}`;
 }
 
-/** "mês grátis", "7 dias grátis". */
+/** "semana grátis", "mês grátis", "3 dias grátis". */
 export function trialName(p: Period) {
-  return p.count === 1 && p.unit === 'mes' ? 'mês grátis' : `${periodLabel(p)} grátis`;
+  if (p.count === 1 && p.unit !== 'dia') return `${UNIT_NAMES[p.unit][0]} grátis`;
+  return `${periodLabel(p)} grátis`;
 }
 
 /** "R$ 24,90 por mês". */
@@ -111,7 +112,7 @@ export function describe(
   switch (ent.status) {
     case 'teste':
       return {
-        title: until ? `Mês grátis até ${until}` : 'Mês grátis',
+        title: until ? `Semana grátis até ${until}` : 'Semana grátis',
         detail: `Depois, ${price ? `são ${price}` : 'a assinatura começa a ser cobrada'}, pela ${store}. Se não quiser continuar, cancele antes${until ? ` de ${until}` : ''}.`,
       };
     case 'ativa':
@@ -134,11 +135,11 @@ export function describe(
     case 'expirada':
       return { title: 'Assinatura encerrada', detail: 'Seus registros continuam guardados neste aparelho.' };
     default:
-      return { title: 'Sem assinatura', detail: 'O primeiro mês é grátis.' };
+      return { title: 'Sem assinatura', detail: 'A primeira semana é grátis.' };
   }
 }
 
-/** Quando lembrar que o mês grátis vai acabar: dois dias antes (ou um, se não der mais). */
+/** Quando lembrar que a semana grátis vai acabar: dois dias antes (ou um, se não der mais). */
 export function trialReminderAt(ent: Entitlement, now = new Date()): Date | null {
   if (ent.status !== 'teste' || !ent.until) return null;
   const end = Date.parse(ent.until);
@@ -149,13 +150,13 @@ export function trialReminderAt(ent: Entitlement, now = new Date()): Date | null
   return null;
 }
 
-/** Dias até o mês grátis virar cobrança; null para quem não está nele ou já cancelou. */
+/** Dias até a semana grátis virar cobrança; null para quem não está nela ou já cancelou. */
 export function trialDaysLeft(ent: Entitlement, now = new Date()): number | null {
   if (ent.status !== 'teste' || !ent.until) return null;
   return Math.max(0, Math.ceil((Date.parse(ent.until) - now.getTime()) / 86_400_000));
 }
 
-/** Mensal primeiro: é o plano com o mês grátis em destaque. */
+/** Mensal primeiro: é o plano com a semana grátis em destaque. */
 export function sortPlans(plans: Plan[]) {
   return [...plans].sort((a, b) => (a.period === b.period ? a.amount - b.amount : a.period === 'mes' ? -1 : 1));
 }

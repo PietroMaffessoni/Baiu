@@ -13,7 +13,7 @@ Ficha pronta para copiar no App Store Connect, e o passo a passo do que precisa 
 | SKU | baiu-ios |
 | Categoria principal | Finanças |
 | Categoria secundária | Produtividade |
-| Preço | Gratuito para baixar, com assinatura mensal e primeiro mês grátis (veja Assinatura) |
+| Preço | Gratuito para baixar, com assinatura mensal e primeira semana grátis (veja Assinatura) |
 | Classificação etária | 4+ (responda "não" a todas as perguntas do questionário) |
 | URL de suporte | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/suporte.md |
 | URL da política de privacidade | https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md |
@@ -21,7 +21,7 @@ Ficha pronta para copiar no App Store Connect, e o passo a passo do que precisa 
 
 ## Texto promocional
 
-Conecte seus bancos e deixe o Baiu organizar cada entrada e saída. O primeiro mês é grátis. Seus registros financeiros ficam no seu celular, criptografados.
+Conecte seus bancos e deixe o Baiu organizar cada entrada e saída. A primeira semana é grátis. Seus registros financeiros ficam no seu celular, criptografados.
 
 ## Palavras-chave
 
@@ -59,7 +59,7 @@ PRIVADO DE VERDADE
 Sem anúncios e sem rastreamento. Seus registros financeiros ficam no seu celular, criptografados com uma chave guardada no próprio aparelho; nem os dados dos bancos conectados ficam no nosso servidor. Os avisos do Baiu são calculados no próprio aparelho. Dá para bloquear o app com Face ID e esconder os valores com um toque.
 
 ASSINATURA
-O primeiro mês é grátis. Depois, a assinatura do Baiu é cobrada todo mês pela App Store e renova sozinha até você cancelar. Cancele quando quiser em Ajustes, Assinatura, até 24 horas antes da renovação. O Baiu avisa 2 dias antes de o mês grátis acabar.
+A primeira semana é grátis. Depois, a assinatura do Baiu é cobrada todo mês pela App Store e renova sozinha até você cancelar. Cancele quando quiser em Ajustes, Assinatura, até 24 horas antes da renovação. O Baiu avisa 2 dias antes de a semana grátis acabar.
 Termos de uso: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/termos.md
 Política de privacidade: https://github.com/PietroMaffessoni/Baiu/blob/main/docs/privacidade.md
 
@@ -91,7 +91,7 @@ O app já declara `ITSAppUsesNonExemptEncryption = false`, então o App Store Co
 - Login: necessário. Crie pelo app uma conta só para a revisão e informe e-mail e senha nos campos de login de demonstração.
 - Notas para o revisor:
 
-> Para ver o app com dados prontos, toque em "Explorar com dados de exemplo" na primeira tela; essa é a única parte sem conta. Para o uso real, entre com a conta de demonstração informada acima. Em Contas, "Conectar banco" abre a conexão pelo Open Finance (Polp e Celcoin). Ela pede o CPF do titular e a autorização no app do banco. Também dá para cadastrar uma conta à mão e registrar um movimento pelo botão + na tela inicial. O app tem assinatura com o primeiro mês grátis (assinatura com renovação automática, grupo "Baiu"). A conta de demonstração não tem assinatura: depois do login aparece a tela de assinatura, onde dá para começar o mês grátis com uma conta Sandbox. Cancelar fica em Ajustes, Assinatura. Os registros financeiros ficam só no aparelho, criptografados; o servidor guarda apenas nome, e-mail e celular. A conta pode ser excluída em Ajustes, Minha conta, Excluir conta. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados e avisam gastos fora do normal. O assistente abre pelo balão "Conversar com o Baiu" na tela inicial; no exemplo ele usa respostas prontas, e com a conta a conversa com inteligência artificial (Anthropic) é opcional e pede consentimento explícito antes do primeiro envio, mostrando o que será enviado.
+> Para ver o app com dados prontos, toque em "Explorar com dados de exemplo" na primeira tela; essa é a única parte sem conta. Para o uso real, entre com a conta de demonstração informada acima. Em Contas, "Conectar banco" abre a conexão pelo Open Finance (Polp e Celcoin). Ela pede o CPF do titular e a autorização no app do banco. Também dá para cadastrar uma conta à mão e registrar um movimento pelo botão + na tela inicial. O app tem assinatura com a primeira semana grátis (assinatura com renovação automática, grupo "Baiu"). A conta de demonstração não tem assinatura: depois do login aparece a tela de assinatura, onde dá para começar a semana grátis com uma conta Sandbox. Cancelar fica em Ajustes, Assinatura. Os registros financeiros ficam só no aparelho, criptografados; o servidor guarda apenas nome, e-mail e celular. A conta pode ser excluída em Ajustes, Minha conta, Excluir conta. O bloqueio por Face ID é opcional e fica em Ajustes. As notificações locais lembram vencimentos cadastrados e avisam gastos fora do normal. O assistente abre pelo balão "Conversar com o Baiu" na tela inicial; no exemplo ele usa respostas prontas, e com a conta a conversa com inteligência artificial (Anthropic) é opcional e pede consentimento explícito antes do primeiro envio, mostrando o que será enviado.
 
 - Contato da revisão: seu nome, telefone e e-mail.
 
@@ -111,12 +111,12 @@ A Apple só libera assinaturas depois do contrato de apps pagos. Faça na ordem:
 | Nome exibido (pt-BR) | Baiu mensal |
 | Descrição (pt-BR) | Bancos conectados, avisos de gastos e o Baiu assistente |
 
-3. Em **Ofertas introdutórias**, crie um **Teste gratuito de 1 mês**, para todos os países e para novos assinantes.
+3. Em **Ofertas introdutórias**, crie um **Teste gratuito de 1 semana**, para todos os países e para novos assinantes.
 4. Em **Informações de revisão**, envie a captura `store/imagens/revisao-assinatura.png` e cole as notas para o revisor. A primeira assinatura vai para revisão junto com uma versão do app.
 5. Em **Usuários e acesso, Integrações, Compra dentro do app**, gere uma chave (arquivo `.p8`) para o RevenueCat. Não envie esse arquivo por mensagem: ele vai direto para o painel do RevenueCat. Lá também está o endereço para **App Store Server Notifications**, que você cola na página do app, em Informações do app.
 6. Em **Usuários e acesso, Sandbox**, crie uma conta de teste para comprar sem pagar. No sandbox, um mês dura poucos minutos.
 
-Plano anual: crie `baiu_anual` no mesmo grupo, por R$ 229,90 por ano, também com o primeiro mês grátis. Ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
+Plano anual: crie `baiu_anual` no mesmo grupo, por R$ 229,90 por ano, também com a primeira semana grátis. Ele aparece sozinho na tela de assinatura depois de entrar no RevenueCat. O resto da configuração está em `supabase/LEIA-ME.md`, apêndice B.
 
 ## Capturas de tela
 

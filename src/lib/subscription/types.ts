@@ -2,7 +2,7 @@
 export const ENTITLEMENT = 'assinatura';
 
 /**
- * - teste: no mês grátis, vai renovar;
+ * - teste: na semana grátis, vai renovar;
  * - ativa: pagando, vai renovar;
  * - cancelada: cancelou, usa até o fim do período e não é cobrada de novo;
  * - pagamento: a loja não conseguiu cobrar e dá um prazo para acertar;
@@ -18,7 +18,7 @@ export type Entitlement = {
   active: boolean;
   /** Está (ou estava) no período grátis. */
   trial: boolean;
-  /** Fim do período atual: fim do mês grátis, próxima cobrança ou fim do acesso. */
+  /** Fim do período atual: fim da semana grátis, próxima cobrança ou fim do acesso. */
   until: string | null;
   willRenew: boolean;
   store: SubStore | null;

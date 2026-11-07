@@ -22,7 +22,7 @@ module.exports = async (browser) => {
     });
     await t.step(`${width}×${height} assinatura: o botão de assinar aparece`, async () => {
       await t.signup('Teste Tela', `tela.${width}@gmail.com`, '11996421873', { subscribe: false });
-      const b = page.getByRole('button', { name: 'Começar meu mês grátis', exact: true }).first();
+      const b = page.getByRole('button', { name: 'Começar minha semana grátis', exact: true }).first();
       await b.scrollIntoViewIfNeeded();
       const box = await b.boundingBox();
       if (!box || box.y + box.height > height || box.y < 0) throw new Error('botão fora da tela');

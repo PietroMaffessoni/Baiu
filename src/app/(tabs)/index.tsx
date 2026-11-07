@@ -185,7 +185,7 @@ export default function Home() {
         <Notice
           icon="warning"
           tone="lantern"
-          title={trialLeft <= 1 ? 'Seu mês grátis acaba amanhã' : `Seu mês grátis acaba em ${trialLeft} dias`}
+          title={trialLeft <= 1 ? 'Sua semana grátis acaba amanhã' : `Sua semana grátis acaba em ${trialLeft} dias`}
           text="Depois, a assinatura começa a ser cobrada. Toque para ver os detalhes ou cancelar."
           onPress={() => router.push('/assinatura')}
         />

@@ -13,7 +13,7 @@ const CHANNEL = 'vencimentos';
 /** Canal e identificador dos avisos de gastos do Baiu (src/lib/assistant/notify.ts). */
 export const ALERTS_CHANNEL = 'avisos';
 export const ALERTS_ID = 'baiu-avisos';
-/** Aviso de que o mês grátis da assinatura está acabando. */
+/** Aviso de que a semana grátis da assinatura está acabando. */
 const TRIAL_CHANNEL = 'assinatura';
 const TRIAL_ID = 'baiu-assinatura';
 const MAX_BILLS = 30; // iOS guarda até 64 agendamentos; dois por vencimento
@@ -101,7 +101,7 @@ export async function syncReminders(bills: Bill[], enabled: boolean) {
 }
 
 /**
- * Avisa antes de o mês grátis virar cobrança (`days` antes do fim).
+ * Avisa antes de a semana grátis virar cobrança (`days` antes do fim).
  * `at` null cancela: a pessoa cancelou, já pagou ou desligou o aviso.
  */
 export async function syncTrialReminder(at: Date | null, days: number) {
@@ -111,7 +111,7 @@ export async function syncTrialReminder(at: Date | null, days: number) {
   await Notifications.scheduleNotificationAsync({
     identifier: TRIAL_ID,
     content: {
-      title: 'Seu mês grátis está acabando',
+      title: 'Sua semana grátis está acabando',
       body: `A assinatura do Baiu começa a ser cobrada ${days <= 1 ? 'amanhã' : `em ${days} dias`}. Se não quiser continuar, cancele em Ajustes, Assinatura.`,
       data: { url: '/assinatura' },
     },
