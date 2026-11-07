@@ -21,7 +21,7 @@ await db.exec(`
 `);
 
 let rows = await check();
-ok('banco vazio: tabelas, funções e gatilhos aparecem como faltando', bad(rows, 10, 30).length === 35, bad(rows, 10, 30).length);
+ok('banco vazio: tabelas, funções e gatilhos aparecem como faltando', bad(rows, 10, 30).length === 38, bad(rows, 10, 30).length);
 ok('itens com ❌ dizem o que fazer', rows.every((r) => r.ok !== '❌' || r.o_que_fazer.length > 10));
 
 for (const f of [
@@ -31,10 +31,11 @@ for (const f of [
   '20261023120000_polp.sql',
   '20261027120000_bancos_sem_assinatura.sql',
   '20261105120000_config.sql',
+  '20261106120000_aceites_e_registros.sql',
 ])
   await db.exec(read(`migrations/${f}`));
 rows = await check();
-ok('com as seis migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
+ok('com as sete migrações, tudo do banco está certo', bad(rows, 10, 30).length === 0, bad(rows, 10, 30).join('; '));
 ok('sem funções estranhas depois das migrações', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
 await db.exec(`create function public.assistant_take(n integer) returns int language sql as 'select 1';`);
 rows = await check();
@@ -47,6 +48,8 @@ await db.exec(`
 rows = await check();
 ok('a função do RLS automático do Supabase não é acusada', bad(rows, 23, 23).length === 0, bad(rows, 23, 23).join('; '));
 ok('sem pg_cron e Vault, a tarefa diária aparece como faltando', bad(rows, 40, 43).length === 6, bad(rows, 40, 43).length);
+ok('sem pg_cron, a limpeza dos registros de acesso aparece como faltando', bad(rows, 44, 44).length === 1);
+ok('sem a tabela de registros do Supabase, a permissão não é acusada', bad(rows, 45, 45).length === 0);
 
 await db.exec(`
   grant insert on public.consents to authenticated;
@@ -79,9 +82,18 @@ await db.exec(`
   update vault.secrets set value = 'https://abcdefghij.supabase.co' where name = 'project_url';
   insert into cron.job values (1, 'baiu-bancos-sem-assinatura', true, 'select net.http_post(url := u || ''/functions/v1/bank'')');
   insert into cron.job_run_details values (1, 'succeeded', '2026-11-02 06:00:00+00');
+  insert into cron.job values (2, 'baiu-registros-de-acesso', true, 'select public.baiu_cleanup_access_logs()');
 `);
 rows = await check();
 ok('Vault e tarefa certos', bad(rows, 41, 43).length === 0, bad(rows, 41, 43).join('; '));
+ok('limpeza dos registros de acesso agendada', bad(rows, 44, 44).length === 0);
+await db.exec(`
+  create table auth.audit_log_entries (id uuid, created_at timestamptz);
+  create role sem_permissao nologin;
+  alter function public.baiu_cleanup_access_logs() owner to sem_permissao;
+`);
+rows = await check();
+ok('acha a limpeza sem permissão de apagar os registros', bad(rows, 45, 45).length === 1);
 ok('mostra a última execução no horário de Brasília', rows.some((r) => r.item.includes('succeeded em 02/11 03:00')));
 ok('nenhum segredo aparece no resultado', !JSON.stringify(rows).includes('abcdefghij'));
 

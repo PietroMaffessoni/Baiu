@@ -1,6 +1,9 @@
-/** Versões dos documentos aceitos no cadastro. Mudou o texto, muda a versão. */
-export const TERMS_VERSION = '2026-10-27';
-export const PRIVACY_VERSION = '2026-11-06';
+/**
+ * Versões dos documentos aceitos no cadastro. Mudou o texto, muda a versão, e
+ * quem já tem conta aceita de novo antes de continuar (tela /novos-termos).
+ */
+export const TERMS_VERSION = '2026-11-06';
+export const PRIVACY_VERSION = '2026-11-06.2';
 
 export type Profile = {
   id: string;
@@ -9,7 +12,13 @@ export type Profile = {
   /** Celular em E.164, como +5511987654321. */
   phone: string;
   createdAt: string;
+  /** Versões dos Termos e da Política que a pessoa aceitou por último. */
+  accepted: { terms: string; privacy: string };
 };
+
+/** Aceitou as versões atuais dos dois textos. */
+export const acceptedCurrent = (p: Profile) =>
+  p.accepted.terms === TERMS_VERSION && p.accepted.privacy === PRIVACY_VERSION;
 
 export type SignUpInput = {
   email: string;
@@ -84,6 +93,8 @@ export interface AuthBackend {
   /** Confere a senha atual antes de ações sensíveis. */
   confirmPassword(email: string, password: string): Promise<void>;
   updateProfile(p: { fullName: string; phone: string }): Promise<Profile>;
+  /** Registra o aceite das versões novas dos Termos e da Política (o servidor guarda a data). */
+  acceptDocuments(v: { terms: string; privacy: string }): Promise<Profile>;
   /** Exclui a conta no servidor (LGPD, art. 18). */
   deleteAccount(): Promise<void>;
   signOut(): Promise<void>;

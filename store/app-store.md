@@ -77,8 +77,9 @@ Em App Store Connect, Privacidade do app, declare que o app **coleta dados**, co
 | Informações financeiras: Outras informações financeiras | Sim | Não | Funcionalidade do app |
 | Compras: Histórico de compras | Sim | Não | Funcionalidade do app |
 | Identificadores: ID do usuário | Sim | Não | Funcionalidade do app |
+| Outros dados: Outros tipos de dados | Sim | Não | Análise |
 
-Todos os outros tipos: não coletados. "Outras informações financeiras" cobre os bancos conectados pelo Open Finance (opcional): os dados vêm do banco pela Celcoin e pela Polp, que mantêm a autorização ligada à conta da pessoa, e passam pelo nosso servidor até o aparelho. Por isso ficam vinculados. "Histórico de compras" e "ID do usuário" vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos da App Store para saber se a assinatura está ativa. O manifesto de privacidade do app já declara esses seis tipos.
+Todos os outros tipos: não coletados. "Outras informações financeiras" cobre os bancos conectados pelo Open Finance (opcional): os dados vêm do banco pela Celcoin e pela Polp, que mantêm a autorização ligada à conta da pessoa, e passam pelo nosso servidor até o aparelho. Por isso ficam vinculados. "Histórico de compras" e "ID do usuário" vêm da assinatura: o RevenueCat recebe o id da conta (um código aleatório) e os recibos da App Store para saber se a assinatura está ativa. "Outros tipos de dados" é a resposta opcional de como a pessoa conheceu o Baiu (Instagram, indicação...), guardada com o cadastro para saber quais canais trazem gente. O manifesto de privacidade do app já declara esses sete tipos.
 
 A conversa com IA está desligada nesta versão (`AI_ENABLED` em `src/lib/assistant/remote.ts`): o Baiu responde só com respostas calculadas no aparelho. Quando ela voltar, a diretriz 5.1.2(i) da Apple pede que o app diga claramente quando dados pessoais vão para uma IA de terceiros e peça permissão antes (o app já tem essa tela), e é preciso voltar a declarar "Outro conteúdo do usuário" aqui e no manifesto.
 

@@ -11,7 +11,14 @@ import { AuthFailure, type AuthBackend, type Profile } from './types';
  */
 export const FAKE_CODE = '246810';
 
-type Row = { profile: Profile; password: string; confirmed: boolean; consent: Record<string, unknown> };
+type Row = {
+  profile: Profile;
+  password: string;
+  confirmed: boolean;
+  consent: Record<string, unknown>;
+  /** Cada aceite de versão nova, como a tabela consents do servidor. */
+  accepts?: { document: string; version: string; at: string }[];
+};
 type Db = { users: Record<string, Row>; session: string | null };
 
 const KEY = 'baiu:fake-auth';
@@ -28,7 +35,7 @@ function deviceStore(): Store {
   let db: Db = { users: {}, session: null };
   const ready = AsyncStorage.getItem(KEY)
     .then((raw) => {
-      if (raw) db = JSON.parse(raw) as Db;
+      if (raw) db = upgrade(JSON.parse(raw) as Db);
     })
     .catch(() => {});
   return {
@@ -41,12 +48,18 @@ function deviceStore(): Store {
   };
 }
 
+/** Contas de teste guardadas antes de existir o campo das versões aceitas. */
+function upgrade(db: Db): Db {
+  for (const row of Object.values(db.users)) row.profile.accepted ??= { terms: '', privacy: '' };
+  return db;
+}
+
 function browserStore(): Store {
   return {
     ready: Promise.resolve(),
     load: (): Db => {
       try {
-        return JSON.parse(localStorage.getItem(KEY) ?? '') as Db;
+        return upgrade(JSON.parse(localStorage.getItem(KEY) ?? '') as Db);
       } catch {
         return { users: {}, session: null };
       }
@@ -113,7 +126,14 @@ export function createFakeBackend(
       if (d.users[email]?.confirmed) return; // silêncio, como o Supabase
       send(email);
       d.users[email] = {
-        profile: { id: `u-${Object.keys(d.users).length + 1}-${email.length}`, email, fullName, phone, createdAt: new Date().toISOString() },
+        profile: {
+          id: `u-${Object.keys(d.users).length + 1}-${email.length}`,
+          email,
+          fullName,
+          phone,
+          createdAt: new Date().toISOString(),
+          accepted: { terms: consent.terms, privacy: consent.privacy },
+        },
         password,
         confirmed: false,
         consent: { ...consent, at: new Date().toISOString() },
@@ -190,6 +210,24 @@ export function createFakeBackend(
       if (!row) throw new AuthFailure('session_expired');
       if (!validProfile(fullName, phone)) throw new AuthFailure('invalid_data');
       row.profile = { ...row.profile, fullName, phone };
+      store.save(d);
+      emit(row.profile);
+      return row.profile;
+    },
+
+    async acceptDocuments({ terms, privacy }) {
+      await wait();
+      const d = db();
+      const row = d.session ? d.users[d.session] : undefined;
+      if (!row) throw new AuthFailure('session_expired');
+      const at = new Date().toISOString();
+      const before = row.profile.accepted;
+      row.accepts = [
+        ...(row.accepts ?? []),
+        ...(before.terms !== terms ? [{ document: 'termos', version: terms, at }] : []),
+        ...(before.privacy !== privacy ? [{ document: 'privacidade', version: privacy, at }] : []),
+      ];
+      row.profile = { ...row.profile, accepted: { terms, privacy } };
       store.save(d);
       emit(row.profile);
       return row.profile;

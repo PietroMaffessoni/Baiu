@@ -26,11 +26,11 @@ Para usar o Baiu com a sua conta é preciso ter uma assinatura ativa. O modo exe
 
 Semana grátis: quem assina pela primeira vez usa o Baiu por 7 dias sem pagar. O período grátis vale uma vez por pessoa, conforme as regras da loja.
 
-Cobrança: ao fim da semana grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.
+Cobrança: ao fim da semana grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. O preço mostrado antes da compra é o total, com impostos: não há taxa de adesão nem outra cobrança do Baiu. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.
 
 Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim da semana grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de a semana grátis acabar.
 
-Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.
+Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com dentro desses 7 dias: nós devolvemos o valor, pela loja ou por Pix para uma conta em seu nome.
 
 Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar.
 
@@ -66,8 +66,14 @@ Podemos atualizar o app, mudar ou encerrar funções, sempre buscando preservar 
 
 Fazemos o possível para o Baiu funcionar bem, mas ele é oferecido como está. Na medida permitida pela lei, não respondemos por decisões tomadas com base nas informações do app nem por perdas de dados causadas por falha, troca ou perda do aparelho. Nada aqui limita direitos garantidos pelo Código de Defesa do Consumidor.
 
-## Lei aplicável
+## Mudanças nestes termos
+
+Se estes termos mudarem, você vê no app um resumo do que mudou e aceita a nova versão antes de continuar. O aceite fica registrado com a data.
+
+Se não concordar, você pode cancelar a assinatura, exportar seus registros e excluir a conta, sem multa.
+
+## Lei aplicável e contato
 
 Estes termos seguem as leis do Brasil.
 
-Dúvidas: suporte.baiu@gmail.com.
+O Baiu é oferecido por Pietro Maffessoni. Dúvidas, reclamações e pedidos: suporte.baiu@gmail.com. Respondemos em até 5 dias.

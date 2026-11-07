@@ -1,6 +1,14 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
-import { auth, AuthFailure, type AuthBackend, type Profile, type SignUpInput } from '@/lib/auth';
+import {
+  auth,
+  AuthFailure,
+  PRIVACY_VERSION,
+  TERMS_VERSION,
+  type AuthBackend,
+  type Profile,
+  type SignUpInput,
+} from '@/lib/auth';
 import { clearReminders } from '@/lib/reminders';
 import { blockSaves, wipeVault } from '@/lib/vault';
 
@@ -26,6 +34,8 @@ type Ctx = {
   cancelReset: () => Promise<void>;
   changePassword: (current: string, next: string) => Promise<void>;
   updateProfile: (p: { fullName: string; phone: string }) => Promise<void>;
+  /** Aceita as versões atuais dos Termos e da Política. */
+  acceptDocuments: () => Promise<void>;
   /** `beforeDelete` roda depois de conferir a senha e antes de excluir (ex.: desconectar bancos). */
   deleteAccount: (password: string, beforeDelete?: () => Promise<void>) => Promise<void>;
   signOut: () => Promise<void>;
@@ -109,6 +119,8 @@ export function AuthProvider({ children, backend = auth }: { children: ReactNode
         await backend.updatePassword(next);
       },
       updateProfile: async (p) => apply(await backend.updateProfile(p)),
+      acceptDocuments: async () =>
+        apply(await backend.acceptDocuments({ terms: TERMS_VERSION, privacy: PRIVACY_VERSION })),
       deleteAccount: async (password, beforeDelete) => {
         const p = requireProfile();
         await backend.confirmPassword(p.email, password).catch((e) => {

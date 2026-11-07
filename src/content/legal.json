@@ -12,7 +12,7 @@
           "O Baiu avisa quando um gasto foge do normal e reconhece contas que se repetem. Esses avisos são calculados no próprio aparelho, sem internet e sem inteligência artificial.",
           "Para criar sua conta, guardamos no nosso servidor apenas nome, e-mail, celular, a senha protegida e o registro de quando você aceitou estes termos e, se você responder, como conheceu o Baiu.",
           "O Baiu é uma assinatura, com a primeira semana grátis. Quem cobra é a App Store ou o Google Play: não recebemos o número do seu cartão nem seus dados de pagamento.",
-          "Não vendemos dados, não usamos publicidade e não rastreamos você."
+          "Não vendemos dados, não temos anúncios, não usamos cookies nem ferramentas de rastreamento e não mandamos propaganda."
         ]
       },
       {
@@ -61,11 +61,12 @@
         "body": [
           "Criar e manter sua conta, permitir o login, confirmar seu e-mail, recuperar a senha e responder seus pedidos de suporte: execução do contrato de uso do app (art. 7º, V, da LGPD).",
           "Guardar o registro dos aceites e responder a autoridades quando a lei exigir: cumprimento de obrigação legal e exercício regular de direitos (art. 7º, II e VI).",
-          "Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas seguidas: legítimo interesse em manter sua conta segura (art. 7º, IX).",
+          "Registrar acessos e bloquear tentativas suspeitas, como muitas senhas erradas seguidas: legítimo interesse em manter sua conta segura (art. 7º, IX) e a guarda de registros de acesso prevista no Marco Civil da Internet (art. 7º, II).",
           "Saber como você conheceu o Baiu, se você responder: legítimo interesse em entender quais canais trazem gente (art. 7º, IX).",
           "Conectar seus bancos, buscar e organizar seus dados financeiros: seu consentimento (art. 7º, I), dado no Baiu e confirmado no seu banco pelo Open Finance. Você pode revogar quando quiser.",
           "Assinatura: conferir se ela está ativa, liberar as funções que dependem dela e avisar antes do fim da semana grátis: execução do contrato (art. 7º, V). O envio ao RevenueCat, nos Estados Unidos, é necessário para executar esse contrato (art. 33, IX).",
-          "O celular só é usado para falar com você sobre a sua conta. Não enviamos propaganda."
+          "O e-mail e o celular só são usados para assuntos da sua conta: códigos de confirmação, recuperação de senha, avisos de segurança e respostas ao suporte. Não enviamos propaganda nem novidades.",
+          "Se um dia quisermos mandar novidades, vamos pedir uma autorização à parte, desmarcada, que você pode recusar sem perder nada do app e retirar quando quiser. Todo e-mail desse tipo terá um link para sair da lista."
         ]
       },
       {
@@ -74,18 +75,26 @@
           "Supabase: provedor que hospeda o servidor de contas, faz a autenticação e roda a função que encaminha os dados dos bancos conectados, como operador dos dados. Os dados ficam em servidores na região de São Paulo, no Brasil. Como o Supabase é uma empresa dos Estados Unidos, pode haver transferência internacional nos termos do art. 33 da LGPD, com as garantias contratuais do provedor.",
           "Polp: faz a ponte com o Open Finance, como operadora, só se você conectar algum banco. Recebe e guarda os dados que você autorizou no banco, com criptografia e controle de acesso, para entregá-los ao Baiu. Se o contrato entre o Baiu e a Polp terminar, ela apaga ou anonimiza os dados em até 60 dias, e as cópias de segurança em até 90 dias, salvo obrigação legal.",
           "Celcoin Instituição de Pagamento: instituição autorizada pelo Banco Central que recebe os dados dos bancos pelo Open Finance, só se você conectar algum banco, conforme os Termos de Uso e a Norma de Privacidade Externa dela.",
-          "Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha.",
+          "Provedor de envio de e-mails: recebe apenas o seu e-mail para entregar os códigos de confirmação e de recuperação de senha, como operador.",
           "Apple e Google: as lojas processam a compra e a cobrança da assinatura, conforme as políticas delas. O Baiu recebe delas apenas o recibo da compra, sem dados de pagamento.",
           "RevenueCat: confere os recibos das lojas e informa se a assinatura está ativa, como operador. Fica nos Estados Unidos, o que configura transferência internacional, necessária para executar o contrato de assinatura (art. 33, IX), com as garantias contratuais do provedor.",
+          "GitHub: hospeda as páginas de ajuda e a página de volta do Open Finance. Como qualquer site, recebe o endereço IP de quem as abre, conforme a política dele.",
+          "Com cada operador há contrato com regras de proteção de dados: eles só usam os dados para o serviço que prestam ao Baiu.",
           "Não compartilhamos dados com anunciantes, bancos ou parceiros comerciais. Autoridades só recebem dados mediante ordem judicial ou exigência legal."
         ]
       },
       {
         "heading": "Por quanto tempo guardamos",
         "body": [
-          "Enquanto sua conta existir. Ao excluir a conta, os dados dela saem do nosso servidor na hora; cópias de segurança do provedor podem guardá-los por um curto período, até serem sobrescritas.",
+          "Nome, e-mail, celular, senha protegida e como você conheceu o Baiu: enquanto sua conta existir. Ao excluir a conta, saem do nosso servidor na hora.",
+          "Registros de aceite dos termos e da política: enquanto sua conta existir, como prova do que você aceitou. Saem junto com a conta.",
+          "Registros de acesso (data, hora e endereço IP de cada login): 6 meses, como prevê o Marco Civil da Internet (Lei 12.965/2014, art. 15). Depois disso são apagados automaticamente, mesmo que você tenha excluído a conta antes. Só são entregues a autoridades com ordem judicial.",
           "Conexões com bancos: enquanto estiverem ativas. Ao cancelar uma autorização, ou ao excluir sua conta, o Baiu a encerra no Open Finance. O histórico das autorizações (banco, categorias de dados e datas) fica guardado enquanto sua conta existir, como prova do consentimento e para você consultar em Bancos conectados.",
-          "Cadastro da assinatura no RevenueCat: enquanto sua conta existir. É apagado quando você exclui a conta.",
+          "Dados dos bancos na Polp: guardados por ela só para entregar ao Baiu, conforme o contrato entre os dois. Se o contrato entre o Baiu e a Polp terminar, ela apaga ou anonimiza os dados em até 60 dias, e as cópias de segurança em até 90 dias.",
+          "Cadastro da assinatura no RevenueCat: enquanto sua conta existir. É apagado quando você exclui a conta. As lojas guardam o registro das compras pelos prazos delas e da lei fiscal.",
+          "Registros de envio dos e-mails da conta, no provedor de envio: até 30 dias.",
+          "Mensagens trocadas com o suporte: até 5 anos depois do atendimento, o prazo para reclamar de um serviço no Código de Defesa do Consumidor (art. 27). Se você pedir, apagamos antes, a não ser que a lei mande guardar.",
+          "Cópias de segurança automáticas do servidor: são sobrescritas em até 30 dias. Dados apagados somem delas nesse prazo.",
           "Os registros financeiros do aparelho são apagados quando você exclui a conta, apaga os dados em Ajustes ou desinstala o app."
         ]
       },
@@ -94,14 +103,22 @@
         "body": [
           "Pela LGPD (art. 18), você pode confirmar se tratamos seus dados, acessá-los, corrigi-los, pedir anonimização, bloqueio ou eliminação, pedir a portabilidade, saber com quem foram compartilhados, revogar consentimentos e reclamar à Autoridade Nacional de Proteção de Dados (ANPD).",
           "No próprio app: veja e corrija seus dados em Ajustes, Minha conta; exporte seus registros em CSV em Ajustes; desconecte bancos em Ajustes, Bancos conectados; veja, cancele ou peça reembolso da assinatura em Ajustes, Assinatura; e exclua a conta em Minha conta, Excluir conta.",
-          "Para qualquer outro pedido, escreva para suporte.baiu@gmail.com. Respondemos no prazo da LGPD, de até 15 dias."
+          "Para qualquer outro pedido, inclusive uma cópia completa de tudo que o nosso servidor guarda sobre você, escreva para suporte.baiu@gmail.com, com o assunto \"Privacidade\". Respondemos em até 15 dias (art. 19 da LGPD)."
         ]
       },
       {
         "heading": "Segurança",
         "body": [
           "A comunicação com o servidor usa conexão criptografada (HTTPS). A sessão de login fica cifrada no aparelho. Você pode exigir Face ID, digital ou o código do aparelho para abrir o app.",
-          "Se acontecer um incidente de segurança que possa trazer risco a você, avisaremos você e a ANPD, como manda o art. 48 da LGPD."
+          "Se acontecer um incidente de segurança que possa trazer risco ou dano relevante a você, como um vazamento, avisaremos você e a ANPD em até 3 dias úteis depois de sabermos que ele atingiu dados pessoais, como pedem a LGPD (art. 48) e o regulamento da ANPD (Resolução CD/ANPD nº 15/2024).",
+          "O aviso diz o que aconteceu, quais dados foram afetados, os riscos para você, o que já fizemos e o que você pode fazer para se proteger."
+        ]
+      },
+      {
+        "heading": "Cookies e rastreamento",
+        "body": [
+          "O Baiu é um app e não usa cookies. Não tem anúncios, ferramentas de análise de uso nem identificador de publicidade, nem antes nem depois do cadastro. Nada sobre o que você faz no app é enviado para medir uso ou para terceiros.",
+          "As páginas de ajuda e desta política ficam no GitHub, que segue a política de cookies dele."
         ]
       },
       {
@@ -122,19 +139,22 @@
       {
         "heading": "Menores de idade",
         "body": [
-          "O Baiu é destinado a maiores de 18 anos, e o cadastro pede essa confirmação. Se soubermos que uma conta pertence a um menor, ela será excluída."
+          "O Baiu é destinado a maiores de 18 anos, e o cadastro pede essa confirmação. Não coletamos de propósito dados de crianças e adolescentes, nem com autorização dos pais.",
+          "Se soubermos que uma conta pertence a um menor, ela será excluída, com os dados dela. Pais ou responsáveis que souberem de uma conta assim podem escrever para suporte.baiu@gmail.com."
         ]
       },
       {
         "heading": "Mudanças nesta política",
         "body": [
-          "Se esta política mudar, a nova versão aparece no app e nesta página, com a data de atualização. Mudanças importantes serão avisadas no app antes de valer."
+          "Se esta política mudar, a nova versão aparece no app e nesta página, com a data de atualização.",
+          "Quem já tem conta vê no app um resumo do que mudou e aceita a nova versão antes de continuar. O aceite fica registrado com a data. Até aceitar, você ainda pode ver e cancelar a assinatura, exportar seus registros e excluir a conta."
         ]
       },
       {
         "heading": "Contato e encarregado de dados",
         "body": [
-          "Dúvidas sobre privacidade, pedidos ligados aos seus dados e o canal do encarregado de proteção de dados: suporte.baiu@gmail.com."
+          "Encarregado pelo tratamento de dados pessoais (art. 41 da LGPD): Pietro Maffessoni.",
+          "Canal do encarregado: suporte.baiu@gmail.com, com o assunto \"Privacidade\". Por ele você pede seus direitos, tira dúvidas e faz reclamações sobre seus dados. A ANPD também pode falar conosco por ele."
         ]
       }
     ]
@@ -164,9 +184,9 @@
         "body": [
           "Para usar o Baiu com a sua conta é preciso ter uma assinatura ativa. O modo exemplo continua gratuito.",
           "Semana grátis: quem assina pela primeira vez usa o Baiu por 7 dias sem pagar. O período grátis vale uma vez por pessoa, conforme as regras da loja.",
-          "Cobrança: ao fim da semana grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.",
+          "Cobrança: ao fim da semana grátis, a assinatura passa a ser cobrada automaticamente, no valor e na periodicidade mostrados antes da compra, na conta da App Store ou do Google Play usada para assinar, e renova sozinha a cada período até você cancelar. O preço mostrado antes da compra é o total, com impostos: não há taxa de adesão nem outra cobrança do Baiu. Mudanças de preço serão avisadas com antecedência, e a loja pode pedir a sua concordância antes de cobrar o valor novo.",
           "Cancelamento: você pode cancelar a qualquer momento, sem multa, em Ajustes, Assinatura, ou nos ajustes da loja. Para não ser cobrado, cancele até 24 horas antes do fim da semana grátis ou da renovação. O cancelamento vale no fim do período já pago: até lá, você continua usando tudo. Se você permitir notificações, avisamos 2 dias antes de a semana grátis acabar.",
-          "Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com.",
+          "Arrependimento e reembolso: você pode desistir em até 7 dias depois de uma cobrança e receber o valor de volta, como garante o Código de Defesa do Consumidor (art. 49). O pedido é feito à loja, pelo atalho em Ajustes, Assinatura, Pedir reembolso. Se a loja recusar ou você tiver dificuldade, escreva para suporte.baiu@gmail.com dentro desses 7 dias: nós devolvemos o valor, pela loja ou por Pix para uma conta em seu nome.",
           "Sem assinatura ativa, seus registros continuam guardados no aparelho: você pode exportá-los, sair ou excluir a conta a qualquer momento. Excluir a conta não cancela a assinatura na loja; cancele antes. Os bancos conectados fazem parte da assinatura: 7 dias depois que ela termina, o Baiu cancela as autorizações do Open Finance. O que já tinha vindo dos bancos continua no aparelho, como contas manuais, e você pode conectar de novo se voltar a assinar."
         ]
       },
@@ -207,12 +227,27 @@
         ]
       },
       {
-        "heading": "Lei aplicável",
+        "heading": "Mudanças nestes termos",
+        "body": [
+          "Se estes termos mudarem, você vê no app um resumo do que mudou e aceita a nova versão antes de continuar. O aceite fica registrado com a data.",
+          "Se não concordar, você pode cancelar a assinatura, exportar seus registros e excluir a conta, sem multa."
+        ]
+      },
+      {
+        "heading": "Lei aplicável e contato",
         "body": [
           "Estes termos seguem as leis do Brasil.",
-          "Dúvidas: suporte.baiu@gmail.com."
+          "O Baiu é oferecido por Pietro Maffessoni. Dúvidas, reclamações e pedidos: suporte.baiu@gmail.com. Respondemos em até 5 dias."
         ]
       }
     ]
-  }
+  },
+  "changes": [
+    "Prazos claros para cada dado. Os registros de acesso (data, hora e IP) ficam 6 meses e depois são apagados.",
+    "O encarregado de dados agora tem nome: Pietro Maffessoni, pelo suporte.baiu@gmail.com.",
+    "Se houver um vazamento com risco para você, avisamos você e a ANPD em até 3 dias úteis.",
+    "O Baiu não usa cookies, rastreamento nem propaganda. Se um dia houver novidades por e-mail, vamos pedir sua autorização à parte.",
+    "Arrependimento: se a loja não devolver o valor de uma cobrança feita há até 7 dias, nós devolvemos.",
+    "Quando os textos mudarem, você vê o resumo e aceita de novo, como agora."
+  ]
 }

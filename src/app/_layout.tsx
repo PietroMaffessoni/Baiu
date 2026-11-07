@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Baiu } from '@/components/baiu/baiu';
 import { Button } from '@/components/button';
 import { LockGate } from '@/components/lock-gate';
+import { acceptedCurrent } from '@/lib/auth';
 import { useAssistantUpkeep } from '@/lib/assistant/use-assistant';
 import { useBankUpkeep } from '@/lib/bank/use-bank';
 import { useReminderRouting } from '@/lib/reminders';
@@ -80,8 +81,11 @@ function Owned({ fontsLoaded }: { fontsLoaded: boolean }) {
 
 function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authReady: boolean }) {
   const { owner, hydrated, unreadable, state } = useStore();
+  const { profile } = useAuth();
   const inApp = owner !== null;
   const signedIn = inApp && owner !== 'demo';
+  // os Termos ou a Política mudaram depois do último aceite: aceita de novo antes de seguir
+  const outdated = signedIn && !!profile && !acceptedCurrent(profile);
   // sem assinatura ativa, só a tela de assinar, a conta e os textos legais ficam abertos
   const sub = useSubscriptionUpkeep(signedIn ? owner : null, state.settings.trialReminder);
   const locked = signedIn && sub.locked;
@@ -114,7 +118,9 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="verificar-email" />
               <Stack.Screen name="recuperar-senha" />
             </Stack.Protected>
-            <Stack.Protected guard={inApp && !locked} redirectTo={inApp ? '/assinatura' : '/boas-vindas'}>
+            <Stack.Protected
+              guard={inApp && !locked && !outdated}
+              redirectTo={!inApp ? '/boas-vindas' : outdated ? '/novos-termos' : '/assinatura'}>
               <Stack.Screen name="(tabs)" options={{ animation: 'fade' }} />
               <Stack.Screen name="conta/[id]" options={{ ...pushedHeader, title: '' }} />
               <Stack.Screen name="vencimentos" options={{ ...pushedHeader, title: 'Vencimentos' }} />
@@ -139,6 +145,9 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
               <Stack.Screen name="folego" options={sheet} />
               <Stack.Screen name="apresentacao" options={{ animation: 'fade' }} />
             </Stack.Protected>
+            <Stack.Protected guard={outdated} redirectTo={inApp ? '/' : '/boas-vindas'}>
+              <Stack.Screen name="novos-termos" options={{ animation: 'fade' }} />
+            </Stack.Protected>
             <Stack.Protected guard={signedIn} redirectTo={inApp ? '/' : '/boas-vindas'}>
               <Stack.Screen name="assinatura" options={{ ...pushedHeader, title: 'Assinatura' }} />
               <Stack.Screen name="minha-conta" options={{ ...pushedHeader, title: 'Minha conta' }} />
@@ -146,6 +155,7 @@ function Navigation({ fontsLoaded, authReady }: { fontsLoaded: boolean; authRead
             {/* abertas para todos: o cadastro tem links para elas */}
             <Stack.Screen name="privacidade" options={{ ...pushedHeader, title: 'Privacidade' }} />
             <Stack.Screen name="termos" options={{ ...pushedHeader, title: 'Termos de uso' }} />
+            <Stack.Screen name="licencas" options={{ ...pushedHeader, title: 'Licenças' }} />
           </Stack>
         </LockGate>
       )}

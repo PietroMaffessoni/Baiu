@@ -8,7 +8,7 @@ Marque cada caixa só depois de conferir no painel ou com a consulta indicada. S
 
 Duas conferências automáticas mostram o que está pronto e o que falta. Nenhuma muda nada nem mostra segredos.
 
-1. **Por dentro (banco de dados):** no **SQL Editor**, cole o arquivo `conferencia.sql` inteiro e clique em **Run**. Cada linha é um item: ✅ está certo, ❌ precisa de ajuste (a coluna `o_que_fazer` diz como). Ele confere tabelas, RLS, permissões, funções, gatilhos e a tarefa diária (passos 2 e 7.1).
+1. **Por dentro (banco de dados):** no **SQL Editor**, cole o arquivo `conferencia.sql` inteiro e clique em **Run**. Cada linha é um item: ✅ está certo, ❌ precisa de ajuste (a coluna `o_que_fazer` diz como). Ele confere tabelas, RLS, permissões, funções, gatilhos e as tarefas diárias (passos 2, 7.1 e 7.2).
 2. **Por fora (como o app enxerga):** com a URL e a chave publishable no `.env.local` (passo 8), rode no computador:
 
    ```bash
@@ -47,6 +47,7 @@ Os registros financeiros ficam só no celular da pessoa. Saldos e movimentos dos
 | `migrations/20261023120000_polp.sql` | Histórico das autorizações dos bancos (desconectar marca a data em vez de apagar) e categorias autorizadas |
 | `migrations/20261027120000_bancos_sem_assinatura.sql` | Funções da tarefa diária que cancela os bancos de quem ficou sem assinatura |
 | `migrations/20261105120000_config.sql` | Tabela `baiu_config` (versões dos termos e limite de perguntas por dia) e funções que só aceitam a versão atual do termo |
+| `migrations/20261106120000_aceites_e_registros.sql` | Registra o aceite de versões novas dos Termos e da Política, e apaga os registros de acesso com mais de 6 meses |
 | `conferencia.sql` | Consulta que confere o banco de dados inteiro (veja "Conferência rápida") |
 | `functions/baiu-chat/index.ts` | Função da conversa com IA |
 | `functions/bank/index.ts` | Função dos bancos conectados |
@@ -74,7 +75,7 @@ Em 15/10/2026 o Pietro deixou isto pronto. Ninguém conferiu ainda se funcionou:
 - RLS automático ligado;
 - integração com o GitHub conectada.
 
-O passo 2 confere se as seis migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
+O passo 2 confere se as sete migrações rodaram. Os passos 4 a 6 (modelos de e-mail, SMTP e ligação com o app) ficaram para depois e ainda estão pendentes.
 
 ---
 
@@ -97,15 +98,15 @@ A integração com o GitHub aplica sozinha, a cada envio para a `main`, os arqui
   | Production branch | `main` |
   | Deploy to production | Ligado |
 
-- [ ] As seis migrações rodaram. Confira no **SQL Editor**:
+- [ ] As sete migrações rodaram. Confira no **SQL Editor**:
 
   ```sql
   select version, name from supabase_migrations.schema_migrations order by version;
   ```
 
-  O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000`, `20261027120000` e `20261105120000`.
+  O resultado deve ter `20261014120000`, `20261015120000`, `20261015130000`, `20261023120000`, `20261027120000`, `20261105120000` e `20261106120000`.
 
-  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os seis arquivos podem rodar de novo sem estragar nada, desde que sempre na ordem da data.
+  Se faltar alguma, ou se a tabela `supabase_migrations.schema_migrations` não existir, veja os erros em **Integrations, GitHub**. Também dá para colar cada arquivo no SQL Editor, um de cada vez e na ordem da data, e rodar. Os sete arquivos podem rodar de novo sem estragar nada, desde que sempre na ordem da data.
 
 - [ ] Tabelas, RLS, permissões, funções e gatilhos estão certos: rode `conferencia.sql` no **SQL Editor** e confira que os itens de 10 a 30 estão com ✅. Ninguém grava nas tabelas pela API; as gravações passam só pelas funções do banco.
 - [ ] A validação funciona. Em **Authentication, Users**, tente criar um usuário pelo botão **Add user**. **Tem que dar erro**, porque faltam nome, celular e aceites. Daqui em diante, contas só nascem pelo app.
@@ -242,6 +243,17 @@ Cada banco conectado custa R$ 3,60 por mês na Polp enquanto a autorização est
 - [ ] A senha das duas pontas é a mesma. Se a função responder 401, confira `BANK_CLEANUP_SECRET` e o segredo `bank_cleanup_secret` do Vault.
 
 A função usa a chave secreta do Supabase, que já existe em toda função. Ela nunca vai para o app.
+
+### 7.2 Tarefa diária: apagar registros de acesso com mais de 6 meses
+
+A política de privacidade promete guardar os registros de acesso do login (data, hora e IP, na tabela `auth.audit_log_entries`) por 6 meses e depois apagar. Se o `pg_cron` já estava ligado quando a migração `20261106120000` rodou, a tarefa já foi agendada sozinha. Senão, depois de ligar o `pg_cron` (passo 7.1), rode uma vez no **SQL Editor**:
+
+```sql
+select cron.schedule('baiu-registros-de-acesso', '30 6 * * *', 'select public.baiu_cleanup_access_logs()');
+```
+
+- [ ] Em `conferencia.sql`, os itens 44 e 45 estão com ✅.
+- [ ] No dia seguinte, `select status, return_message from cron.job_run_details d join cron.job j using (jobid) where j.jobname = 'baiu-registros-de-acesso' order by start_time desc limit 1;` mostra `succeeded`.
 
 ## 8. Ligar o app ao servidor
 

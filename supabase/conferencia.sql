@@ -13,7 +13,8 @@ fn(sig, quem) as (
     ('public.bank_link(text, text, text, text[])', 'app'),
     ('public.bank_unlink(text)', 'app'),
     ('public.bank_active_connections()', 'servidor'),
-    ('public.bank_lapse(uuid, text)', 'servidor')
+    ('public.bank_lapse(uuid, text)', 'servidor'),
+    ('public.baiu_cleanup_access_logs()', 'servidor')
 ),
 tb(nome, app_le) as (
   values ('consents', true), ('assistant_usage', false), ('bank_connections', true), ('baiu_config', false)
@@ -98,7 +99,7 @@ itens(ordem, item, ok, o_que_fazer) as (
       union all
       select to_regprocedure(x) from unnest(array[
         'public.baiu_valid_name(text)', 'public.baiu_valid_phone(text)', 'public.baiu_check_user()',
-        'public.baiu_record_consents()', 'public.bank_link(text, text, text)',
+        'public.baiu_record_consents()', 'public.baiu_record_new_consents()', 'public.bank_link(text, text, text)',
         'public.assistant_take(text, integer)']) x
       where to_regprocedure(x) is not null)
 
@@ -106,8 +107,9 @@ itens(ordem, item, ok, o_que_fazer) as (
   union all
   select 30, 'Gatilho ' || t || ' na tabela de usuários',
          exists (select 1 from pg_trigger where tgrelid = 'auth.users'::regclass and tgname = t and not tgisinternal),
-         'Rode a migração 20261014120000_contas.sql.'
-  from unnest(array['baiu_check_user', 'baiu_record_consents']) t
+         case when t = 'baiu_record_new_consents' then 'Rode a migração 20261106120000_aceites_e_registros.sql.'
+              else 'Rode a migração 20261014120000_contas.sql.' end
+  from unnest(array['baiu_check_user', 'baiu_record_consents', 'baiu_record_new_consents']) t
 
   -- 4. tarefa diária (LEIA-ME, passo 7.1)
   union all
@@ -136,6 +138,22 @@ itens(ordem, item, ok, o_que_fazer) as (
              where jobname = 'baiu-bancos-sem-assinatura' and active and command like '%/functions/v1/bank%'$q$, false, true, '')))[1]::text::int > 0
          end, false),
          'SQL Editor: rode o select cron.schedule(...) do LEIA-ME, passo 7.1.'
+
+  -- 5. registros de acesso: 6 meses (LEIA-ME, passo 7.2)
+  union all
+  select 44, 'Tarefa diária baiu-registros-de-acesso agendada',
+         coalesce(case when to_regclass('cron.job') is not null then
+           (xpath('/row/n/text()', query_to_xml($q$select count(*) as n from cron.job
+             where jobname = 'baiu-registros-de-acesso' and active and command like '%baiu_cleanup_access_logs%'$q$, false, true, '')))[1]::text::int > 0
+         end, false),
+         'SQL Editor: rode o select cron.schedule(''baiu-registros-de-acesso'', ...) do LEIA-ME, passo 7.2.'
+  union all
+  select 45, 'A limpeza dos registros de acesso consegue apagar em auth.audit_log_entries',
+         to_regclass('auth.audit_log_entries') is null
+           or coalesce(has_table_privilege(
+                (select p.proowner::regrole::text from pg_proc p where p.oid = to_regprocedure('public.baiu_cleanup_access_logs()')),
+                'auth.audit_log_entries', 'delete'), false),
+         'Rode a migração 20261106120000_aceites_e_registros.sql pelo GitHub ou no SQL Editor, como postgres. Se continuar ❌, fale com o suporte do Supabase.'
 )
 select ordem, item,
        case when ok then '✅' else '❌' end as ok,
@@ -147,9 +165,9 @@ union all
 select 50, 'Histórico de migrações (' || coalesce(
          case when to_regclass('supabase_migrations.schema_migrations') is not null then
            (xpath('/row/n/text()', query_to_xml($q$select count(*) as n from supabase_migrations.schema_migrations
-             where version in ('20261014120000', '20261015120000', '20261015130000', '20261023120000', '20261027120000', '20261105120000')$q$,
+             where version in ('20261014120000', '20261015120000', '20261015130000', '20261023120000', '20261027120000', '20261105120000', '20261106120000')$q$,
              false, true, '')))[1]::text
-         end, '0') || ' de 6 registradas)',
+         end, '0') || ' de 7 registradas)',
        '⚠️',
        'Só informativo: migrações coladas à mão no SQL Editor não entram nesse histórico. Valem os itens acima.'
 union all

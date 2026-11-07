@@ -26,6 +26,11 @@ Escreva para **suporte.baiu@gmail.com** a partir do e-mail cadastrado, com o ass
 - Da Polp e da Celcoin, que fazem a conexão com os bancos: as autorizações são canceladas antes da exclusão, e o Baiu deixa de receber dados dos seus bancos. Se quiser, confira no app do seu banco, na área de Open Finance, que a autorização acabou.
 - Do RevenueCat, que confere a assinatura: o cadastro ligado à sua conta. As lojas guardam o registro das compras conforme as regras delas.
 - Do aparelho: os registros financeiros da conta, quando a exclusão é feita pelo app. Se a exclusão for feita por e-mail, desinstale o app para apagar os registros do aparelho.
-- Cópias de segurança do provedor do servidor podem guardar os dados por um curto período, até serem sobrescritas.
+- Cópias de segurança automáticas do servidor: são sobrescritas em até 30 dias.
+
+## O que fica por um tempo
+
+- Registros de acesso do login (data, hora e IP): ficam 6 meses desde cada acesso, como prevê o Marco Civil da Internet, e depois são apagados sozinhos.
+- Mensagens trocadas com o suporte: até 5 anos, para comprovar o atendimento. Se quiser, peça para apagarmos antes.
 
 Leia também a [Política de Privacidade](privacidade.md).

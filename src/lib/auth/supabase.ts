@@ -29,6 +29,10 @@ function toProfile(u: User): Profile {
     fullName: typeof m.full_name === 'string' ? m.full_name : '',
     phone: typeof m.phone === 'string' ? m.phone : '',
     createdAt: u.created_at,
+    accepted: {
+      terms: typeof m.terms_version === 'string' ? m.terms_version : '',
+      privacy: typeof m.privacy_version === 'string' ? m.privacy_version : '',
+    },
   };
 }
 
@@ -191,6 +195,13 @@ export function createSupabaseBackend(): AuthBackend {
 
     async updateProfile({ fullName, phone }) {
       const data = await run(() => need().auth.updateUser({ data: { full_name: fullName, phone } }));
+      if (!data.user) throw new AuthFailure('unknown');
+      return toProfile(data.user);
+    },
+
+    async acceptDocuments({ terms, privacy }) {
+      // o gatilho baiu_record_new_consents grava cada versão nova em consents, com a data do servidor
+      const data = await run(() => need().auth.updateUser({ data: { terms_version: terms, privacy_version: privacy } }));
       if (!data.user) throw new AuthFailure('unknown');
       return toProfile(data.user);
     },

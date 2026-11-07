@@ -193,6 +193,26 @@ module.exports = async ({ page, step, go, btn, tap, field, fill, typeIn, keys, W
     await go('/contas');
   }, ['R$ 2.500,00']);
 
+  // ---------- textos novos ----------
+  await step('45a termos novos pedem aceite antes de abrir o app', async () => {
+    await page.evaluate(() => {
+      const d = JSON.parse(localStorage.getItem('baiu:fake-auth'));
+      d.users['maria.silva@gmail.com'].profile.accepted = { terms: '2026-10-27', privacy: '2026-11-06' };
+      localStorage.setItem('baiu:fake-auth', JSON.stringify(d));
+    });
+    await page.reload({ waitUntil: 'networkidle' });
+    await W(2000);
+    await go('/contas');
+  }, ['Os termos mudaram', 'Ler os Termos de uso', 'Minha conta'], ['R$ 2.500,00']);
+  await step('45b sem marcar, não continua', () => btn('Continuar', { wait: 600 }), ['Para continuar, marque que leu e aceita os textos novos.']);
+  await step('45c aceitar registra e volta ao app', async () => {
+    await btn('Li e aceito os Termos de uso e a Política de privacidade atualizados', { role: 'checkbox' });
+    await btn('Continuar', { wait: 1500 });
+    await go('/contas');
+    const accepts = await page.evaluate(() => JSON.parse(localStorage.getItem('baiu:fake-auth')).users['maria.silva@gmail.com'].accepts);
+    if (!accepts || accepts.length !== 2) throw new Error('aceites: ' + JSON.stringify(accepts));
+  }, ['R$ 2.500,00'], ['Os termos mudaram']);
+
   // ---------- excluir conta ----------
   await step('46 excluir conta pede a senha certa', async () => {
     await go('/minha-conta');

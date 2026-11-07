@@ -75,13 +75,15 @@ export default function MinhaConta() {
         <Group title="Seus dados e a LGPD">
           <View style={{ paddingVertical: 14, gap: 8 }}>
             <T variant="callout" tone="ink2">
-              No servidor do Baiu ficam só o nome, o e-mail, o celular e o registro de quando você aceitou os termos.
-              Contas, movimentos e investimentos ficam apenas neste aparelho, criptografados. A assinatura é cobrada
+              No servidor do Baiu ficam o nome, o e-mail, o celular, o registro de quando você aceitou os termos e, se
+              você conectou bancos, a lista das autorizações. Contas, movimentos e investimentos ficam apenas neste
+              aparelho, criptografados. A assinatura é cobrada
               pela loja do seu celular; o Baiu não vê seus dados de pagamento.
             </T>
             <T variant="callout" tone="ink2">
               Você pode corrigir seus dados aqui, exportar seus registros em Ajustes e excluir a conta abaixo. Para
-              qualquer outro pedido, escreva para {SUPPORT}.
+              qualquer outro pedido, inclusive uma cópia de tudo que o servidor guarda sobre você, escreva para{' '}
+              {SUPPORT}. Respondemos em até 15 dias.
             </T>
           </View>
           <Rule />

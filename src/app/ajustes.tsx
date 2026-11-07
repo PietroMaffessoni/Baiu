@@ -289,6 +289,8 @@ export default function Ajustes() {
         <Rule inset={33} />
         <ListRow icon="doc" label="Termos de uso" onPress={() => router.push('/termos')} chevron />
         <Rule inset={33} />
+        <ListRow icon="book" label="Licenças de código aberto" onPress={() => router.push('/licencas')} chevron />
+        <Rule inset={33} />
         <ListRow
           icon="help"
           label="Ajuda e contato"

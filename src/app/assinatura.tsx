@@ -161,7 +161,8 @@ function Paywall({ ent, locked }: { ent: Entitlement | null; locked: boolean }) 
     }
   };
 
-  const trial = plan?.trial ?? plans?.find((p) => p.trial)?.trial ?? null;
+  // o título e o texto falam do plano escolhido: o anual pode não ter a semana grátis
+  const trial = plan?.trial ?? null;
 
   return (
     <>
@@ -174,10 +175,10 @@ function Paywall({ ent, locked }: { ent: Entitlement | null; locked: boolean }) 
           {returning && locked
             ? 'Sua assinatura terminou. Seus registros continuam guardados neste aparelho: assine de novo para continuar de onde parou. Os bancos conectados são desconectados 7 dias depois do fim.'
             : trial && plan
-              ? `Use tudo por ${periodLabel(trial)} sem pagar nada. Depois, ${priceLabel(plans!.find((p) => p.period === 'mes') ?? plan)}. Cancele quando quiser.`
+              ? `Use tudo por ${periodLabel(trial)} sem pagar nada. Depois, ${priceLabel(plan)}. Cancele quando quiser.`
               : plan
                 ? `${priceLabel(plan)}. Cancele quando quiser.`
-                : 'Organize seu dinheiro sem digitar nada.'}
+                : 'Seu dinheiro organizado num lugar só.'}
         </T>
       </View>
 

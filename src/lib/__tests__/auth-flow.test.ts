@@ -3,7 +3,7 @@ import { AuthApiError, AuthRetryableFetchError } from '@supabase/supabase-js';
 
 import { createFakeBackend, FAKE_CODE } from '../auth/fake';
 import { mapError } from '../auth/supabase';
-import { AuthFailure, PRIVACY_VERSION, TERMS_VERSION, type SignUpInput } from '../auth/types';
+import { acceptedCurrent, AuthFailure, PRIVACY_VERSION, TERMS_VERSION, type SignUpInput } from '../auth/types';
 
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
@@ -125,6 +125,26 @@ describe('login, senha e conta', () => {
     await b.updateProfile({ fullName: 'Maria Souza', phone: '+5521991234560' });
     expect(seen).toContain('Maria Souza');
     expect(await b.restore()).toMatchObject({ fullName: 'Maria Souza', phone: '+5521991234560' });
+  });
+
+  it('quem aceitou textos antigos aceita de novo, e cada versão nova fica registrada', async () => {
+    const b = createFakeBackend();
+    await b.signUp(input({ consent: { terms: '2026-10-27', privacy: '2026-11-06', adult: true } }));
+    const old = await b.verifySignUp('maria.silva@gmail.com', FAKE_CODE);
+    expect(acceptedCurrent(old)).toBe(false);
+    const now = await b.acceptDocuments({ terms: TERMS_VERSION, privacy: PRIVACY_VERSION });
+    expect(acceptedCurrent(now)).toBe(true);
+    expect(acceptedCurrent((await b.restore())!)).toBe(true);
+    const row = b._db().users['maria.silva@gmail.com'];
+    expect(row.accepts?.map((a) => `${a.document} ${a.version}`)).toEqual([
+      `termos ${TERMS_VERSION}`,
+      `privacidade ${PRIVACY_VERSION}`,
+    ]);
+  });
+
+  it('quem se cadastrou com os textos atuais não precisa aceitar de novo', async () => {
+    const b = await ready();
+    expect(acceptedCurrent((await b.restore())!)).toBe(true);
   });
 
   it('excluir a conta apaga o acesso', async () => {

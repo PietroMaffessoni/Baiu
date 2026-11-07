@@ -95,7 +95,9 @@ Não. As sugestões e as respostas da conversa são educativas e gerais. Elas n�
 
 ## Contato
 
-Escreva para **suporte.baiu@gmail.com**.
+Escreva para **suporte.baiu@gmail.com**. Respondemos em até 5 dias.
+
+Pedidos sobre seus dados pessoais (cópia, correção, exclusão): use o assunto "Privacidade". O encarregado de dados é Pietro Maffessoni, e respondemos em até 15 dias, como pede a LGPD.
 
 Se preferir, abra uma solicitação em [github.com/PietroMaffessoni/Baiu/issues](https://github.com/PietroMaffessoni/Baiu/issues).
 
