@@ -58,5 +58,8 @@ google-service-account.json
 e2e/.web/
 e2e/capturas/
 
+# testes de carga: resultados completos de cada rodada
+carga/resultados/
+
 # Supabase CLI (dados locais do link)
 supabase/.temp/

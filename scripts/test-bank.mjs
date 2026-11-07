@@ -1,7 +1,7 @@
 // Testa a função bank (supabase/functions/bank/index.ts) em Node, com o
 // banco de dados e a Polp simulados. Nada vai para a internet.
 // Rodar: npm run test:sql
-import { _resetCache, handle, validCpf } from '../supabase/functions/bank/index.ts';
+import { _resetAlerts, _resetCache, handle, validCpf } from '../supabase/functions/bank/index.ts';
 
 const results = [];
 const ok = (name, cond, extra = '') => results.push(`${cond ? 'OK   ' : 'FALHA'} ${name}${cond ? '' : ' ' + extra}`);
@@ -425,6 +425,133 @@ ok('login vencido: 401', (await call({ action: 'sync' }, world({ user: null })))
 ok('ação antiga ou desconhecida: 400', (await call({ action: 'token' })).status === 400 && (await call({ action: 'apagar_tudo' })).status === 400);
 ok('corpo inválido: 400', (await call('{oi')).status === 400);
 ok('preflight do navegador', (await handle(new Request('https://x/', { method: 'OPTIONS' }), env())).status === 204);
+
+// muita gente ao mesmo tempo (os números de verdade saem do npm run test:carga)
+const tick = () => new Promise((r) => setTimeout(r, 20));
+{
+  _resetCache();
+  const w = world();
+  const rs = await Promise.all(Array.from({ length: 50 }, () => handle(req({ action: 'institutions' }), env(), w.http)));
+  ok('institutions: 50 pessoas juntas, uma busca só na Polp', rs.every((r) => r.status === 200) && w.calls.filter((c) => c.url.endsWith('/institutions')).length === 1);
+}
+{
+  _resetCache();
+  await handle(req({ action: 'institutions' }), env(), world().http);
+  const w = world();
+  const down = async (url, init) => (url.endsWith('/institutions') ? new Response('{}', { status: 503 }) : w.http(url, init));
+  const real = Date.now;
+  Date.now = () => real() + 2 * 3_600_000;
+  try {
+    const r = await handle(req({ action: 'institutions' }), env(), down);
+    ok('institutions: lista vencida e Polp fora do ar, entrega a guardada', r.status === 200 && (await r.json()).institutions.length === 3);
+    await tick();
+  } finally {
+    Date.now = real;
+  }
+}
+{
+  const w = world({ rows: ['c-1', 'c-2', 'c-3'] });
+  let now = 0;
+  let peak = 0;
+  const http = async (url, init) => {
+    if (!url.includes('polp.com.br')) return w.http(url, init);
+    peak = Math.max(peak, ++now);
+    await new Promise((r) => setTimeout(r, 5));
+    try {
+      return await w.http(url, init);
+    } finally {
+      now--;
+    }
+  };
+  _resetCache();
+  const r = await handle(req({ action: 'sync', since: {} }), env(), http);
+  const body = await r.json();
+  ok('sync: bancos e listas em paralelo, no máximo 8 chamadas à Polp ao mesmo tempo', r.status === 200 && peak > 1 && peak <= 8, `pico ${peak}`);
+  const order = ['c-1', 'c-2', 'c-3'].flatMap((c) => ['acc-1', 'acc-2', 'card-1'].map((a) => `${c}/${a}`)).join(',');
+  ok('sync: a resposta sai na mesma ordem, banco por banco', body.accounts.map((a) => `${a.itemId}/${a.id}`).join(',') === order);
+  ok('sync: com tudo em paralelo, nada se perde', body.transactions.length === 3 * (2 * 4 + 2) && body.investments.length === 3 * 2, `${body.transactions.length} movimentos, ${body.investments.length} investimentos`);
+}
+{
+  const w = world();
+  const signals = [];
+  const http = async (url, init = {}) => {
+    signals.push(init.signal instanceof AbortSignal);
+    if (url.includes('polp.com.br')) throw new DOMException('tempo esgotado', 'TimeoutError');
+    return w.http(url, init);
+  };
+  _resetCache();
+  const r = await handle(req({ action: 'sync' }), env(), http);
+  ok('Polp que não responde a tempo: ocupado, sem esperar para sempre', r.status === 503 && (await r.json()).error === 'busy' && signals.every(Boolean));
+}
+{
+  const w = world();
+  let first = true;
+  const http = async (url, init) => {
+    if (first && url.endsWith('/consents/c-1')) {
+      first = false;
+      return new Response('{}', { status: 429 });
+    }
+    return w.http(url, init);
+  };
+  _resetCache();
+  const r = await handle(req({ action: 'sync' }), env(), http);
+  ok('Polp pede para esperar uma vez: tenta de novo e segue', r.status === 200 && (await r.json()).items.length === 1);
+}
+
+// alerta de lentidão
+{
+  const logs = [];
+  const warn = console.warn;
+  console.warn = (line) => logs.push(String(line));
+  const lento = () => logs.filter((l) => l.includes('"alerta":"lento"'));
+  const hooks = [];
+  const slowPolp = (ms) => {
+    const w = world();
+    return async (url, init) => {
+      if (url.startsWith('https://alerta.exemplo/')) {
+        hooks.push(JSON.parse(init.body));
+        return new Response(null, { status: 204 });
+      }
+      if (url.includes('polp.com.br')) await new Promise((r) => setTimeout(r, ms));
+      return w.http(url, init);
+    };
+  };
+  const e = env({ BAIU_ALERTA_URL: 'https://alerta.exemplo/hook', BAIU_ALERTA_MS: '40' });
+  try {
+    _resetAlerts();
+    _resetCache();
+    const r = await handle(req({ action: 'sync', since: {} }), e, slowPolp(25));
+    await tick();
+    const line = lento()[0];
+    ok('alerta: resposta acima do limite vira uma linha "lento" no log, com quanto cada serviço levou', r.status === 200 && !!line && JSON.parse(line).acao === 'sync' && JSON.parse(line).etapas.Polp.n > 1);
+    ok('alerta: e um aviso no webhook dizendo onde foi a demora', hooks.length === 1 && /bank\/sync levou \d+ ms/.test(hooks[0].text) && hooks[0].text.includes('Polp (') && hooks[0].content === hooks[0].text);
+    ok('alerta: nada da pessoa no log nem no aviso', ![line, JSON.stringify(hooks)].some((s) => s.includes(UID) || s.includes('token-da-pessoa') || s.includes('1500')));
+    ok('alerta: o app recebe Server-Timing com o tempo de cada serviço', /Polp: \d+x/.test(r.headers.get('Server-Timing') ?? '') && /total;dur=\d+/.test(r.headers.get('Server-Timing') ?? ''));
+    await handle(req({ action: 'sync', since: {} }), e, slowPolp(25));
+    await tick();
+    ok('alerta: no máximo um aviso por ação a cada 5 minutos (o log registra todas)', hooks.length === 1 && lento().length === 2);
+    const real = Date.now;
+    Date.now = () => real() + 6 * 60_000;
+    try {
+      await handle(req({ action: 'sync', since: {} }), e, slowPolp(25));
+      await tick();
+    } finally {
+      Date.now = real;
+    }
+    ok('alerta: o aviso seguinte conta as lentas que ficaram sem aviso', hooks.length === 2 && hooks[1].text.includes('Mais 1 resposta lenta'));
+    _resetAlerts();
+    logs.length = 0;
+    await handle(req({ action: 'sync' }), env({ BAIU_ALERTA_URL: 'https://alerta.exemplo/hook' }), slowPolp(0));
+    await tick();
+    ok('alerta: resposta rápida não avisa', lento().length === 0 && hooks.length === 2);
+    _resetAlerts();
+    await handle(req({ action: 'sync', since: {} }), env({ BAIU_ALERTA_URL: 'http://alerta.exemplo/hook', BAIU_ALERTA_MS: '40' }), slowPolp(25));
+    await tick();
+    ok('alerta: endereço do webhook sem https é ignorado (fica só o log)', hooks.length === 2 && lento().length === 1);
+  } finally {
+    console.warn = warn;
+  }
+}
 
 console.log(results.join('\n'));
 process.exit(results.some((r) => r.startsWith('FALHA')) ? 1 : 0);

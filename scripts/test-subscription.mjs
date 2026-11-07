@@ -294,5 +294,42 @@ ok(
   (await subscription(new Request('https://x/', { method: 'OPTIONS' }), env())).status === 204,
 );
 
+// ---------- alerta de lentidão ----------
+{
+  const hooks = [];
+  const warn = console.warn;
+  console.warn = () => {};
+  const tick = () => new Promise((r) => setTimeout(r, 20));
+  /** O mundo de sempre, com um serviço demorando `ms`. */
+  const slow = (part, ms) => {
+    const w = world();
+    return {
+      calls: w.calls,
+      http: async (url, init) => {
+        if (url.startsWith('https://alerta.exemplo/')) {
+          hooks.push(JSON.parse(init.body));
+          return new Response(null, { status: 204 });
+        }
+        if (url.includes(part)) await new Promise((r) => setTimeout(r, ms));
+        return w.http(url, init);
+      },
+    };
+  };
+  const e = env({ BAIU_ALERTA_URL: 'https://alerta.exemplo/hook', BAIU_ALERTA_MS: '40' });
+  try {
+    await forget(slow('revenuecat.com', 60), e);
+    await tick();
+    ok('alerta: exclusão lenta avisa e aponta o RevenueCat', hooks.length === 1 && hooks[0].text.includes('subscription/forget') && hooks[0].text.includes('assinatura (RevenueCat)'));
+    await callChat(slow('/v1/messages', 80), e);
+    await tick();
+    ok('alerta: a IA demorar para escrever não conta', hooks.length === 1);
+    await callChat(slow('/rpc/assistant_take', 60), e);
+    await tick();
+    ok('alerta: na conversa, demora fora da IA avisa', hooks.length === 2 && hooks[1].text.includes('baiu-chat/pergunta') && hooks[1].text.includes('banco de dados'));
+  } finally {
+    console.warn = warn;
+  }
+}
+
 console.log(results.join('\n'));
 process.exit(results.some((r) => r.startsWith('FALHA')) ? 1 : 0);

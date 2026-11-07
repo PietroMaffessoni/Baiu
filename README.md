@@ -101,12 +101,17 @@ npm test            # testes de lógica (saldos, fôlego, vencimentos, investime
 npm run test:sql    # testa o SQL do servidor num Postgres embutido e as funções da IA, dos bancos e da assinatura, sem internet
 npm run typecheck   # TypeScript
 npm run lint        # ESLint
+npm run test:carga  # 100 e depois 1000 pessoas ao mesmo tempo nos bancos conectados (k6), sem internet
 npm run test:e2e    # roteiros de navegador: uso diário, cadastro, bancos, assistente, assinatura e telas pequenas
 npm run store:images   # refaz as capturas das lojas e a captura da assinatura para a revisão da Apple
 node scripts/build-legal-docs.mjs   # gera docs/privacidade.md e docs/termos.md a partir do app
 ```
 
 Os roteiros de navegador geram a versão web com o servidor, o banco, a IA e a loja falsos (`EXPO_PUBLIC_AUTH_FAKE=1`) e usam o Edge ou o Chrome instalados (outro navegador: `BAIU_BROWSER`). `npm run test:e2e -- bancos assinatura` roda só alguns; `--sem-build` reaproveita a última versão web. As falhas ficam com uma captura em `e2e/capturas/`.
+
+O teste de carga (`carga/`) roda as funções `bank` e `subscription` de verdade num servidor local, com o login, o banco de dados, a Polp e o RevenueCat simulados com tempos realistas, e o k6 fazendo o papel dos celulares: cada pessoa abre o app (que atualiza os bancos), às vezes abre o histórico ou a lista de bancos, e no início uma rajada abre a tela de conectar junto. No fim, mostra os tempos de cada ação e quantas chamadas cada serviço de fora recebeu, que é onde aparece o gargalo. Precisa do k6 (`winget install k6`, ou a variável `K6` com o caminho). Nada vai para a internet; para medir o servidor de verdade, combine antes com o sócio e use o ambiente de teste da Polp. O tempo médio da Polp é um chute de 220 ms até haver credencial (`CARGA_POLP_MS` muda).
+
+Toda resposta das funções acima de 1 segundo vira uma linha `"alerta":"lento"` nos logs do Supabase, com quanto cada serviço de fora levou, e, com o segredo `BAIU_ALERTA_URL`, um aviso no Slack ou no Discord (no máximo um por ação a cada 5 minutos). As respostas também levam o cabeçalho `Server-Timing`. Na conversa com IA, o tempo da própria IA não conta.
 
 ## Estrutura
 
@@ -125,6 +130,7 @@ src/
   theme/          cores, fontes e tipografia
 docs/             privacidade, termos, suporte e exclusão de conta, publicados pelo GitHub
 e2e/              roteiros de navegador (e2e/roteiros) e o gerador das imagens das lojas
+carga/            teste de carga com o k6: servidor local com as funções e os serviços de fora simulados
 supabase/         SQL do servidor, funções da IA, dos bancos e da assinatura, modelos de e-mail e guia de configuração
 store/            fichas da App Store e do Google Play e imagens das lojas
 ```

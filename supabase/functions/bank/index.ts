@@ -18,6 +18,9 @@
 //   REVENUECAT_SECRET_KEY                obrigatório: só quem assina conecta e atualiza bancos
 //   BAIU_SUBSCRIPTION_OFF=1              opcional: libera sem conferir a assinatura.
 //                                        Só para testes; apagar antes de publicar
+//   BAIU_ALERTA_URL                      opcional: webhook (Slack, Discord) que recebe o aviso de
+//                                        resposta acima de 1 s; sem ele, o aviso fica só nos logs
+//   BAIU_ALERTA_MS                       opcional: outro limite para o aviso, em ms
 // SUPABASE_URL e SUPABASE_ANON_KEY já existem em toda função do Supabase.
 //
 // Sem dependências externas: roda no Deno do Supabase e nos testes em Node
@@ -39,6 +42,15 @@ const MAX_PAGES = 20;
 const BANK_LIMIT = 3;
 const VERSION_RE = /^\d{4}-\d{2}-\d{2}$/;
 const ID_RE = /^[\w-]{1,100}$/;
+/**
+ * Chamadas à Polp ao mesmo tempo, por pedido. Uma atualização faz umas 14
+ * chamadas por banco; em fila, uma depois da outra, passava de 3 segundos
+ * (carga/rodar.mjs). Em paralelo, sem jogar todas de uma vez na Polp.
+ */
+const POLP_PARALLEL = 8;
+/** Quanto esperar a Polp e o banco de dados antes de desistir e pedir para tentar de novo. */
+const POLP_TIMEOUT = 15_000;
+const DB_TIMEOUT = 10_000;
 
 const CORS = {
   'Access-Control-Allow-Origin': '*',
@@ -120,10 +132,136 @@ async function subscription(uid: string, env: Env, http: typeof fetch): Promise<
   return 'ok';
 }
 
-/** Lista de bancos da Polp (é pública e muda pouco), guardada por uma hora. */
+/**
+ * Lista de bancos da Polp: é pública, igual para todo mundo e muda pouco.
+ * Fica guardada por uma hora. Com muita gente abrindo a tela de conectar ao
+ * mesmo tempo, só um pedido vai à Polp e os outros esperam por ele (antes,
+ * 100 pessoas juntas faziam 100 buscas iguais). Vencida, a lista guardada
+ * ainda serve por até um dia enquanto a nova chega, e se a Polp falhar.
+ */
+const LIST_FRESH = 3_600_000;
+const LIST_STALE = DAY;
 let cached: { list: Json[]; until: number } | null = null;
+let loading: Promise<Json[]> | null = null;
 export function _resetCache() {
   cached = null;
+  loading = null;
+}
+
+/** Deixa uma tarefa terminar depois da resposta (no Supabase; nos testes, só segue). */
+function background(p: Promise<unknown>) {
+  p.catch(() => {});
+  (globalThis as { EdgeRuntime?: { waitUntil(p: Promise<unknown>): void } }).EdgeRuntime?.waitUntil(p);
+}
+
+/** No máximo `n` tarefas ao mesmo tempo; as outras esperam a vez, na ordem. */
+function limiter(n: number) {
+  let active = 0;
+  const queue: (() => void)[] = [];
+  return async <T>(task: () => Promise<T>): Promise<T> => {
+    if (active < n) active++;
+    else await new Promise<void>((r) => queue.push(r));
+    try {
+      return await task();
+    } finally {
+      // a vaga passa direto para o próximo da fila
+      const next = queue.shift();
+      if (next) next();
+      else active--;
+    }
+  };
+}
+
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// ---------- alerta de lentidão (igual em bank, subscription e baiu-chat) ----------
+
+/** Resposta mais demorada que isto vira alerta. BAIU_ALERTA_MS muda o limite. */
+const SLOW_MS = 1_000;
+/** Um aviso por ação a cada 5 minutos; as outras lentas entram na conta do próximo aviso. */
+const ALERT_EVERY = 5 * 60_000;
+type Stage = { n: number; ms: number; max: number };
+const lastAlert = new Map<string, { at: number; skipped: number }>();
+export function _resetAlerts() {
+  lastAlert.clear();
+}
+
+/** De quem é cada chamada: é isso que diz onde a demora está. */
+function stageOf(url: string) {
+  if (url.includes('/auth/v1/')) return 'login';
+  if (url.includes('/rest/v1/')) return 'banco de dados';
+  if (url.includes('polp.com.br')) return 'Polp';
+  if (url.includes('revenuecat.com')) return 'assinatura (RevenueCat)';
+  if (url.includes('anthropic.com') || url.includes('/v1/messages')) return 'IA';
+  return 'outro';
+}
+
+/** Um fetch que anota quantas chamadas cada serviço recebeu e quanto cada uma levou. */
+function timed(http: typeof fetch) {
+  const stages: Record<string, Stage> = {};
+  const wrapped = (async (input: Request | URL | string, init?: RequestInit) => {
+    const name = stageOf(input instanceof Request ? input.url : String(input));
+    const t = Date.now();
+    try {
+      return await http(input, init);
+    } finally {
+      const s = (stages[name] ??= { n: 0, ms: 0, max: 0 });
+      const d = Date.now() - t;
+      s.n++;
+      s.ms += d;
+      s.max = Math.max(s.max, d);
+    }
+  }) as typeof fetch;
+  return { http: wrapped, stages };
+}
+
+/** Cabeçalho Server-Timing: o app e o navegador mostram onde foi o tempo de cada resposta. */
+function serverTiming(total: number, stages: Record<string, Stage>) {
+  const parts = Object.entries(stages).map(
+    ([name, s], i) => `s${i};dur=${s.ms};desc="${name}: ${s.n}x, a mais lenta ${s.max} ms"`,
+  );
+  return [...parts, `total;dur=${total}`].join(', ');
+}
+
+/**
+ * Passou do limite: uma linha nos logs (procure por "lento" em Edge Functions,
+ * Logs) e, com BAIU_ALERTA_URL, um aviso no webhook (Slack, Discord ou outro
+ * que aceite JSON com "text" ou "content"). Sem dados da pessoa: só a ação, o
+ * tempo, o status e quanto cada serviço demorou.
+ */
+function alertSlow(fn: string, action: string, ms: number, status: number, stages: Record<string, Stage>, env: Env, http: typeof fetch) {
+  const limit = Number(env('BAIU_ALERTA_MS')) || SLOW_MS;
+  if (ms <= limit) return;
+  console.warn(JSON.stringify({ alerta: 'lento', funcao: fn, acao: action, ms, limite: limit, status, etapas: stages }));
+  const url = env('BAIU_ALERTA_URL');
+  if (!url || !/^https:\/\/\S+$/.test(url)) return;
+  const now = Date.now();
+  const prev = lastAlert.get(`${fn}/${action}`);
+  if (prev && now - prev.at < ALERT_EVERY) {
+    prev.skipped++;
+    return;
+  }
+  lastAlert.set(`${fn}/${action}`, { at: now, skipped: 0 });
+  const worst = Object.entries(stages).sort((a, b) => b[1].max - a[1].max);
+  const where = worst.length
+    ? worst.map(([name, s]) => `${name} (${s.n} ${s.n === 1 ? 'chamada' : 'chamadas'}, a mais lenta ${s.max} ms)`).join(', ')
+    : 'nenhum serviço de fora: a demora foi na própria função';
+  const text =
+    `Baiu lento: ${fn}/${action} levou ${ms} ms (limite ${limit} ms), status ${status}. ` +
+    `Mais demorado: ${where}.` +
+    (prev?.skipped === 1 ? ' Mais 1 resposta lenta desde o último aviso.' : '') +
+    (prev && prev.skipped > 1 ? ` Mais ${prev.skipped} respostas lentas desde o último aviso.` : '');
+  background(
+    http(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ text, content: text }),
+      signal: AbortSignal.timeout(5_000),
+    }).then(
+      (r) => void (r.ok || console.error(`${fn}: o aviso de lentidão não foi aceito`, r.status)),
+      () => console.error(`${fn}: o aviso de lentidão não foi enviado`),
+    ),
+  );
 }
 
 /** CPF com os dígitos verificadores certos. */
@@ -260,7 +398,22 @@ async function cleanup(
   return { checked, revoked };
 }
 
+const ACTIONS = new Set(['institutions', 'start', 'reconnect', 'status', 'sync', 'history', 'unlink', 'unlink_all']);
+
 export async function handle(req: Request, env: Env, http: typeof fetch = fetch): Promise<Response> {
+  const started = Date.now();
+  const t = timed(http);
+  const meta = { action: 'outra' };
+  const res = await route(req, env, t.http, meta);
+  if (req.method !== 'POST') return res;
+  const ms = Date.now() - started;
+  res.headers.set('Server-Timing', serverTiming(ms, t.stages));
+  // a tarefa diária confere centenas de pessoas: demorar ali é normal
+  if (meta.action !== 'limpeza') alertSlow('bank', meta.action, ms, res.status, t.stages, env, http);
+  return res;
+}
+
+async function route(req: Request, env: Env, http: typeof fetch, meta: { action: string }): Promise<Response> {
   if (req.method === 'OPTIONS') return new Response(null, { status: 204, headers: CORS });
   if (req.method !== 'POST') return fail(405, 'method');
 
@@ -273,18 +426,36 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   const api = sandbox ? `${POLP}/sandbox` : POLP;
   const redirect = /^https:\/\/\S+$/.test(env('POLP_REDIRECT_URL') ?? '') ? env('POLP_REDIRECT_URL') : undefined;
 
+  const slot = limiter(POLP_PARALLEL);
+  const ask = (url: string, init: RequestInit) =>
+    slot(async () => {
+      try {
+        return await http(url, {
+          ...init,
+          headers: {
+            'x-api-client': clientId,
+            'x-api-secret': clientSecret,
+            Accept: 'application/json',
+            'Content-Type': 'application/json',
+            ...(init.headers ?? {}),
+          },
+          signal: AbortSignal.timeout(POLP_TIMEOUT),
+        });
+      } catch {
+        console.error('bank: a Polp não respondeu a tempo');
+        throw new Stop(503, 'busy');
+      }
+    });
+
   /** Chamada à Polp. 404 vira null (autorização ou recurso que não existe mais). */
   const polp = async (path: string, init: RequestInit = {}, root = api): Promise<Json | null> => {
-    const r = await http(`${root}${path}`, {
-      ...init,
-      headers: {
-        'x-api-client': clientId,
-        'x-api-secret': clientSecret,
-        Accept: 'application/json',
-        'Content-Type': 'application/json',
-        ...(init.headers ?? {}),
-      },
-    });
+    let r = await ask(`${root}${path}`, init);
+    // muitos pedidos de uma vez: a Polp pede para esperar. Leituras tentam mais uma vez
+    if (r.status === 429 && (init.method ?? 'GET') === 'GET') {
+      const wait = Number(r.headers.get('Retry-After'));
+      await sleep(Number.isFinite(wait) && wait > 0 ? Math.min(wait * 1000, 2_000) : 300 + Math.random() * 400);
+      r = await ask(`${root}${path}`, init);
+    }
     if (r.status === 404) return null;
     if (r.status === 401 || r.status === 402 || r.status === 403) {
       // 401: chaves erradas; 402: plano inativo ou fatura em atraso; 403: conta da Polp em aprovação
@@ -312,6 +483,7 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
 
   // tarefa diária (pg_cron, sem login de pessoa): cancela as autorizações de quem ficou sem assinatura
   if (req.headers.has('x-cleanup-secret')) {
+    meta.action = 'limpeza';
     const expected = env('BANK_CLEANUP_SECRET') ?? '';
     if (expected.length < 16 || !same(req.headers.get('x-cleanup-secret') ?? '', expected)) return fail(401, 'session');
     try {
@@ -334,12 +506,20 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
   } catch {
     return fail(400, 'invalid');
   }
+  if (body && ACTIONS.has(String(body.action))) meta.action = String(body.action);
 
   const supa = async (path: string, init: RequestInit = {}) => {
-    const r = await http(`${base}${path}`, {
-      ...init,
-      headers: { Authorization: auth, apikey: anon, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
-    });
+    let r: Response;
+    try {
+      r = await http(`${base}${path}`, {
+        ...init,
+        headers: { Authorization: auth, apikey: anon, 'Content-Type': 'application/json', ...(init.headers ?? {}) },
+        signal: AbortSignal.timeout(DB_TIMEOUT),
+      });
+    } catch {
+      console.error('bank: o banco de dados não respondeu a tempo');
+      throw new Stop(503, 'busy');
+    }
     if (r.status === 401) throw new Stop(401, 'session');
     if (r.status === 404) {
       console.error('bank: tabela ou função ausente; aplique as migrações dos bancos');
@@ -368,15 +548,26 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
     return out;
   };
 
-  const institutions = async () => {
-    if (cached && cached.until > Date.now()) return cached.list;
+  const fetchInstitutions = async () => {
     // a lista é pública e a mesma nos dois ambientes
     const r = await polp('/institutions', { method: 'GET' }, POLP);
     const list = (Array.isArray(r?.data) ? (r!.data as Json[]) : [])
       .filter((i) => typeof i.id === 'string' && typeof i.name === 'string' && i.type !== 'BUSINESS')
-      .map((i) => ({ id: i.id, name: str(i.name).slice(0, 120), status: str(i.status) }));
-    if (list.length) cached = { list, until: Date.now() + 3_600_000 };
-    return list as Json[];
+      .map((i) => ({ id: i.id, name: str(i.name).slice(0, 120), status: str(i.status) })) as Json[];
+    if (list.length) cached = { list, until: Date.now() + LIST_FRESH };
+    return list;
+  };
+  const institutions = async () => {
+    const now = Date.now();
+    if (cached && cached.until > now) return cached.list;
+    // uma busca só, mesmo com muita gente pedindo junto
+    const p = (loading ??= fetchInstitutions().finally(() => (loading = null)));
+    if (cached && now - cached.until < LIST_STALE) {
+      // vencida: entrega a guardada e atualiza por trás, sem ninguém esperar
+      background(p);
+      return cached.list;
+    }
+    return p;
   };
 
   try {
@@ -527,42 +718,62 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
           // bancos do aparelho cuja autorização acabou (cancelada em outro aparelho ou por falta de assinatura)
           revoked: Object.keys(since).filter((id) => ID_RE.test(id) && !ids.has(id)),
         };
-        for (const row of active) {
+        type Part = { item: Json; accounts: Json[]; transactions: Json[]; investments: Json[] };
+        /** Um banco: confere a autorização e então busca contas, cartões e investimentos ao mesmo tempo. */
+        const fetchBank = async (row: Row): Promise<Part | null> => {
           const id = row.item_id;
           const c = await consent(id);
           // autorização cancelada no banco, ou que a pessoa nunca terminou: não aparece como banco conectado
-          if (!c || c.status === 'AWAITING_AUTHORIZATION' || c.status === 'REJECTED') continue;
-          out.items.push(toItem(c, row.institution || 'Banco'));
-          if (c.status !== 'AUTHORISED') continue;
+          if (!c || c.status === 'AWAITING_AUTHORIZATION' || c.status === 'REJECTED') return null;
+          const part: Part = { item: toItem(c, row.institution || 'Banco'), accounts: [], transactions: [], investments: [] };
+          if (c.status !== 'AUTHORISED') return part;
 
           const last = typeof since[id] === 'string' ? Date.parse(since[id] as string) : NaN;
           const fresh = Number.isNaN(last);
           const from = fresh ? '' : `?fromCreatedAt=${new Date(last - OVERLAP_DAYS * DAY).toISOString()}`;
 
-          for (const a of await all(`/consents/${id}/accounts`)) {
-            if (typeof a.id !== 'string') continue;
-            out.accounts.push(toAccount(a, id));
-            for (const t of await all(`/accounts/${a.id}/transactions${from}`)) out.transactions.push(toTx(t, a.id));
-          }
+          const accounts = async () => {
+            const list = (await all(`/consents/${id}/accounts`)).filter((a) => typeof a.id === 'string');
+            const txs = await Promise.all(list.map((a) => all(`/accounts/${a.id}/transactions${from}`)));
+            return list.map((a, k) => ({ account: toAccount(a, id) as Json, tx: txs[k].map((t) => toTx(t, str(a.id)) as Json) }));
+          };
+          const cards = async () => {
+            const list = (await all(`/consents/${id}/credit-cards`)).filter((card) => typeof card.id === 'string');
+            return Promise.all(
+              list.map(async (card) => {
+                const [bills, txs] = await Promise.all([
+                  polp(`/credit-cards/${card.id}/bills`, { method: 'GET' }),
+                  all(`/credit-cards/${card.id}/transactions${from}`),
+                ]);
+                return {
+                  account: toCard(card, id, Array.isArray(bills?.data) ? (bills!.data as Json[]) : []) as Json,
+                  tx: txs.map((t) => toCardTx(t, str(card.id))).filter((tx) => tx !== null) as Json[],
+                };
+              }),
+            );
+          };
+          const investments = async () => {
+            if (!fresh && Date.now() - last <= INVESTMENTS_EVERY) return [];
+            const lists = await Promise.all(INVESTMENT_LISTS.map(([path]) => all(`/consents/${id}/${path}`)));
+            return lists.flatMap((list, k) => list.map((i) => toInvestment(i, id, INVESTMENT_LISTS[k][1])).filter((i) => i !== null)) as Json[];
+          };
 
-          for (const card of await all(`/consents/${id}/credit-cards`)) {
-            if (typeof card.id !== 'string') continue;
-            const bills = await polp(`/credit-cards/${card.id}/bills`, { method: 'GET' });
-            out.accounts.push(toCard(card, id, Array.isArray(bills?.data) ? (bills!.data as Json[]) : []));
-            for (const t of await all(`/credit-cards/${card.id}/transactions${from}`)) {
-              const tx = toCardTx(t, card.id);
-              if (tx) out.transactions.push(tx);
-            }
+          const [acc, crd, inv] = await Promise.all([accounts(), cards(), investments()]);
+          for (const a of [...acc, ...crd]) {
+            part.accounts.push(a.account);
+            part.transactions.push(...a.tx);
           }
+          part.investments.push(...inv);
+          return part;
+        };
 
-          if (fresh || Date.now() - last > INVESTMENTS_EVERY) {
-            for (const [path, kind] of INVESTMENT_LISTS) {
-              for (const i of await all(`/consents/${id}/${path}`)) {
-                const inv = toInvestment(i, id, kind);
-                if (inv) out.investments.push(inv);
-              }
-            }
-          }
+        // os bancos também ao mesmo tempo; a resposta sai na ordem de antes
+        for (const part of await Promise.all(active.map(fetchBank))) {
+          if (!part) continue;
+          out.items.push(part.item);
+          out.accounts.push(...part.accounts);
+          out.transactions.push(...part.transactions);
+          out.investments.push(...part.investments);
         }
         return json(200, out);
       }
@@ -570,22 +781,23 @@ export async function handle(req: Request, env: Env, http: typeof fetch = fetch)
       case 'history': {
         // todas as autorizações, inclusive canceladas: o Open Finance exige que a pessoa as veja
         const list = (await rows(false)).slice(0, 50);
-        const out = [];
-        for (const r of list) {
-          let status = 'cancelada';
-          if (!r.revoked_at) {
-            const c = await consent(r.item_id);
-            status = c ? consentStatus(str(c.status)) : 'cancelada';
-          }
-          out.push({
-            id: r.item_id,
-            name: r.institution || 'Banco',
-            createdAt: r.created_at,
-            revokedAt: r.revoked_at,
-            products: Array.isArray(r.products) ? r.products : [],
-            status,
-          });
-        }
+        const out = await Promise.all(
+          list.map(async (r) => {
+            let status = 'cancelada';
+            if (!r.revoked_at) {
+              const c = await consent(r.item_id);
+              status = c ? consentStatus(str(c.status)) : 'cancelada';
+            }
+            return {
+              id: r.item_id,
+              name: r.institution || 'Banco',
+              createdAt: r.created_at,
+              revokedAt: r.revoked_at,
+              products: Array.isArray(r.products) ? r.products : [],
+              status,
+            };
+          }),
+        );
         return json(200, { consents: out });
       }
 

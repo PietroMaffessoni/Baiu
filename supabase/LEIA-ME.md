@@ -186,6 +186,8 @@ Em **Edge Functions, Secrets**:
 | `REVENUECAT_SECRET_KEY` | Sim | Chave secreta v1 do RevenueCat (começa com `sk_`) | app.revenuecat.com (apêndice B) |
 | `BANK_CLEANUP_SECRET` | Para cobrar | Senha da tarefa diária que desconecta os bancos de quem saiu da assinatura (passo 7.1). Invente uma com pelo menos 32 letras e números, por exemplo num gerenciador de senhas | Sócio |
 | `BANK_LAPSE_DAYS` | Não | Dias depois do fim da assinatura até desconectar os bancos. Padrão 7 | Decisão do Pietro e do sócio |
+| `BAIU_ALERTA_URL` | Recomendado | Webhook que recebe o aviso quando uma resposta passa de 1 segundo, dizendo onde foi a demora (Polp, login, banco de dados, RevenueCat). Serve o webhook de entrada do Slack ou o de um canal do Discord; precisa ser `https`. Sem ele, o aviso fica só nos logs | Sócio (o canal é de quem vai acompanhar) |
+| `BAIU_ALERTA_MS` | Não | Limite do aviso, em milissegundos. Padrão `1000` | Decisão do Pietro e do sócio |
 | `BAIU_SUBSCRIPTION_OFF` | Só em teste | `1` libera a IA e os bancos sem conferir a assinatura. **Apagar antes de publicar** | — |
 
 `SUPABASE_URL` e `SUPABASE_ANON_KEY` já existem em toda função. Não crie esses dois.
@@ -326,7 +328,8 @@ Os bancos dá para testar no Expo Go, no ambiente de teste da Polp (`POLP_SANDBO
 
 **Logs**
 
-- [ ] Em **Edge Functions, Logs** de cada função, aparecem só códigos de status. Nunca aparecem conversas, valores ou nomes. Se aparecer algo assim, avise o Pietro antes de publicar.
+- [ ] Em **Edge Functions, Logs** de cada função, aparecem só códigos de status e, nas respostas lentas, uma linha com `"alerta":"lento"` (ação, tempo e quanto cada serviço levou). Nunca aparecem conversas, valores ou nomes. Se aparecer algo assim, avise o Pietro antes de publicar.
+- [ ] Com `BAIU_ALERTA_URL` cadastrado, chega um aviso no canal quando uma resposta passa de 1 segundo, no máximo um por ação a cada 5 minutos, contando as outras lentas do intervalo. Para testar, cadastre `BAIU_ALERTA_MS=1` por um minuto, use o app e apague depois.
 
 ## 10. Segurança antes de publicar
 
