@@ -11,7 +11,7 @@ Legenda: ✅ pronto · 🔧 feito em 06/11/2026 · ⏳ falta, e depende de você
 | Política de privacidade e termos de uso | ✅ No app (Ajustes, Sobre) e em `docs/`. 🔧 Prazos, encarregado, incidentes, cookies, marketing, menores e mudanças de texto revistos. O texto mora em `src/content/legal.json`; `node scripts/build-legal-docs.mjs` gera os `docs/` |
 | Checkbox para aceitar os termos, com registro | ✅ No cadastro, desmarcado. O servidor recusa cadastro sem aceite e grava versão e data em `consents`. 🔧 Quando um texto muda, quem já tem conta vê o resumo (tela `/novos-termos`) e aceita de novo, e cada versão nova fica registrada |
 | Encarregado de dados ou canal de contato | 🔧 Encarregado nomeado: Pietro Maffessoni, canal suporte.baiu@gmail.com (assunto "Privacidade") |
-| Quem é o fornecedor | ⏳ O Decreto 7.962/2013 (comércio eletrônico) pede, nos termos e na loja, o nome, o **CPF ou CNPJ** e o **endereço físico** do fornecedor. Os termos já dizem o nome. Falta decidir se entra o seu CPF e endereço, ou se vale abrir um CNPJ antes de lançar |
+| Quem é o fornecedor | ⏳ O Decreto 7.962/2013 (comércio eletrônico, art. 2º) pede, em lugar de destaque, o nome, o **CPF ou o CNPJ** e o **endereço físico e eletrônico** do fornecedor. O CPF basta: a lei não exige CNPJ. Os termos já dizem o nome e o e-mail. Falta pôr o CPF (ou o CNPJ, se abrirem) e um endereço onde vocês recebam correspondência |
 
 ## Dados pessoais (LGPD)
 
@@ -21,7 +21,7 @@ Legenda: ✅ pronto · 🔧 feito em 06/11/2026 · ⏳ falta, e depende de você
 | Banner de cookies com botão de recusar | ➖ O app não usa cookies. As páginas de `docs/` ficam no GitHub, que cuida dos cookies dele. Se um dia houver site próprio com analytics, aí precisa do banner, com "Recusar" do mesmo tamanho de "Aceitar" |
 | Consentimento separado para marketing | ➖ O Baiu não manda propaganda. 🔧 A política promete que, se um dia mandar, vai pedir uma autorização à parte, desmarcada. Só crie essa caixa junto com o envio, nunca antes |
 | Link de descadastro em todo e-mail | ➖ Os três e-mails (código, recuperação, senha alterada) são da conta e não precisam. Todo e-mail de novidades precisará ter |
-| Coletar só o necessário | ✅ CPF não é guardado; finanças ficam no aparelho; "como conheceu" é opcional. ⏳ O **celular é obrigatório** e não tem uso concreto ("se precisar"). É o ponto mais fraco na regra da necessidade: decida entre torná-lo opcional ou tirá-lo |
+| Coletar só o necessário | ✅ CPF não é guardado; finanças ficam no aparelho; "como conheceu" é opcional. ✅ O celular continua obrigatório (decisão do Pietro em 11/11/2026), com uso declarado: contato sobre a conta, avisos de segurança e suporte. Usá-lo para propaganda ou WhatsApp de novidades exige a autorização à parte do item de marketing |
 | Prazo de cada dado | 🔧 A política lista o prazo de cada um. 🔧 Os registros de acesso (data, hora e IP) agora são apagados depois de 6 meses por uma tarefa diária (migração `20261106120000`) |
 | Pedir acesso e exclusão | ✅ Corrigir em Minha conta, exportar em CSV, excluir a conta no app (desconecta bancos e apaga o RevenueCat) e por e-mail (`docs/excluir-conta.md`). 🔧 A política e Minha conta dizem que dá para pedir a cópia de tudo do servidor, em até 15 dias |
 | Vazou dado com risco: avisar a ANPD em até 3 dias úteis | 🔧 Prometido na política, com o roteiro em [incidentes.md](incidentes.md). ⏳ Leiam o roteiro antes de lançar |
@@ -54,11 +54,11 @@ Legenda: ✅ pronto · 🔧 feito em 06/11/2026 · ⏳ falta, e depende de você
 
 | Quem | O que faz | Situação |
 | --- | --- | --- |
-| Supabase | Servidor, login, funções | ⏳ O DPA vale ao aceitar os termos: baixe e guarde a versão atual em supabase.com/legal/dpa |
-| RevenueCat | Confere a assinatura | ⏳ O DPA faz parte dos termos: baixe e guarde a versão atual em revenuecat.com/dpa |
-| Polp | Ponte com o Open Finance | ⏳ Peça por escrito o contrato com as cláusulas de proteção de dados (uso só para o Baiu, segurança, aviso de incidente, prazos de 60 e 90 dias para apagar). Pergunte também em quanto tempo ela apaga os dados de quem cancela a autorização, para pôr na política. Depois, preencha o formulário de conformidade no painel |
+| Supabase | Servidor, login, funções | ✅ O DPA já vale com os termos que vocês aceitaram. Recomendado, não obrigatório: guardar o PDF da versão atual (supabase.com/legal/dpa) numa pasta privada, como prova |
+| RevenueCat | Confere a assinatura | ✅ Mesma situação: o DPA faz parte dos termos. Recomendado guardar o PDF (revenuecat.com/dpa) quando criarem a conta |
+| Polp | Ponte com o Open Finance | ⏳ É o único que pede ação de verdade: ela recebe dados financeiros. Ao assinar o plano, confira se o contrato tem as cláusulas de proteção de dados; se não tiver, peça por escrito (uso só para o Baiu, segurança, aviso de incidente, prazos de 60 e 90 dias para apagar). Pergunte também em quanto tempo ela apaga os dados de quem cancela a autorização, para pôr na política. Depois, preencha o formulário de conformidade no painel |
 | Celcoin | Recebe os dados dos bancos | ➖ Atua com os termos e a norma de privacidade dela, mostrados à pessoa ao conectar. O contrato é com a Polp |
-| Envio de e-mails (SMTP) | Códigos e senha | ⏳ Ainda não escolhido. Use um provedor transacional com DPA (Resend, Brevo ou parecido). O Gmail pessoal não tem DPA e guarda cada código enviado na pasta Enviados, o que não bate com o prazo de 30 dias da política |
+| Envio de e-mails (SMTP) | Códigos e senha | ⏳ Ainda não escolhido (LEIA-ME do Supabase, passo 5). Recomendado: um provedor transacional (Resend, Brevo ou parecido), que já vem com DPA e entrega melhor. Dá para usar o Gmail, mas aí é preciso apagar de tempos em tempos os códigos que ficam na pasta Enviados, porque a política promete guardar os registros de envio por até 30 dias |
 | Apple e Google | Cobram a assinatura | ➖ São controladores independentes, pelos contratos de desenvolvedor |
 | GitHub | Páginas de ajuda e volta do Open Finance | ➖ Termos do GitHub; citado na política |
 
